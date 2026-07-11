@@ -59,16 +59,15 @@ The game loop is then one call:
 ecs.update(deltaTime); // runs every system, then flushes destroyed entities
 ```
 
-## Why `components.get` never returns `undefined`
+## The type system tells the truth
 
-An entity only appears in a system's `entities` set while it has **all** of the
-system's `requiredComponents` — so inside `update`, those components are
-guaranteed to exist. The types encode this: `createSystem` captures the
-`requiredComponents` array as a literal type, and `components.get(entity, name)`
-only accepts names from that list, returning the component with no `| undefined`
-and no `!`.
+The nicest property of this package: `components.get` returns components
+**without `| undefined` and without `!`** — and the compiler, not convention,
+makes that honest. Two guarantees combine:
 
-Asking for a component you did not declare is a compile error:
+**You can only ask for components you declared.** `createSystem` captures the
+`requiredComponents` array as a literal type, so the accessor only accepts
+those names:
 
 ```ts
 ecs.createSystem({
@@ -82,7 +81,32 @@ ecs.createSystem({
 });
 ```
 
-This guarantee rides on type inference, so **define systems through
+**You can only ask about entities you have proof for.** `Entity` is a plain
+number, but the accessor does not accept plain numbers — it accepts
+`EntityWith<Components, Name>`, an entity *proven* to have that component. The
+brand is compile-time only (at runtime these are ordinary numbers, zero cost).
+Proof comes from two places:
+
+- **A system's `entities` set.** Membership means "has all required
+  components", so entities you iterate are pre-proven.
+- **A `hasComponent` check.** It is a type guard: a true result narrows the
+  entity to proven, for that component.
+
+```ts
+components.get(123, "position"); // ✘ compile error: a bare number proves nothing
+
+// an entity id stored in a component — its target may be destroyed by now
+if (ecs.hasComponent(homing.target, "position")) {
+  components.get(homing.target, "position"); // ✔ the check is the proof
+}
+```
+
+This is exactly the discipline a networked game needs: entity references that
+cross frames, components, or the network are unproven by construction, and the
+compiler forces the "does it still exist?" question at every such boundary —
+at zero runtime cost beyond the check you should have written anyway.
+
+Both guarantees ride on type inference, so **define systems through
 `ecs.createSystem({...})`**. A system written as a plain object annotated
 `System<Components>` still works at runtime, but the compiler falls back to
 allowing every component name.
@@ -91,7 +115,14 @@ Outside of systems, where presence is genuinely unknown, use:
 
 - `getComponent(entity, name)` → the component or `undefined`
 - `get(entity, name)` → the component, or a descriptive throw
-- `hasComponent(entity, name)` → boolean
+- `hasComponent(entity, name)` → boolean, and the proof described above
+
+## End-to-end example
+
+[`src/example.ts`](./src/example.ts) is a commented tour of the whole API —
+spawning, a movement system, a homing-missile system that proves a stored
+target reference before using it, lifecycle hooks, and the update loop. It
+typechecks as part of `pnpm check`, so it cannot drift from the real API.
 
 ## The update context
 
@@ -99,7 +130,7 @@ Outside of systems, where presence is genuinely unknown, use:
 
 | Field | What it is |
 | --- | --- |
-| `entities` | The entities currently matching `requiredComponents` (`ReadonlySet<Entity>`) |
+| `entities` | The entities currently matching `requiredComponents`, proven (`ReadonlySet<EntityWith<…>>`) |
 | `components` | The typed accessor described above |
 | `deltaTime` | Whatever was passed to `ecs.update(deltaTime)` — seconds by convention |
 | `ecs` | The world, for structural changes: `addComponent`, `destroyEntity`, … |
