@@ -22,11 +22,12 @@ type ProvenEntity<Components> = EntityWith<Components, keyof Components>;
 /** Read access to the components a system declared in requiredComponents. */
 export type ComponentAccessor<Components, Required extends keyof Components> = {
   /**
-   * Returns the entity's component, without `| undefined`. Only accepts
-   * entities proven to have the component: taken from a system's entities set,
-   * or narrowed through a hasComponent() check.
+   * Proven entity (from a system's entities set, or a hasComponent() check):
+   * the component is returned without `| undefined`.
    */
   get<Name extends Required>(entity: EntityWith<Components, Name>, name: Name): Components[Name];
+  /** Unproven entity: honestly optional — the component may be gone. */
+  get<Name extends Required>(entity: Entity, name: Name): Components[Name] | undefined;
 };
 
 /** Everything a system receives on each update tick. */
@@ -64,23 +65,18 @@ export class ECS<Components> {
   }
 
   // Components
-  getComponent<Name extends keyof Components>(
+  /** Proven entity: the component is returned without `| undefined`. */
+  get<Name extends keyof Components>(
+    entity: EntityWith<Components, Name>,
+    name: Name,
+  ): Components[Name];
+  /** Unproven entity: honestly optional — the component may be gone. */
+  get<Name extends keyof Components>(entity: Entity, name: Name): Components[Name] | undefined;
+  get<Name extends keyof Components>(
     entity: Entity,
     name: Name,
   ): Components[Name] | undefined {
     return this.entities.get(entity)?.get(name) as Components[Name] | undefined;
-  }
-
-  /**
-   * Returns the component, throwing if it is absent. Inside a system prefer
-   * context.components.get, which restricts names to the declared requirements.
-   */
-  get<Name extends keyof Components>(entity: Entity, name: Name): Components[Name] {
-    const component = this.entities.get(entity)?.get(name);
-    if (component === undefined) {
-      throw new Error(`Entity ${entity} has no "${String(name)}" component`);
-    }
-    return component as Components[Name];
   }
 
   /** Doubles as a type guard: a true result proves the entity for typed access. */

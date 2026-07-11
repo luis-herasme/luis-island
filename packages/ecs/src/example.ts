@@ -45,16 +45,17 @@ const movementSystem = ecs.createSystem({
       position.x += velocity.x * deltaTime;
       position.y += velocity.y * deltaTime;
 
-      // Both of these are compile errors, not runtime surprises:
-      //   components.get(entity, "health"); // "health" was not declared above
-      //   components.get(123, "position");  // a bare number proves nothing
+      // The types stay honest at the edges:
+      //   components.get(entity, "health"); // compile error: not declared above
+      //   components.get(123, "position");  // legal, but typed `... | undefined`
     }
   },
 });
 
-// 4. Stored entity references are where the proof system earns its keep.
-//    The missile's target may have been destroyed since last frame — so the
-//    compiler refuses `components.get(homing.target, ...)` until we check.
+// 4. Stored entity references are where the honest types earn their keep. The
+//    missile's target is a plain Entity that may have been destroyed since
+//    last frame — so reading through it returns `| undefined`, and the
+//    compiler makes us handle the absence.
 const homingSystem = ecs.createSystem({
   requiredComponents: ["position", "homing"],
 
@@ -62,14 +63,15 @@ const homingSystem = ecs.createSystem({
     for (const entity of entities) {
       const homing = components.get(entity, "homing");
 
-      // hasComponent() is a type guard: a true result IS the proof.
-      if (!ecs.hasComponent(homing.target, "position")) {
+      // Unproven entity → optional overload. (When you would rather narrow
+      // the entity than check the value, ecs.hasComponent(homing.target,
+      // "position") is a type guard that proves it.)
+      const targetPosition = components.get(homing.target, "position");
+      if (targetPosition === undefined) {
         ecs.destroyEntity(entity); // target is gone — retire the missile
         continue;
       }
 
-      // Inside this branch homing.target is proven, so typed access works.
-      const targetPosition = components.get(homing.target, "position");
       const position = components.get(entity, "position");
       position.x += Math.sign(targetPosition.x - position.x) * homing.speed * deltaTime;
       position.y += Math.sign(targetPosition.y - position.y) * homing.speed * deltaTime;
@@ -80,7 +82,7 @@ const homingSystem = ecs.createSystem({
 // 5. Lifecycle hooks fire when an entity starts or stops matching — the place
 //    to acquire and release per-entity resources (the render adapter will
 //    create and remove scene-graph nodes here). The entity argument is proven
-//    too: ecs.get() cannot miss for declared components.
+//    too, so ecs.get() returns the health without `| undefined`.
 const healthMonitorSystem = ecs.createSystem({
   requiredComponents: ["health"],
 

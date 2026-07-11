@@ -15,10 +15,10 @@ describe("entities and components", () => {
     const entity = ecs.addEntity();
 
     ecs.addComponent(entity, "position", { x: 1, y: 2 });
-    expect(ecs.getComponent(entity, "position")).toEqual({ x: 1, y: 2 });
+    expect(ecs.get(entity, "position")).toEqual({ x: 1, y: 2 });
     expect(ecs.hasComponent(entity, "position")).toBe(true);
 
-    expect(ecs.getComponent(entity, "velocity")).toBeUndefined();
+    expect(ecs.get(entity, "velocity")).toBeUndefined();
     expect(ecs.hasComponent(entity, "velocity")).toBe(false);
   });
 
@@ -28,22 +28,35 @@ describe("entities and components", () => {
 
     ecs.addComponent(entity, "health", 100);
     ecs.removeComponent(entity, "health");
-    expect(ecs.getComponent(entity, "health")).toBeUndefined();
+    expect(ecs.get(entity, "health")).toBeUndefined();
   });
 
   it("reports missing components on unknown entities without throwing", () => {
     const ecs = createWorld();
-    expect(ecs.getComponent(999, "position")).toBeUndefined();
+    expect(ecs.get(999, "position")).toBeUndefined();
     expect(ecs.hasComponent(999, "position")).toBe(false);
   });
 
-  it("get() returns the component or throws when absent", () => {
+  it("get() types the result by proof", () => {
     const ecs = createWorld();
     const entity = ecs.addEntity();
     ecs.addComponent(entity, "health", 42);
 
-    expect(ecs.get(entity, "health")).toBe(42);
-    expect(() => ecs.get(entity, "velocity")).toThrow(/no "velocity" component/);
+    // unproven entity: the optional overload applies
+    const maybeHealth = ecs.get(entity, "health");
+    expect(maybeHealth).toBe(42);
+    // @ts-expect-error unproven access is optional and cannot be assumed present
+    const assumedHealth: number = ecs.get(entity, "health");
+    expect(assumedHealth).toBe(42);
+
+    // proven through the type guard: no undefined in the result type
+    if (ecs.hasComponent(entity, "health")) {
+      const provenHealth: number = ecs.get(entity, "health");
+      expect(provenHealth).toBe(42);
+    }
+
+    // absent component: undefined, never a throw
+    expect(ecs.get(entity, "velocity")).toBeUndefined();
   });
 });
 
@@ -171,20 +184,30 @@ describe("system update context", () => {
     );
 
     ecs.update(2);
-    expect(ecs.getComponent(entity, "position")).toEqual({ x: 6, y: 8 });
+    expect(ecs.get(entity, "position")).toEqual({ x: 6, y: 8 });
   });
 
-  it("rejects unproven entities at compile time", () => {
+  it("types unproven entities as optional inside systems", () => {
     const ecs = createWorld();
-    // never added to the world; this test is a compile-time assertion
-    ecs.createSystem({
-      requiredComponents: ["position"],
-      update({ components }) {
-        // @ts-expect-error a bare number is not proof the entity has "position"
-        components.get(123, "position");
-      },
-    });
-    expect(true).toBe(true);
+    const entity = ecs.addEntity();
+    ecs.addComponent(entity, "position", { x: 1, y: 1 });
+    const rawEntity: number = entity;
+
+    let maybePosition: { x: number; y: number } | undefined;
+    ecs.addSystem(
+      ecs.createSystem({
+        requiredComponents: ["position"],
+        update({ components }) {
+          maybePosition = components.get(rawEntity, "position");
+          // @ts-expect-error unproven access is optional and cannot be assumed present
+          const assumedPosition: { x: number; y: number } = components.get(rawEntity, "position");
+          expect(assumedPosition).toBeDefined();
+        },
+      }),
+    );
+
+    ecs.update(0);
+    expect(maybePosition).toEqual({ x: 1, y: 1 });
   });
 
   it("hasComponent proves an entity for typed access", () => {
@@ -239,7 +262,7 @@ describe("system update context", () => {
     });
 
     ecs.update(0);
-    expect(ecs.getComponent(entity, "position")).toEqual({ x: 0, y: 0 });
+    expect(ecs.get(entity, "position")).toEqual({ x: 0, y: 0 });
   });
 });
 
@@ -250,10 +273,10 @@ describe("deferred destruction", () => {
     ecs.addComponent(entity, "health", 50);
 
     ecs.destroyEntity(entity);
-    expect(ecs.getComponent(entity, "health")).toBe(50);
+    expect(ecs.get(entity, "health")).toBe(50);
 
     ecs.update(0);
-    expect(ecs.getComponent(entity, "health")).toBeUndefined();
+    expect(ecs.get(entity, "health")).toBeUndefined();
     expect(ecs.hasComponent(entity, "health")).toBe(false);
   });
 

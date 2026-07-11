@@ -81,10 +81,14 @@ ecs.createSystem({
 });
 ```
 
-**You can only ask about entities you have proof for.** `Entity` is a plain
-number, but the accessor does not accept plain numbers — it accepts
-`EntityWith<Components, Name>`, an entity *proven* to have that component. The
-brand is compile-time only (at runtime these are ordinary numbers, zero cost).
+**The result type depends on what you can prove about the entity.** `get` has
+two overloads. For an entity *proven* to have the component — the type
+`EntityWith<Components, Name>`, a compile-time-only brand over the plain
+number — it returns the component directly. For a bare `Entity`, it returns
+`Components[Name] | undefined`, because the honest answer is "maybe it's
+gone". Nothing throws; strict mode makes you handle the `undefined` before
+using the value.
+
 Proof comes from two places:
 
 - **A system's `entities` set.** Membership means "has all required
@@ -93,29 +97,35 @@ Proof comes from two places:
   entity to proven, for that component.
 
 ```ts
-components.get(123, "position"); // ✘ compile error: a bare number proves nothing
+for (const entity of entities) {
+  components.get(entity, "position");        // { x, y, z } — proven, no undefined
+}
 
-// an entity id stored in a component — its target may be destroyed by now
+components.get(123, "position");             // { x, y, z } | undefined — handle it
+
+// an entity id stored in a component — its target may be destroyed by now:
+const targetPosition = components.get(homing.target, "position");
+if (targetPosition === undefined) { /* target is gone */ }
+
+// or narrow the entity instead of checking the value:
 if (ecs.hasComponent(homing.target, "position")) {
-  components.get(homing.target, "position"); // ✔ the check is the proof
+  components.get(homing.target, "position"); // proven — no undefined
 }
 ```
 
 This is exactly the discipline a networked game needs: entity references that
-cross frames, components, or the network are unproven by construction, and the
+cross frames, components, or the network are unproven by construction, so the
 compiler forces the "does it still exist?" question at every such boundary —
-at zero runtime cost beyond the check you should have written anyway.
+as an `undefined` you must handle, at zero runtime cost.
 
 Both guarantees ride on type inference, so **define systems through
 `ecs.createSystem({...})`**. A system written as a plain object annotated
 `System<Components>` still works at runtime, but the compiler falls back to
 allowing every component name.
 
-Outside of systems, where presence is genuinely unknown, use:
-
-- `getComponent(entity, name)` → the component or `undefined`
-- `get(entity, name)` → the component, or a descriptive throw
-- `hasComponent(entity, name)` → boolean, and the proof described above
+Outside of systems the same two methods cover everything: `ecs.get(entity,
+name)` with the overloads above, and `hasComponent(entity, name)` when you
+want the proof itself.
 
 ## End-to-end example
 
