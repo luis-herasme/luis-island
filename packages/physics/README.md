@@ -23,6 +23,7 @@ const body = new RigidBody({
   mass: 1,
   restitution: 0,               // bounciness, 0..1
   damping: 0,                   // per-second linear deceleration
+  stepHeight: 0,                // ledges up to this high lift instead of block
 });
 ```
 
@@ -51,6 +52,13 @@ world.step(deltaTime);
 
 The contacts from the latest step stay readable on `world.contacts` for game
 logic that wants to know who touched whom.
+
+**Stairs.** A side contact between a dynamic body with a `stepHeight` and a
+static box whose top edge sits within that height resolves by lifting the
+body onto the ledge instead of blocking it. A staircase is then just a row of
+static boxes with rises below the walker's `stepHeight` — the Minecraft-style
+world stays boxes all the way down. Taller ledges block normally, so walls
+stay walls.
 
 ## Wiring it into the ECS
 

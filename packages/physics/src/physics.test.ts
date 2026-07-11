@@ -145,6 +145,106 @@ describe("PhysicsWorld", () => {
     expect(light.velocity.x - heavy.velocity.x).toBeLessThanOrEqual(0.0001); // no longer approaching
   });
 
+  it("a stepping body climbs a ledge within its stepHeight", () => {
+    const world = new PhysicsWorld();
+    const ground = new RigidBody({
+      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
+      type: "static",
+      translation: new Vector3(0, -0.6, 0),
+    });
+    // A wide raised platform starting at x = 1.5, its top at -0.1 — a 0.4
+    // ledge above the walker's bottom at -0.5.
+    const step = new RigidBody({
+      collider: Collider.box({ halfExtents: new Vector3(5, 0.25, 10) }),
+      type: "static",
+      translation: new Vector3(6.5, -0.35, 0),
+    });
+    const walker = unitBox({ position: [0, 0, 0] });
+    walker.stepHeight = 0.5;
+    world.addBody(ground);
+    world.addBody(step);
+    world.addBody(walker);
+
+    for (let stepIndex = 0; stepIndex < 120; stepIndex++) {
+      walker.velocity.x = 3;
+      world.step(FIXED_DELTA_TIME);
+    }
+
+    // It walked onto and past the ledge instead of being blocked by it.
+    expect(walker.translation.x).toBeGreaterThan(1.6);
+    expect(walker.translation.y).toBeCloseTo(0.4, 1); // resting on the step top at -0.1
+  });
+
+  it("a stepping body is still blocked by ledges taller than stepHeight", () => {
+    const world = new PhysicsWorld();
+    const ground = new RigidBody({
+      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
+      type: "static",
+      translation: new Vector3(0, -0.6, 0),
+    });
+    // Wall top at +0.5: a 1.0 ledge, above the walker's 0.5 stepHeight.
+    const wall = new RigidBody({
+      collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 10) }),
+      type: "static",
+      translation: new Vector3(2, 0, 0),
+    });
+    const walker = unitBox({ position: [0, 0, 0] });
+    walker.stepHeight = 0.5;
+    world.addBody(ground);
+    world.addBody(wall);
+    world.addBody(walker);
+
+    for (let stepIndex = 0; stepIndex < 120; stepIndex++) {
+      walker.velocity.x = 3;
+      world.step(FIXED_DELTA_TIME);
+    }
+
+    expect(walker.translation.x).toBeLessThanOrEqual(1.05);
+    expect(walker.translation.y).toBeCloseTo(0, 1);
+  });
+
+  it("stepHeight 0 keeps every ledge blocking", () => {
+    const world = new PhysicsWorld();
+    const ground = new RigidBody({
+      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
+      type: "static",
+      translation: new Vector3(0, -0.6, 0),
+    });
+    const step = new RigidBody({
+      collider: Collider.box({ halfExtents: new Vector3(0.5, 0.25, 10) }),
+      type: "static",
+      translation: new Vector3(2, -0.35, 0),
+    });
+    const walker = unitBox({ position: [0, 0, 0] });
+    world.addBody(ground);
+    world.addBody(step);
+    world.addBody(walker);
+
+    for (let stepIndex = 0; stepIndex < 120; stepIndex++) {
+      walker.velocity.x = 3;
+      world.step(FIXED_DELTA_TIME);
+    }
+
+    expect(walker.translation.x).toBeLessThanOrEqual(1.05);
+  });
+
+  it("dynamic bodies are pushed, never stepped onto", () => {
+    const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
+    const crate = unitBox({ position: [2, 0, 0] });
+    const walker = unitBox({ position: [0, 0, 0] });
+    walker.stepHeight = 0.5;
+    world.addBody(crate);
+    world.addBody(walker);
+
+    for (let stepIndex = 0; stepIndex < 60; stepIndex++) {
+      walker.velocity.set(3, 0, 0);
+      world.step(FIXED_DELTA_TIME);
+    }
+
+    expect(walker.translation.y).toBeCloseTo(0, 5); // never lifted
+    expect(crate.translation.x).toBeGreaterThan(2); // shoved along instead
+  });
+
   it("keeps the latest contacts readable for game logic", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
     const first = unitBox();

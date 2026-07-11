@@ -96,6 +96,8 @@ export class PhysicsWorld {
     const totalInverseMass = first.inverseMass + second.inverseMass;
     if (totalInverseMass === 0) return;
 
+    if (this.tryStepUp(contact)) return;
+
     // Impulse: cancel the approach velocity along the normal, plus bounce.
     // The normal points first → second, so approaching means a negative
     // relative velocity along it.
@@ -119,5 +121,38 @@ export class PhysicsWorld {
 
     first.translation.addScaledVector(normal, -correctionMagnitude * first.inverseMass);
     second.translation.addScaledVector(normal, correctionMagnitude * second.inverseMass);
+  }
+
+  /**
+   * A side contact between a stepping dynamic body and a static box whose
+   * top edge sits within the body's stepHeight resolves by lifting the body
+   * onto the ledge instead of blocking it. This is what makes staircases of
+   * static boxes walkable; taller obstacles fall through to normal blocking.
+   */
+  private tryStepUp(contact: Contact): boolean {
+    // Only sideways contacts are steppable; tops and bottoms resolve normally.
+    if (contact.normal.y !== 0) return false;
+
+    let stepper: RigidBody;
+    let obstacle: RigidBody;
+
+    if (contact.first.type === "dynamic" && contact.first.stepHeight > 0 && contact.second.type === "static") {
+      stepper = contact.first;
+      obstacle = contact.second;
+    } else if (contact.second.type === "dynamic" && contact.second.stepHeight > 0 && contact.first.type === "static") {
+      stepper = contact.second;
+      obstacle = contact.first;
+    } else {
+      return false;
+    }
+
+    const obstacleTop = obstacle.translation.y + obstacle.collider.halfExtents.y;
+    const stepperBottom = stepper.translation.y - stepper.collider.halfExtents.y;
+    const ledgeHeight = obstacleTop - stepperBottom;
+
+    if (ledgeHeight <= 0 || ledgeHeight > stepper.stepHeight) return false;
+
+    stepper.translation.y = obstacleTop + stepper.collider.halfExtents.y;
+    return true;
   }
 }

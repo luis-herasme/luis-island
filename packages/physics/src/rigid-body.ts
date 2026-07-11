@@ -19,6 +19,12 @@ type RigidBodyOptions = {
   restitution?: number;
   /** Per-second linear deceleration; 0 keeps momentum forever. */
   damping?: number;
+  /**
+   * Side contacts with static boxes whose top edge is at most this far above
+   * the body's bottom lift the body onto the ledge instead of blocking it —
+   * this is what makes staircases of static boxes walkable. 0 disables it.
+   */
+  stepHeight?: number;
 };
 
 export class RigidBody {
@@ -29,6 +35,7 @@ export class RigidBody {
   mass: number;
   restitution: number;
   damping: number;
+  stepHeight: number;
 
   constructor(options: RigidBodyOptions) {
     this.collider = options.collider;
@@ -38,6 +45,7 @@ export class RigidBody {
     this.mass = options.mass ?? 1;
     this.restitution = options.restitution ?? 0;
     this.damping = options.damping ?? 0;
+    this.stepHeight = options.stepHeight ?? 0;
   }
 
   /** 1 / mass, with static bodies reading as 0 — the form resolution needs. */
