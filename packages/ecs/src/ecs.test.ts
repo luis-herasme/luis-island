@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ECS, type Entity, type System } from "./index";
+import { ECS, type Entity } from "./index";
 
 interface TestComponents {
   position: { x: number; y: number };
@@ -36,25 +36,34 @@ describe("entities and components", () => {
     expect(ecs.getComponent(999, "position")).toBeUndefined();
     expect(ecs.hasComponent(999, "position")).toBe(false);
   });
+
+  it("get() returns the component or throws when absent", () => {
+    const ecs = createWorld();
+    const entity = ecs.addEntity();
+    ecs.addComponent(entity, "health", 42);
+
+    expect(ecs.get(entity, "health")).toBe(42);
+    expect(() => ecs.get(entity, "velocity")).toThrow(/no "velocity" component/);
+  });
 });
 
 describe("system membership", () => {
-  const createMovementSystem = () => {
+  const createMovementSystem = (ecs: ECS<TestComponents>) => {
     const seen: Entity[][] = [];
-    const system: System<TestComponents> = {
+    const system = ecs.createSystem({
       requiredComponents: ["position", "velocity"],
-      update(entities) {
+      update({ entities }) {
         seen.push([...entities]);
       },
       onEntityAdded: vi.fn(),
       onEntityRemoved: vi.fn(),
-    };
+    });
     return { system, seen };
   };
 
   it("tracks only entities with all required components", () => {
     const ecs = createWorld();
-    const { system, seen } = createMovementSystem();
+    const { system, seen } = createMovementSystem(ecs);
     ecs.addSystem(system);
 
     const moving = ecs.addEntity();
@@ -64,13 +73,13 @@ describe("system membership", () => {
     const still = ecs.addEntity();
     ecs.addComponent(still, "position", { x: 5, y: 5 });
 
-    ecs.update();
+    ecs.update(0);
     expect(seen[0]).toEqual([moving]);
   });
 
   it("fires onEntityAdded when an entity gains the required components", () => {
     const ecs = createWorld();
-    const { system } = createMovementSystem();
+    const { system } = createMovementSystem(ecs);
     ecs.addSystem(system);
 
     const entity = ecs.addEntity();
@@ -83,7 +92,7 @@ describe("system membership", () => {
 
   it("fires onEntityRemoved when a required component is removed", () => {
     const ecs = createWorld();
-    const { system } = createMovementSystem();
+    const { system } = createMovementSystem(ecs);
     ecs.addSystem(system);
 
     const entity = ecs.addEntity();
@@ -100,17 +109,17 @@ describe("system membership", () => {
     ecs.addComponent(entity, "position", { x: 0, y: 0 });
     ecs.addComponent(entity, "velocity", { x: 1, y: 1 });
 
-    const { system, seen } = createMovementSystem();
+    const { system, seen } = createMovementSystem(ecs);
     ecs.addSystem(system);
     expect(system.onEntityAdded).toHaveBeenCalledWith(entity, ecs);
 
-    ecs.update();
+    ecs.update(0);
     expect(seen[0]).toEqual([entity]);
   });
 
   it("notifies a deleted system about all of its entities", () => {
     const ecs = createWorld();
-    const { system, seen } = createMovementSystem();
+    const { system, seen } = createMovementSystem(ecs);
     ecs.addSystem(system);
 
     const entity = ecs.addEntity();
@@ -120,8 +129,82 @@ describe("system membership", () => {
     ecs.deleteSystem(system);
     expect(system.onEntityRemoved).toHaveBeenCalledWith(entity, ecs);
 
-    ecs.update();
+    ecs.update(0);
     expect(seen).toEqual([]);
+  });
+});
+
+describe("system update context", () => {
+  it("passes deltaTime through to systems", () => {
+    const ecs = createWorld();
+    const receivedDeltas: number[] = [];
+    ecs.addSystem({
+      requiredComponents: [],
+      update({ deltaTime }) {
+        receivedDeltas.push(deltaTime);
+      },
+    });
+
+    ecs.update(1 / 60);
+    ecs.update(0.25);
+    expect(receivedDeltas).toEqual([1 / 60, 0.25]);
+  });
+
+  it("gives systems non-optional access to their required components", () => {
+    const ecs = createWorld();
+    const entity = ecs.addEntity();
+    ecs.addComponent(entity, "position", { x: 0, y: 0 });
+    ecs.addComponent(entity, "velocity", { x: 3, y: 4 });
+
+    ecs.addSystem(
+      ecs.createSystem({
+        requiredComponents: ["position", "velocity"],
+        update({ entities, components, deltaTime }) {
+          for (const movingEntity of entities) {
+            const position = components.get(movingEntity, "position");
+            const velocity = components.get(movingEntity, "velocity");
+            position.x += velocity.x * deltaTime;
+            position.y += velocity.y * deltaTime;
+          }
+        },
+      }),
+    );
+
+    ecs.update(2);
+    expect(ecs.getComponent(entity, "position")).toEqual({ x: 6, y: 8 });
+  });
+
+  it("rejects undeclared component names at compile time", () => {
+    const ecs = createWorld();
+    // never added to the world; this test is a compile-time assertion
+    ecs.createSystem({
+      requiredComponents: ["position"],
+      update({ entities, components }) {
+        for (const entity of entities) {
+          // @ts-expect-error "velocity" is not in requiredComponents
+          components.get(entity, "velocity");
+        }
+      },
+    });
+    expect(true).toBe(true);
+  });
+
+  it("exposes the world so systems can mutate entities", () => {
+    const ecs = createWorld();
+    const entity = ecs.addEntity();
+    ecs.addComponent(entity, "health", 1);
+
+    ecs.addSystem({
+      requiredComponents: ["health"],
+      update({ entities, ecs: world }) {
+        for (const damagedEntity of entities) {
+          world.addComponent(damagedEntity, "position", { x: 0, y: 0 });
+        }
+      },
+    });
+
+    ecs.update(0);
+    expect(ecs.getComponent(entity, "position")).toEqual({ x: 0, y: 0 });
   });
 });
 
@@ -134,7 +217,7 @@ describe("deferred destruction", () => {
     ecs.destroyEntity(entity);
     expect(ecs.getComponent(entity, "health")).toBe(50);
 
-    ecs.update();
+    ecs.update(0);
     expect(ecs.getComponent(entity, "health")).toBeUndefined();
     expect(ecs.hasComponent(entity, "health")).toBe(false);
   });
@@ -150,27 +233,29 @@ describe("deferred destruction", () => {
     ecs.destroyEntity(entity);
     expect(onEntityRemoved).not.toHaveBeenCalled();
 
-    ecs.update();
+    ecs.update(0);
     expect(onEntityRemoved).toHaveBeenCalledWith(entity, ecs);
   });
 
   it("destroys entities queued from inside a system update", () => {
     const ecs = createWorld();
-    ecs.addSystem({
-      requiredComponents: ["health"],
-      update(entities, world) {
-        for (const entity of entities) {
-          if (world.getComponent(entity, "health")! <= 0) world.destroyEntity(entity);
-        }
-      },
-    });
+    ecs.addSystem(
+      ecs.createSystem({
+        requiredComponents: ["health"],
+        update({ entities, components, ecs: world }) {
+          for (const entity of entities) {
+            if (components.get(entity, "health") <= 0) world.destroyEntity(entity);
+          }
+        },
+      }),
+    );
 
     const dead = ecs.addEntity();
     ecs.addComponent(dead, "health", 0);
     const alive = ecs.addEntity();
     ecs.addComponent(alive, "health", 100);
 
-    ecs.update();
+    ecs.update(0);
     expect(ecs.hasComponent(dead, "health")).toBe(false);
     expect(ecs.hasComponent(alive, "health")).toBe(true);
   });

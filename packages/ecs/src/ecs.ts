@@ -1,14 +1,32 @@
 export type Entity = number;
 
-export interface System<Components> {
-  readonly requiredComponents: (keyof Components)[];
-  update?(entities: Set<Entity>, ecs: ECS<Components>): void;
+/** Read access to the components a system declared in requiredComponents. */
+export interface ComponentAccessor<Components, Required extends keyof Components> {
+  /**
+   * Returns the entity's component, without `| undefined`: membership in the
+   * system's entity set guarantees presence. Throws if the component is
+   * missing, which is only possible for entities from somewhere else.
+   */
+  get<Name extends Required>(entity: Entity, name: Name): Components[Name];
+}
+
+/** Everything a system receives on each update tick. */
+export interface SystemContext<Components, Required extends keyof Components> {
+  entities: ReadonlySet<Entity>;
+  components: ComponentAccessor<Components, Required>;
+  deltaTime: number;
+  ecs: ECS<Components>;
+}
+
+export interface System<Components, Required extends keyof Components = keyof Components> {
+  readonly requiredComponents: readonly Required[];
+  update?(context: SystemContext<Components, Required>): void;
   onEntityAdded?(entity: Entity, ecs: ECS<Components>): void;
   onEntityRemoved?(entity: Entity, ecs: ECS<Components>): void;
 }
 
 export class ECS<Components> {
-  private systems = new Map<System<Components>, Set<Entity>>();
+  private systems = new Map<System<Components, keyof Components>, Set<Entity>>();
   private entities = new Map<Entity, Map<keyof Components, Components[keyof Components]>>();
 
   private nextEntityId = 0;
@@ -34,6 +52,18 @@ export class ECS<Components> {
     return this.entities.get(entity)?.get(name) as Components[Name] | undefined;
   }
 
+  /**
+   * Returns the component, throwing if it is absent. Inside a system prefer
+   * context.components.get, which restricts names to the declared requirements.
+   */
+  get<Name extends keyof Components>(entity: Entity, name: Name): Components[Name] {
+    const component = this.entities.get(entity)?.get(name);
+    if (component === undefined) {
+      throw new Error(`Entity ${entity} has no "${String(name)}" component`);
+    }
+    return component as Components[Name];
+  }
+
   hasComponent(entity: Entity, name: keyof Components): boolean {
     return this.entities.get(entity)?.has(name) ?? false;
   }
@@ -53,32 +83,40 @@ export class ECS<Components> {
   }
 
   // Systems
-  createSystem<CreatedSystem extends System<Components>>(system: CreatedSystem): CreatedSystem {
+  /**
+   * Identity helper that exists for type inference: Components flows from the
+   * ECS instance and the requiredComponents literal narrows Required, so the
+   * system's context.components only accepts declared names.
+   */
+  createSystem<const Required extends keyof Components>(
+    system: System<Components, Required>,
+  ): System<Components, Required> {
     return system;
   }
 
-  addSystem(system: System<Components>): void {
-    this.systems.set(system, new Set());
+  addSystem<const Required extends keyof Components>(system: System<Components, Required>): void {
+    this.systems.set(system as System<Components, keyof Components>, new Set());
 
     for (const entity of this.entities.keys()) {
       this.updateEntitySystems(entity);
     }
   }
 
-  deleteSystem(system: System<Components>): void {
-    if (system.onEntityRemoved) {
-      for (const entity of this.systems.get(system)!) {
-        system.onEntityRemoved(entity, this);
+  deleteSystem<Required extends keyof Components>(system: System<Components, Required>): void {
+    const storedSystem = system as System<Components, keyof Components>;
+    if (storedSystem.onEntityRemoved) {
+      for (const entity of this.systems.get(storedSystem)!) {
+        storedSystem.onEntityRemoved(entity, this);
       }
     }
 
-    this.systems.delete(system);
+    this.systems.delete(storedSystem);
   }
 
   // Main loop
-  update(): void {
+  update(deltaTime: number): void {
     for (const [system, entities] of this.systems.entries()) {
-      system.update?.(entities, this);
+      system.update?.({ entities, components: this, deltaTime, ecs: this });
     }
 
     this.destroyEntities();
