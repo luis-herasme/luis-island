@@ -25,6 +25,12 @@ importers:
         specifier: ^6.0.0
         version: 6.4.3
 
+  packages/ecs:
+    devDependencies:
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7
+
   packages/math:
     devDependencies:
       vitest:

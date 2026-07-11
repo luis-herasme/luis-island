@@ -10,6 +10,7 @@
     "noEmit": true,
     "lib": ["ES2022", "DOM"],
     "paths": {
+      "@game/ecs": ["./packages/ecs/src/index.ts"],
       "@game/math": ["./packages/math/src/index.ts"],
       "@game/render": ["./packages/render/src/index.ts"]
     }
