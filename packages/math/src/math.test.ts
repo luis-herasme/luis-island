@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Matrix3, Matrix4, Quaternion, Transform2D, Transform3D, Vector3 } from "./index";
+import { Matrix3x3, Matrix4x4, Quaternion, Transform2D, Transform3D, Vector3 } from "./index";
 
 const closeTo = (actual: number, expected: number) => expect(actual).toBeCloseTo(expected, 5);
 
@@ -27,21 +27,21 @@ describe("Quaternion", () => {
 
   it("quaternion rotation matches matrix rotation", () => {
     const quaternion = new Quaternion().setFromEuler(0.4, -1.1, 2.3);
-    const matrix = new Matrix4().compose(new Vector3(), quaternion, new Vector3(1, 1, 1));
+    const matrix = new Matrix4x4().compose(new Vector3(), quaternion, new Vector3(1, 1, 1));
     const rotatedByQuaternion = new Vector3(1, 2, 3).applyQuaternion(quaternion);
-    const rotatedByMatrix = new Vector3(1, 2, 3).applyMatrix4(matrix);
+    const rotatedByMatrix = new Vector3(1, 2, 3).applyMatrix4x4(matrix);
     closeTo(rotatedByQuaternion.x, rotatedByMatrix.x);
     closeTo(rotatedByQuaternion.y, rotatedByMatrix.y);
     closeTo(rotatedByQuaternion.z, rotatedByMatrix.z);
   });
 });
 
-describe("Matrix4", () => {
+describe("Matrix4x4", () => {
   it("multiplying by inverse gives identity", () => {
     const quaternion = new Quaternion().setFromEuler(0.5, 0.3, -0.7);
-    const matrix = new Matrix4().compose(new Vector3(1, 2, 3), quaternion, new Vector3(2, 3, 4));
-    const product = new Matrix4().multiplyMatrices(matrix, matrix.clone().invert());
-    const identity = new Matrix4();
+    const matrix = new Matrix4x4().compose(new Vector3(1, 2, 3), quaternion, new Vector3(2, 3, 4));
+    const product = new Matrix4x4().multiplyMatrices(matrix, matrix.clone().invert());
+    const identity = new Matrix4x4();
     for (let index = 0; index < 16; index++) {
       closeTo(product.elements[index]!, identity.elements[index]!);
     }
@@ -49,23 +49,23 @@ describe("Matrix4", () => {
 
   it("compose applies scale then rotation then translation", () => {
     const quaternion = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2);
-    const matrix = new Matrix4().compose(new Vector3(10, 0, 0), quaternion, new Vector3(2, 2, 2));
+    const matrix = new Matrix4x4().compose(new Vector3(10, 0, 0), quaternion, new Vector3(2, 2, 2));
     // scale → (2,0,0), rotate → (0,2,0), translate → (10,2,0)
-    const vector = new Vector3(1, 0, 0).applyMatrix4(matrix);
+    const vector = new Vector3(1, 0, 0).applyMatrix4x4(matrix);
     closeTo(vector.x, 10);
     closeTo(vector.y, 2);
     closeTo(vector.z, 0);
   });
 
   it("perspective maps near plane center to z = -1", () => {
-    const matrix = new Matrix4().perspective(Math.PI / 2, 1, 0.1, 100);
-    const vector = new Vector3(0, 0, -0.1).applyMatrix4(matrix);
+    const matrix = new Matrix4x4().perspective(Math.PI / 2, 1, 0.1, 100);
+    const vector = new Vector3(0, 0, -0.1).applyMatrix4x4(matrix);
     closeTo(vector.z, -1);
   });
 
   it("lookAt from +Z toward origin behaves like inverse translation", () => {
-    const matrix = new Matrix4().lookAt(new Vector3(0, 0, 5), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
-    const vector = new Vector3(0, 0, 0).applyMatrix4(matrix);
+    const matrix = new Matrix4x4().lookAt(new Vector3(0, 0, 5), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
+    const vector = new Vector3(0, 0, 0).applyMatrix4x4(matrix);
     closeTo(vector.z, -5);
   });
 });
@@ -98,7 +98,7 @@ describe("Transform3D", () => {
     transform.scale.set(2, 2, 2);
     transform.rotation.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 3);
 
-    const recovered = Transform3D.fromMatrix4(transform.toMatrix4());
+    const recovered = Transform3D.fromMatrix4x4(transform.toMatrix4x4());
 
     closeTo(recovered.translation.x, 1);
     closeTo(recovered.translation.y, 2);
@@ -118,8 +118,8 @@ describe("Transform3D", () => {
     const transform = new Transform3D();
     transform.translation.set(7, 8, 9);
 
-    const target = new Matrix4();
-    const result = transform.toMatrix4(target);
+    const target = new Matrix4x4();
+    const result = transform.toMatrix4x4(target);
 
     expect(result).toBe(target);
     closeTo(target.elements[12]!, 7);
@@ -128,11 +128,11 @@ describe("Transform3D", () => {
   });
 });
 
-describe("Matrix3", () => {
+describe("Matrix3x3", () => {
   it("normal matrix of a uniform-scale matrix keeps normals parallel", () => {
     const quaternion = new Quaternion().setFromEuler(0.2, 0.4, 0.6);
-    const world = new Matrix4().compose(new Vector3(5, 6, 7), quaternion, new Vector3(3, 3, 3));
-    const normalMatrix = new Matrix3().normalFromMatrix4(world);
+    const world = new Matrix4x4().compose(new Vector3(5, 6, 7), quaternion, new Vector3(3, 3, 3));
+    const normalMatrix = new Matrix3x3().normalFromMatrix4x4(world);
     // rotate a normal both ways and compare directions
     const rotatedByQuaternion = new Vector3(0, 1, 0).applyQuaternion(quaternion);
     const elements = normalMatrix.elements;

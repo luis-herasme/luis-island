@@ -46,12 +46,12 @@ export class Renderer {
 
     // Each mesh's material keeps a reference to the uniform value, so every
     // mesh gets its own copy instead of a view into a shared scratch matrix.
-    const cameraInverseMatrix = camera.transform.toMatrix4().invert();
+    const cameraInverseMatrix = camera.transform.toMatrix4x4().invert();
 
     for (const mesh of scene) {
       mesh.material.setUniform("transform", Uniform.matrix4(mesh.transform.toArray()));
-      mesh.material.setUniform("projection_matrix", Uniform.fromMatrix4(camera.projectionMatrix));
-      mesh.material.setUniform("camera_inverse_matrix", Uniform.fromMatrix4(cameraInverseMatrix));
+      mesh.material.setUniform("projection_matrix", Uniform.fromMatrix4x4(camera.projectionMatrix));
+      mesh.material.setUniform("camera_inverse_matrix", Uniform.fromMatrix4x4(cameraInverseMatrix));
 
       this.render(mesh);
     }

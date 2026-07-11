@@ -1,5 +1,5 @@
 import type { Quaternion } from "./quaternion";
-import type { Matrix4 } from "./matrix4";
+import type { Matrix4x4 } from "./matrix4x4";
 
 export class Vector3 {
   constructor(
@@ -105,7 +105,7 @@ export class Vector3 {
     return this;
   }
 
-  applyMatrix4(matrix: Matrix4): this {
+  applyMatrix4x4(matrix: Matrix4x4): this {
     const { x, y, z } = this;
     const elements = matrix.elements;
     const w = elements[3]! * x + elements[7]! * y + elements[11]! * z + elements[15]!;

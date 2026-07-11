@@ -2,7 +2,7 @@ import type { Vector3 } from "./vector3";
 import type { Quaternion } from "./quaternion";
 
 /** 4x4 matrix, column-major storage (WebGL convention). */
-export class Matrix4 {
+export class Matrix4x4 {
   elements = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
   identity(): this {
@@ -10,16 +10,16 @@ export class Matrix4 {
     return this;
   }
 
-  copy(matrix: Matrix4): this {
+  copy(matrix: Matrix4x4): this {
     this.elements.set(matrix.elements);
     return this;
   }
 
-  clone(): Matrix4 {
-    return new Matrix4().copy(this);
+  clone(): Matrix4x4 {
+    return new Matrix4x4().copy(this);
   }
 
-  multiplyMatrices(left: Matrix4, right: Matrix4): this {
+  multiplyMatrices(left: Matrix4x4, right: Matrix4x4): this {
     const leftElements = left.elements;
     const rightElements = right.elements;
     const elements = this.elements;
@@ -44,7 +44,7 @@ export class Matrix4 {
     return this;
   }
 
-  multiply(matrix: Matrix4): this {
+  multiply(matrix: Matrix4x4): this {
     return this.multiplyMatrices(this, matrix);
   }
 
@@ -256,4 +256,4 @@ export class Matrix4 {
 }
 
 /** Scratch matrix for decompose(), so extracting the rotation allocates nothing. */
-const sharedDecomposeMatrix = new Matrix4();
+const sharedDecomposeMatrix = new Matrix4x4();

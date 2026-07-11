@@ -1,8 +1,8 @@
-import { Matrix4, Transform3D } from "@game/math";
+import { Matrix4x4, Transform3D } from "@game/math";
 
 export class PerspectiveCamera {
   transform = new Transform3D();
-  projectionMatrix = new Matrix4();
+  projectionMatrix = new Matrix4x4();
 
   constructor(
     /** Vertical field of view, radians. */

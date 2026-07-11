@@ -146,7 +146,7 @@ material.setUniform("albedo", Uniform.texture(await Texture.fromImageUrl("/crate
 
 `Uniform` is a discriminated union with a factory per GLSL type —
 `Uniform.float`, `.vector2/3/4`, `.int*`, `.unsignedInt*`, `.matrix2/3/4`,
-`.texture` — plus conversions: `Uniform.fromMatrix4(matrix)`,
+`.texture` — plus conversions: `Uniform.fromMatrix4x4(matrix)`,
 `Uniform.fromTransform3D(transform)`.
 
 Textures carry their sampler settings (`minificationFilter`,
@@ -204,7 +204,7 @@ One draw call renders all 100 quads; per-frame animation is just more
 ## Transforms and the camera
 
 `Transform3D` (scale + quaternion rotation + translation, composed into a
-`Matrix4` on demand) and its 2D analog `Transform2D` **live in `@game/math`**,
+`Matrix4x4` on demand) and its 2D analog `Transform2D` **live in `@game/math`**,
 not here — the TRS value type is math, and this package is just one of its
 consumers. There is no parent/child hierarchy anywhere on purpose; composing
 transforms is the ECS's job.
@@ -253,7 +253,7 @@ directly to opt out of the convention (as the instanced example does).
 ## Deviations from suricato
 
 - `glam` is replaced by `@game/math` (`Vector2`, `Vector3`, `Quaternion`,
-  `Matrix4`), and Rust enums by `as const` objects or discriminated unions.
+  `Matrix4x4`), and Rust enums by `as const` objects or discriminated unions.
 - suricato's `transform.rs` has no counterpart file here: `Transform2D` and
   `Transform3D` moved to `@game/math`, since the TRS value type is math and
   the renderer should not own the concept.
@@ -274,7 +274,7 @@ directly to opt out of the convention (as the instanced example does).
   is soft on high-DPI displays.
 - The renderer creates its own full-window canvas and tracks `window` size;
   embedding into an existing layout needs an accepted-canvas constructor.
-- `Transform3D.toMatrix4()`/`toArray()` allocate per call, so `renderScene`
+- `Transform3D.toMatrix4x4()`/`toArray()` allocate per call, so `renderScene`
   allocates per mesh per frame — irrelevant at playground scale, worth a
   scratch-buffer pass before rendering thousands of meshes.
 - Backface culling is not enabled (matches suricato); depth testing is.

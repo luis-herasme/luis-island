@@ -1,4 +1,4 @@
-import type { Matrix3, Matrix4, Transform2D, Transform3D } from "@game/math";
+import type { Matrix3x3, Matrix4x4, Transform2D, Transform3D } from "@game/math";
 import type { Texture } from "./texture";
 
 // Mutable arrays because the WebGL uniform setters take Float32List/Int32List/Uint32List.
@@ -46,8 +46,8 @@ export const Uniform = {
 
   texture: (texture: Texture): Uniform => ({ kind: "texture", texture }),
 
-  fromMatrix3: (matrix: Matrix3): Uniform => ({ kind: "matrix3", value: matrix.elements }),
-  fromMatrix4: (matrix: Matrix4): Uniform => ({ kind: "matrix4", value: matrix.elements }),
+  fromMatrix3x3: (matrix: Matrix3x3): Uniform => ({ kind: "matrix3", value: matrix.elements }),
+  fromMatrix4x4: (matrix: Matrix4x4): Uniform => ({ kind: "matrix4", value: matrix.elements }),
   fromTransform2D: (transform: Transform2D): Uniform => ({ kind: "matrix3", value: transform.toArray() }),
   fromTransform3D: (transform: Transform3D): Uniform => ({ kind: "matrix4", value: transform.toArray() }),
 };

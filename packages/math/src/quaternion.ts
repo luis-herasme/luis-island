@@ -1,5 +1,5 @@
 import type { Vector3 } from "./vector3";
-import type { Matrix4 } from "./matrix4";
+import type { Matrix4x4 } from "./matrix4x4";
 
 export class Quaternion {
   constructor(
@@ -55,7 +55,7 @@ export class Quaternion {
   }
 
   /** Extract rotation from a matrix whose upper 3x3 is a pure rotation (no scale). */
-  setFromRotationMatrix(matrix: Matrix4): this {
+  setFromRotationMatrix(matrix: Matrix4x4): this {
     const elements = matrix.elements;
     const m00 = elements[0]!, m01 = elements[4]!, m02 = elements[8]!;
     const m10 = elements[1]!, m11 = elements[5]!, m12 = elements[9]!;

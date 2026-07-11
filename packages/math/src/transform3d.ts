@@ -1,4 +1,4 @@
-import { Matrix4 } from "./matrix4";
+import { Matrix4x4 } from "./matrix4x4";
 import { Quaternion } from "./quaternion";
 import { Vector3 } from "./vector3";
 
@@ -12,16 +12,16 @@ export class Transform3D {
   rotation = new Quaternion();
   translation = new Vector3();
 
-  toMatrix4(target = new Matrix4()): Matrix4 {
+  toMatrix4x4(target = new Matrix4x4()): Matrix4x4 {
     return target.compose(this.translation, this.rotation, this.scale);
   }
 
   /** Column-major 4x4 matrix elements, ready for a mat4 uniform or attribute. */
   toArray(): Float32Array {
-    return this.toMatrix4().elements;
+    return this.toMatrix4x4().elements;
   }
 
-  static fromMatrix4(matrix: Matrix4): Transform3D {
+  static fromMatrix4x4(matrix: Matrix4x4): Transform3D {
     const transform = new Transform3D();
     matrix.decompose(transform.translation, transform.rotation, transform.scale);
     return transform;

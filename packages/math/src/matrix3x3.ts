@@ -1,7 +1,7 @@
-import type { Matrix4 } from "./matrix4";
+import type { Matrix4x4 } from "./matrix4x4";
 
 /** 3x3 matrix, column-major storage. Mainly used as a normal matrix. */
-export class Matrix3 {
+export class Matrix3x3 {
   elements = new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
   identity(): this {
@@ -9,8 +9,8 @@ export class Matrix3 {
     return this;
   }
 
-  /** Upper-left 3x3 of a Matrix4. */
-  fromMatrix4(matrix: Matrix4): this {
+  /** Upper-left 3x3 of a Matrix4x4. */
+  fromMatrix4x4(matrix: Matrix4x4): this {
     const source = matrix.elements;
     const elements = this.elements;
     elements[0] = source[0]!; elements[1] = source[1]!; elements[2] = source[2]!;
@@ -59,7 +59,7 @@ export class Matrix3 {
   }
 
   /** transpose(inverse(upper3x3(m))) — correct normal transform under non-uniform scale. */
-  normalFromMatrix4(matrix: Matrix4): this {
-    return this.fromMatrix4(matrix).invert().transpose();
+  normalFromMatrix4x4(matrix: Matrix4x4): this {
+    return this.fromMatrix4x4(matrix).invert().transpose();
   }
 }

@@ -99,8 +99,8 @@ export class Animation {
       const parentNode = this.nodes[parentIndex]!;
       const node = this.nodes[nodeIndex]!;
 
-      const globalMatrix = parentNode.globalTransform.toMatrix4().multiply(node.localTransform.toMatrix4());
-      node.globalTransform = Transform3D.fromMatrix4(globalMatrix);
+      const globalMatrix = parentNode.globalTransform.toMatrix4x4().multiply(node.localTransform.toMatrix4x4());
+      node.globalTransform = Transform3D.fromMatrix4x4(globalMatrix);
 
       for (const childIndex of node.childrenIndexList) {
         nodesToUpdate.push([childIndex, nodeIndex]);
