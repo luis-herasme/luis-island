@@ -51,7 +51,7 @@ void main() {
 
 // The renderer creates a full-window canvas and appends it to the body.
 const renderer = new Renderer();
-const camera = PerspectiveCamera.withWindowAspect();
+const camera = new PerspectiveCamera({ aspect: window.innerWidth / window.innerHeight });
 
 // GEOMETRY_BOX is a template built once at module load; copy() hands this
 // mesh its own instance, safe to mutate. Everything stays CPU-side until

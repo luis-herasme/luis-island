@@ -27,11 +27,6 @@ export class PerspectiveCamera {
     this.updateProjectionMatrix();
   }
 
-  /** A camera whose aspect ratio matches the browser window. */
-  static withWindowAspect(): PerspectiveCamera {
-    return new PerspectiveCamera({ aspect: window.innerWidth / window.innerHeight });
-  }
-
   updateProjectionMatrix(): void {
     this.projectionMatrix.perspective(this.fieldOfView, this.aspect, this.near, this.far);
   }

@@ -46,7 +46,7 @@ void main() {
 
 const renderer = new Renderer();
 
-const camera = PerspectiveCamera.withWindowAspect();
+const camera = new PerspectiveCamera({ aspect: window.innerWidth / window.innerHeight });
 camera.transform.translation.set(0, 9, 12);
 camera.transform.rotation.setFromRotationMatrix(
   new Matrix4x4().targetTo(camera.transform.translation, new Vector3(0, 0, 0), new Vector3(0, 1, 0)),

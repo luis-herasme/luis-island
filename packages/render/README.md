@@ -224,8 +224,7 @@ transforms is the ECS's job.
 
 `PerspectiveCamera` is projection parameters plus a `Transform3D`. Move the
 camera by setting its transform; `renderScene` derives the view matrix by
-inverting it. `PerspectiveCamera.withWindowAspect()` matches the window, and
-`renderScene` keeps the aspect updated when the window resizes.
+inverting it, and keeps the aspect updated when the window resizes.
 
 ## Examples
 
