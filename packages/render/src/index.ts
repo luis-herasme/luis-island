@@ -2,7 +2,7 @@ export { Animation } from "./animation";
 export type { AnimationNode, Channel, Interpolation, NodeProperty, Sampler, SamplerValues } from "./animation";
 export { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 export { PerspectiveCamera } from "./camera";
-export { Geometry } from "./geometry";
+export { GEOMETRY_BOX, GEOMETRY_QUAD, GEOMETRY_QUAD_INTERLEAVED, Geometry } from "./geometry";
 export { IndexBuffer, IndexKind } from "./index-buffer";
 export { Material, MaterialResources } from "./material";
 export { Mesh, RenderPrimitive } from "./mesh";

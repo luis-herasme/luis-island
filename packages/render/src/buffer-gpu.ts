@@ -41,6 +41,11 @@ export class BufferGPU {
     return this.bufferCPU.length;
   }
 
+  /** A fresh buffer with a snapshot of the CPU bytes and its own GPU state. */
+  copy(): BufferGPU {
+    return new BufferGPU({ kind: this.kind, usage: this.usage, bufferCPU: this.bufferCPU.slice() });
+  }
+
   getBufferGPU(gl: WebGL2RenderingContext): WebGLBuffer {
     if (!this.bufferGPU) this.createBufferGPU(gl);
     return this.bufferGPU!;

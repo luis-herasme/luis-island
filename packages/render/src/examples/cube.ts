@@ -7,7 +7,7 @@
  */
 import { Quaternion, Vector3 } from "@game/math";
 import { PerspectiveCamera } from "../camera";
-import { Geometry } from "../geometry";
+import { GEOMETRY_BOX } from "../geometry";
 import { Material } from "../material";
 import { Mesh } from "../mesh";
 import { Renderer } from "../renderer";
@@ -53,10 +53,11 @@ void main() {
 const renderer = new Renderer();
 const camera = PerspectiveCamera.withWindowAspect();
 
-// Construction is GPU-free: Geometry.box() only builds CPU-side buffers
-// (positions, normals, uvs, indices). The first render uploads them.
+// GEOMETRY_BOX is a template built once at module load; copy() hands this
+// mesh its own instance, safe to mutate. Everything stays CPU-side until
+// the first render uploads it.
 const cube = new Mesh({
-  geometry: Geometry.box(),
+  geometry: GEOMETRY_BOX.copy(),
   material: new Material({
     vertexShaderSource: VERTEX_SHADER_SOURCE,
     fragmentShaderSource: FRAGMENT_SHADER_SOURCE,

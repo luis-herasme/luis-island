@@ -9,7 +9,7 @@
 import { ECS } from "@game/ecs";
 import { Keyboard } from "@game/input";
 import { Matrix4x4, Transform3D, Vector3 } from "@game/math";
-import { Geometry, Material, Mesh, PerspectiveCamera, Renderer, Uniform, startAnimationLoop } from "@game/render";
+import { GEOMETRY_BOX, Material, Mesh, PerspectiveCamera, Renderer, Uniform, startAnimationLoop } from "@game/render";
 
 // ---------------------------------------------------------------------------
 // Rendering setup — one shader for everything, colored per mesh
@@ -83,7 +83,7 @@ function spawnBox(options: {
 
   const entity = ecs.addEntity();
   ecs.addComponent(entity, "transform", transform);
-  ecs.addComponent(entity, "mesh", new Mesh({ geometry: Geometry.box(), material }));
+  ecs.addComponent(entity, "mesh", new Mesh({ geometry: GEOMETRY_BOX.copy(), material }));
   return entity;
 }
 

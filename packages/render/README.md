@@ -116,9 +116,19 @@ what WebGL requires — one location holds at most a vec4).
 
 **A `Geometry`** is the bundle the mesh draws: any number of plain and
 interleaved buffers, optional `IndexBuffer`, optional `instanceCount`.
-Factories cover the common cases: `Geometry.box()`, `Geometry.quad()`,
-`Geometry.quadInterleaved()`, `Geometry.quadInstanced(count)`, and
-`Geometry.fromOBJ(parseOBJ(text))`.
+
+The built-in shapes are **templates** — canonical geometries built once at
+module load, never rendered themselves. `copy()` hands you an independent
+instance (fresh bytes, own GPU state) that is safe to mutate:
+
+```ts
+new Mesh({ geometry: GEOMETRY_BOX.copy(), material });
+```
+
+`GEOMETRY_QUAD` and `GEOMETRY_QUAD_INTERLEAVED` work the same way. Sharing a
+template directly across meshes is only safe for geometry nothing ever writes
+to. Parameterized shapes stay factories: `Geometry.quadInstanced(count)` and
+`Geometry.fromOBJ(parseOBJ(text))` build fresh geometry per call.
 
 ### Updating vertex data at runtime
 
@@ -223,8 +233,8 @@ Each example is a self-contained, commented, runnable file. They typecheck as
 part of `pnpm check`, so they cannot drift from the real API:
 
 - [`src/examples/cube.ts`](./src/examples/cube.ts) — the core workflow: a
-  `Geometry.box()`, custom GLSL, a `base_color` uniform set by name, per-frame
-  transform animation through the `renderScene` convention.
+  `GEOMETRY_BOX.copy()`, custom GLSL, a `base_color` uniform set by name,
+  per-frame transform animation through the `renderScene` convention.
 - [`src/examples/instancing.ts`](./src/examples/instancing.ts) — a 10×10 grid
   in one instanced draw call: a divisor-1 `mat3` attribute, per-frame
   `setVertex` updates, and direct `renderer.render` without a camera.

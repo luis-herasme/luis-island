@@ -28,6 +28,13 @@ export class IndexBuffer {
     this.buffer = options.buffer;
   }
 
+  /** A fresh, independent index buffer with the current bytes. */
+  copy(): IndexBuffer {
+    const copied = new IndexBuffer({ kind: this.kind, count: this.count, buffer: this.buffer.copy() });
+    copied.offset = this.offset;
+    return copied;
+  }
+
   static fromUint8(values: Uint8Array | readonly number[], usage: BufferUsage = BufferUsage.StaticDraw): IndexBuffer {
     const bytes = values instanceof Uint8Array ? values : Uint8Array.from(values);
     return new IndexBuffer({

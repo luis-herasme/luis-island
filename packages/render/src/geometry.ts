@@ -1,7 +1,7 @@
+import { Transform2D } from "@game/math";
 import { BufferUsage } from "./buffer-gpu";
 import { IndexBuffer } from "./index-buffer";
 import type { OBJ } from "./obj-parser";
-import { Transform2D } from "@game/math";
 import { Data, InterleavedVertexBuffer, VertexBuffer, VertexData } from "./vertex-buffer";
 
 // prettier-ignore
@@ -59,6 +59,23 @@ export class Geometry {
     this.indices = options.indices ?? null;
     this.vertexBuffers = options.vertexBuffers ?? [];
     this.interleavedVertexBuffers = options.interleavedVertexBuffers ?? [];
+  }
+
+  /**
+   * A fresh, independent geometry: every buffer's current bytes are copied
+   * and the copy gets its own GPU state. This is how the GEOMETRY_* template
+   * constants are turned into instances you can safely mutate.
+   */
+  copy(): Geometry {
+    return new Geometry({
+      vertexCount: this.vertexCount,
+      instanceCount: this.instanceCount,
+      indices: this.indices?.copy() ?? null,
+      vertexBuffers: this.vertexBuffers.map((vertexBuffer) => vertexBuffer.copy()),
+      interleavedVertexBuffers: this.interleavedVertexBuffers.map((interleavedVertexBuffer) =>
+        interleavedVertexBuffer.copy(),
+      ),
+    });
   }
 
   getVertexBuffer(name: string): VertexBuffer | null {
@@ -119,118 +136,6 @@ export class Geometry {
     );
   }
 
-  static box(): Geometry {
-    // prettier-ignore
-    const positions: [number, number, number][] = [
-      // Front face (z = 0.5)
-      [0.5, 0.5, 0.5],   // 0: Top-right
-      [0.5, -0.5, 0.5],  // 1: Bottom-right
-      [-0.5, -0.5, 0.5], // 2: Bottom-left
-      [-0.5, 0.5, 0.5],  // 3: Top-left
-      // Back face (z = -0.5)
-      [0.5, 0.5, -0.5],   // 4: Top-right
-      [-0.5, 0.5, -0.5],  // 5: Top-left
-      [-0.5, -0.5, -0.5], // 6: Bottom-left
-      [0.5, -0.5, -0.5],  // 7: Bottom-right
-      // Top face (y = 0.5)
-      [0.5, 0.5, -0.5],  // 8: Back-right
-      [0.5, 0.5, 0.5],   // 9: Front-right
-      [-0.5, 0.5, 0.5],  // 10: Front-left
-      [-0.5, 0.5, -0.5], // 11: Back-left
-      // Bottom face (y = -0.5)
-      [0.5, -0.5, 0.5],   // 12: Front-right
-      [0.5, -0.5, -0.5],  // 13: Back-right
-      [-0.5, -0.5, -0.5], // 14: Back-left
-      [-0.5, -0.5, 0.5],  // 15: Front-left
-      // Right face (x = 0.5)
-      [0.5, 0.5, -0.5],  // 16: Top-back
-      [0.5, -0.5, -0.5], // 17: Bottom-back
-      [0.5, -0.5, 0.5],  // 18: Bottom-front
-      [0.5, 0.5, 0.5],   // 19: Top-front
-      // Left face (x = -0.5)
-      [-0.5, 0.5, 0.5],   // 20: Top-front
-      [-0.5, -0.5, 0.5],  // 21: Bottom-front
-      [-0.5, -0.5, -0.5], // 22: Bottom-back
-      [-0.5, 0.5, -0.5],  // 23: Top-back
-    ];
-
-    // prettier-ignore
-    const normals: [number, number, number][] = [
-      // Front face
-      [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1],
-      // Back face
-      [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1],
-      // Top face
-      [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
-      // Bottom face
-      [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0],
-      // Right face
-      [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
-      // Left face
-      [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0],
-    ];
-
-    // prettier-ignore
-    const uvs: [number, number][] = [
-      // Front face
-      [1, 1], [1, 0], [0, 0], [0, 1],
-      // Back face
-      [0, 1], [1, 1], [1, 0], [0, 0],
-      // Top face
-      [1, 1], [1, 0], [0, 0], [0, 1],
-      // Bottom face
-      [1, 0], [1, 1], [0, 1], [0, 0],
-      // Right face
-      [0, 1], [0, 0], [1, 0], [1, 1],
-      // Left face
-      [1, 1], [1, 0], [0, 0], [0, 1],
-    ];
-
-    // prettier-ignore
-    const indices = [
-      0, 1, 2, 2, 3, 0,       // Front face
-      4, 5, 6, 6, 7, 4,       // Back face
-      8, 9, 10, 10, 11, 8,    // Top face
-      12, 13, 14, 14, 15, 12, // Bottom face
-      16, 17, 18, 18, 19, 16, // Right face
-      20, 21, 22, 22, 23, 20, // Left face
-    ];
-
-    return new Geometry({
-      vertexCount: 24,
-      indices: IndexBuffer.fromUint8(indices),
-      vertexBuffers: [
-        new VertexBuffer({ vertexData: new VertexData({ name: "position", data: Data.vector3(positions) }) }),
-        new VertexBuffer({ vertexData: new VertexData({ name: "normal", data: Data.vector3(normals) }) }),
-        new VertexBuffer({ vertexData: new VertexData({ name: "uv", data: Data.vector2(uvs) }) }),
-      ],
-    });
-  }
-
-  static quad(): Geometry {
-    const [position, color, uvs] = quadData();
-
-    return new Geometry({
-      vertexCount: 4,
-      indices: IndexBuffer.fromUint8(QUAD_INDICES),
-      vertexBuffers: [
-        new VertexBuffer({ vertexData: position }),
-        new VertexBuffer({ vertexData: color }),
-        new VertexBuffer({ vertexData: uvs }),
-      ],
-    });
-  }
-
-  static quadInterleaved(): Geometry {
-    const [position, color, uvs] = quadData();
-
-    return new Geometry({
-      vertexCount: 4,
-      indices: IndexBuffer.fromUint8(QUAD_INDICES),
-      interleavedVertexBuffers: [new InterleavedVertexBuffer({ attributes: [position, color, uvs] })],
-    });
-  }
-
   static quadInstanced(count: number): Geometry {
     const [position, color, uvs] = quadData();
 
@@ -277,3 +182,129 @@ function identityTransforms(count: number): VertexData {
 
   return new VertexData({ name: "transform", data: Data.matrix3(transforms), divisor: 1 });
 }
+
+function createBoxGeometry(): Geometry {
+  // prettier-ignore
+  const positions: [number, number, number][] = [
+    // Front face (z = 0.5)
+    [0.5, 0.5, 0.5],   // 0: Top-right
+    [0.5, -0.5, 0.5],  // 1: Bottom-right
+    [-0.5, -0.5, 0.5], // 2: Bottom-left
+    [-0.5, 0.5, 0.5],  // 3: Top-left
+    // Back face (z = -0.5)
+    [0.5, 0.5, -0.5],   // 4: Top-right
+    [-0.5, 0.5, -0.5],  // 5: Top-left
+    [-0.5, -0.5, -0.5], // 6: Bottom-left
+    [0.5, -0.5, -0.5],  // 7: Bottom-right
+    // Top face (y = 0.5)
+    [0.5, 0.5, -0.5],  // 8: Back-right
+    [0.5, 0.5, 0.5],   // 9: Front-right
+    [-0.5, 0.5, 0.5],  // 10: Front-left
+    [-0.5, 0.5, -0.5], // 11: Back-left
+    // Bottom face (y = -0.5)
+    [0.5, -0.5, 0.5],   // 12: Front-right
+    [0.5, -0.5, -0.5],  // 13: Back-right
+    [-0.5, -0.5, -0.5], // 14: Back-left
+    [-0.5, -0.5, 0.5],  // 15: Front-left
+    // Right face (x = 0.5)
+    [0.5, 0.5, -0.5],  // 16: Top-back
+    [0.5, -0.5, -0.5], // 17: Bottom-back
+    [0.5, -0.5, 0.5],  // 18: Bottom-front
+    [0.5, 0.5, 0.5],   // 19: Top-front
+    // Left face (x = -0.5)
+    [-0.5, 0.5, 0.5],   // 20: Top-front
+    [-0.5, -0.5, 0.5],  // 21: Bottom-front
+    [-0.5, -0.5, -0.5], // 22: Bottom-back
+    [-0.5, 0.5, -0.5],  // 23: Top-back
+  ];
+
+  // prettier-ignore
+  const normals: [number, number, number][] = [
+    // Front face
+    [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1],
+    // Back face
+    [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1],
+    // Top face
+    [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
+    // Bottom face
+    [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0],
+    // Right face
+    [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
+    // Left face
+    [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0],
+  ];
+
+  // prettier-ignore
+  const uvs: [number, number][] = [
+    // Front face
+    [1, 1], [1, 0], [0, 0], [0, 1],
+    // Back face
+    [0, 1], [1, 1], [1, 0], [0, 0],
+    // Top face
+    [1, 1], [1, 0], [0, 0], [0, 1],
+    // Bottom face
+    [1, 0], [1, 1], [0, 1], [0, 0],
+    // Right face
+    [0, 1], [0, 0], [1, 0], [1, 1],
+    // Left face
+    [1, 1], [1, 0], [0, 0], [0, 1],
+  ];
+
+  // prettier-ignore
+  const indices = [
+    0, 1, 2, 2, 3, 0,       // Front face
+    4, 5, 6, 6, 7, 4,       // Back face
+    8, 9, 10, 10, 11, 8,    // Top face
+    12, 13, 14, 14, 15, 12, // Bottom face
+    16, 17, 18, 18, 19, 16, // Right face
+    20, 21, 22, 22, 23, 20, // Left face
+  ];
+
+  return new Geometry({
+    vertexCount: 24,
+    indices: IndexBuffer.fromUint8(indices),
+    vertexBuffers: [
+      new VertexBuffer({ vertexData: new VertexData({ name: "position", data: Data.vector3(positions) }) }),
+      new VertexBuffer({ vertexData: new VertexData({ name: "normal", data: Data.vector3(normals) }) }),
+      new VertexBuffer({ vertexData: new VertexData({ name: "uv", data: Data.vector2(uvs) }) }),
+    ],
+  });
+}
+
+function createQuadGeometry(): Geometry {
+  const [position, color, uvs] = quadData();
+
+  return new Geometry({
+    vertexCount: 4,
+    indices: IndexBuffer.fromUint8(QUAD_INDICES),
+    vertexBuffers: [
+      new VertexBuffer({ vertexData: position }),
+      new VertexBuffer({ vertexData: color }),
+      new VertexBuffer({ vertexData: uvs }),
+    ],
+  });
+}
+
+function createQuadInterleavedGeometry(): Geometry {
+  const [position, color, uvs] = quadData();
+
+  return new Geometry({
+    vertexCount: 4,
+    indices: IndexBuffer.fromUint8(QUAD_INDICES),
+    interleavedVertexBuffers: [new InterleavedVertexBuffer({ attributes: [position, color, uvs] })],
+  });
+}
+
+// The built-in shapes are templates: canonical geometries built once at module
+// load, never rendered or mutated themselves. Call copy() to get an instance
+// of your own — sharing a template directly across meshes is only safe for
+// geometry that nothing ever writes to.
+
+/** Unit box centered at the origin, with per-face normals and uvs. */
+export const GEOMETRY_BOX = createBoxGeometry();
+
+/** Unit quad in the XY plane with per-vertex colors and uvs. */
+export const GEOMETRY_QUAD = createQuadGeometry();
+
+/** The same quad with its attributes interleaved into a single buffer. */
+export const GEOMETRY_QUAD_INTERLEAVED = createQuadInterleavedGeometry();

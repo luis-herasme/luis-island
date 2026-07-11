@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Transform2D } from "@game/math";
+import { GEOMETRY_BOX, GEOMETRY_QUAD_INTERLEAVED } from "./geometry";
 import { parseOBJ } from "./obj-parser";
 import {
   Data,
@@ -92,6 +93,33 @@ describe("vertex layouts", () => {
 
     expect(interleaved.updateVertex("pair", 1, [7, 8])).toBe(true);
     expect(interleaved.updateVertex("missing", 0, [0])).toBe(false);
+  });
+});
+
+describe("geometry templates", () => {
+  it("copy() produces an independent geometry", () => {
+    const first = GEOMETRY_BOX.copy();
+    const second = GEOMETRY_BOX.copy();
+
+    expect(first).not.toBe(second);
+    expect(first.vertexCount).toBe(GEOMETRY_BOX.vertexCount);
+    expect(first.vertexBuffers.length).toBe(GEOMETRY_BOX.vertexBuffers.length);
+
+    // Nothing GPU-facing is shared: each copy owns its buffers and layouts.
+    expect(first.indices).not.toBe(second.indices);
+    expect(first.indices!.buffer).not.toBe(GEOMETRY_BOX.indices!.buffer);
+    expect(first.vertexBuffers[0]!.buffer).not.toBe(second.vertexBuffers[0]!.buffer);
+    expect(first.vertexBuffers[0]!.layout).not.toBe(GEOMETRY_BOX.vertexBuffers[0]!.layout);
+  });
+
+  it("copies interleaved buffers independently too", () => {
+    const first = GEOMETRY_QUAD_INTERLEAVED.copy();
+
+    expect(first.interleavedVertexBuffers[0]!).not.toBe(GEOMETRY_QUAD_INTERLEAVED.interleavedVertexBuffers[0]!);
+    expect(first.interleavedVertexBuffers[0]!.buffer).not.toBe(
+      GEOMETRY_QUAD_INTERLEAVED.interleavedVertexBuffers[0]!.buffer,
+    );
+    expect(first.interleavedVertexBuffers[0]!.stride).toBe(GEOMETRY_QUAD_INTERLEAVED.interleavedVertexBuffers[0]!.stride);
   });
 });
 

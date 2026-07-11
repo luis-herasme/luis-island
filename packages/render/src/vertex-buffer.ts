@@ -328,6 +328,12 @@ type VertexBufferOptions = {
   usage?: BufferUsage;
 };
 
+/** Prepared internal state, used by copy(). */
+type VertexBufferState = {
+  layout: VertexLayout;
+  buffer: BufferGPU;
+};
+
 /**
  * A buffer holding a single vertex attribute, with the layout describing
  * how the GPU should interpret it.
@@ -336,13 +342,23 @@ export class VertexBuffer {
   readonly layout: VertexLayout;
   readonly buffer: BufferGPU;
 
-  constructor(options: VertexBufferOptions) {
-    this.layout = vertexLayoutFromVertexData(options.vertexData);
-    this.buffer = new BufferGPU({
-      kind: BufferKind.ArrayBuffer,
-      usage: options.usage ?? BufferUsage.StaticDraw,
-      bufferCPU: options.vertexData.data.bytes,
-    });
+  constructor(options: VertexBufferOptions | VertexBufferState) {
+    if ("vertexData" in options) {
+      this.layout = vertexLayoutFromVertexData(options.vertexData);
+      this.buffer = new BufferGPU({
+        kind: BufferKind.ArrayBuffer,
+        usage: options.usage ?? BufferUsage.StaticDraw,
+        bufferCPU: options.vertexData.data.bytes,
+      });
+    } else {
+      this.layout = options.layout;
+      this.buffer = options.buffer;
+    }
+  }
+
+  /** A fresh, independent buffer with the same layout and current bytes. */
+  copy(): VertexBuffer {
+    return new VertexBuffer({ layout: { ...this.layout }, buffer: this.buffer.copy() });
   }
 
   get vertexCount(): number {
@@ -359,20 +375,39 @@ type InterleavedVertexBufferOptions = {
   usage?: BufferUsage;
 };
 
+/** Prepared internal state, used by copy(). */
+type InterleavedVertexBufferState = {
+  layouts: VertexLayout[];
+  buffer: BufferGPU;
+};
+
 /** A single buffer holding several vertex attributes interleaved per vertex. */
 export class InterleavedVertexBuffer {
   readonly buffer: BufferGPU;
   readonly layouts: VertexLayout[];
 
-  constructor(options: InterleavedVertexBufferOptions) {
-    const { attributes } = options;
-    if (attributes.length === 0) throw new Error("Vertex buffer cannot be empty");
+  constructor(options: InterleavedVertexBufferOptions | InterleavedVertexBufferState) {
+    if ("attributes" in options) {
+      const { attributes } = options;
+      if (attributes.length === 0) throw new Error("Vertex buffer cannot be empty");
 
-    this.layouts = vertexLayoutsFromVertexDataArray(attributes);
-    this.buffer = new BufferGPU({
-      kind: BufferKind.ArrayBuffer,
-      usage: options.usage ?? BufferUsage.StaticDraw,
-      bufferCPU: interleave(attributes, this.layouts),
+      this.layouts = vertexLayoutsFromVertexDataArray(attributes);
+      this.buffer = new BufferGPU({
+        kind: BufferKind.ArrayBuffer,
+        usage: options.usage ?? BufferUsage.StaticDraw,
+        bufferCPU: interleave(attributes, this.layouts),
+      });
+    } else {
+      this.layouts = options.layouts;
+      this.buffer = options.buffer;
+    }
+  }
+
+  /** A fresh, independent buffer with the same layouts and current bytes. */
+  copy(): InterleavedVertexBuffer {
+    return new InterleavedVertexBuffer({
+      layouts: this.layouts.map((layout) => ({ ...layout })),
+      buffer: this.buffer.copy(),
     });
   }
 
