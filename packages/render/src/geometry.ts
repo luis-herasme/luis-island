@@ -1,8 +1,8 @@
-import { BufferUsage } from "./bufferGPU";
-import { IndexBuffer } from "./indexBuffer";
-import type { OBJ } from "./objParser";
+import { BufferUsage } from "./buffer-gpu";
+import { IndexBuffer } from "./index-buffer";
+import type { OBJ } from "./obj-parser";
 import { Transform2D } from "@game/math";
-import { Data, InterleavedVertexBuffer, VertexBuffer, VertexData } from "./vertexBuffer";
+import { Data, InterleavedVertexBuffer, VertexBuffer, VertexData } from "./vertex-buffer";
 
 // prettier-ignore
 const QUAD_POSITIONS: [number, number][] = [

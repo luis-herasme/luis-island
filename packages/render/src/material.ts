@@ -1,6 +1,6 @@
 import type { Uniform } from "./uniforms";
-import type { VertexLayout } from "./vertexBuffer";
-import { componentTypeSizeInBytes } from "./vertexBuffer";
+import type { VertexLayout } from "./vertex-buffer";
+import { componentTypeSizeInBytes } from "./vertex-buffer";
 
 /** User-written GLSL plus the uniform values to feed it. */
 export class Material {

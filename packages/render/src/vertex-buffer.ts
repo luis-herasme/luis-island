@@ -1,4 +1,4 @@
-import { BufferGPU, BufferKind, BufferUsage } from "./bufferGPU";
+import { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 
 export const VertexComponentType = {
   Byte: 0x1400, // gl.BYTE

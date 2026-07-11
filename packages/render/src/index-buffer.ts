@@ -1,4 +1,4 @@
-import { BufferGPU, BufferKind, BufferUsage } from "./bufferGPU";
+import { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 
 /** Element indices for indexed drawing (gl.drawElements). */
 export class IndexBuffer {

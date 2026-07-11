@@ -1,4 +1,4 @@
-import { BufferGPU, BufferKind, BufferUsage } from "./bufferGPU";
+import { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 import type { Renderer } from "./renderer";
 
 export class UniformBufferObject {

@@ -1,13 +1,13 @@
 export { Animation } from "./animation";
 export type { AnimationNode, Channel, Interpolation, NodeProperty, Sampler, SamplerValues } from "./animation";
-export { BufferGPU, BufferKind, BufferUsage } from "./bufferGPU";
+export { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 export { PerspectiveCamera } from "./camera";
 export { Geometry } from "./geometry";
-export { IndexBuffer } from "./indexBuffer";
+export { IndexBuffer } from "./index-buffer";
 export { Material, MaterialResources } from "./material";
 export { Mesh, RenderPrimitive } from "./mesh";
-export { parseOBJ } from "./objParser";
-export type { OBJ } from "./objParser";
+export { parseOBJ } from "./obj-parser";
+export type { OBJ } from "./obj-parser";
 export { Renderer } from "./renderer";
 export {
   MagnificationFilter,
@@ -18,7 +18,7 @@ export {
   Wrap,
 } from "./texture";
 export type { ImagePixelData, TextureData } from "./texture";
-export { UniformBufferObject } from "./uniformBufferObject";
+export { UniformBufferObject } from "./uniform-buffer-object";
 export { Uniform } from "./uniforms";
 export { fetchBytes, fetchImage, fetchText, generateId, startAnimationLoop } from "./utils";
 export {
@@ -31,5 +31,5 @@ export {
   encodeComponents,
   vertexLayoutFromVertexData,
   vertexLayoutsFromVertexDataArray,
-} from "./vertexBuffer";
-export type { VertexLayout } from "./vertexBuffer";
+} from "./vertex-buffer";
+export type { VertexLayout } from "./vertex-buffer";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Transform2D } from "@game/math";
-import { parseOBJ } from "./objParser";
+import { parseOBJ } from "./obj-parser";
 import {
   Data,
   InterleavedVertexBuffer,
@@ -8,7 +8,7 @@ import {
   VertexComponentType,
   VertexData,
   vertexLayoutsFromVertexDataArray,
-} from "./vertexBuffer";
+} from "./vertex-buffer";
 
 describe("Data", () => {
   it("derives count, component metadata and bytes", () => {
