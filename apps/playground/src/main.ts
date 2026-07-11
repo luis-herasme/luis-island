@@ -1,61 +1,60 @@
 import { Quaternion, Vector3 } from "@game/math";
-import {
-  AmbientLight,
-  DirectionalLight,
-  Mesh,
-  MeshLambertMaterial,
-  PerspectiveCamera,
-  Renderer,
-  Scene,
-  createBoxGeometry,
-  createPlaneGeometry,
-} from "@game/render";
+import { Geometry, Material, Mesh, PerspectiveCamera, Renderer, startAnimationLoop } from "@game/render";
 
-const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-const renderer = new Renderer(canvas);
+const VERTEX_SHADER_SOURCE = `#version 300 es
+in vec3 position;
+in vec3 normal;
+in vec2 uv;
 
-const scene = new Scene();
+uniform mat4 projection_matrix;
+uniform mat4 camera_inverse_matrix;
+uniform mat4 transform;
 
-const cube = new Mesh(createBoxGeometry(1, 1, 1), new MeshLambertMaterial(0xff8844));
-cube.position.set(0, 0.5, 0);
-scene.add(cube);
+out vec3 v_normal;
+out vec2 v_uv;
 
-const ground = new Mesh(createPlaneGeometry(10, 10), new MeshLambertMaterial(0x334455));
-ground.position.set(0, -0.5, 0);
-scene.add(ground);
+void main() {
+  v_uv = uv;
+  v_normal = mat3(transform) * normal;
+  gl_Position = projection_matrix * camera_inverse_matrix * transform * vec4(position, 1.0);
+}`;
 
-const sun = new DirectionalLight(0xffffff, 1);
-sun.direction.set(-0.5, -1, -0.3);
-scene.add(sun);
-scene.add(new AmbientLight(0xffffff, 0.25));
+const FRAGMENT_SHADER_SOURCE = `#version 300 es
+precision mediump float;
 
-const camera = new PerspectiveCamera(Math.PI / 3, 1, 0.1, 100);
-camera.position.set(2.5, 2, 3.5);
-camera.lookAt(cube.position);
+in vec3 v_normal;
+in vec2 v_uv;
 
-function resize() {
-  renderer.setSize(window.innerWidth, window.innerHeight, window.devicePixelRatio);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-}
-window.addEventListener("resize", resize);
-resize();
+out vec4 fragment_color;
+
+void main() {
+  vec3 normal = normalize(v_normal);
+  float light = max(0.2, dot(normal, normalize(vec3(0.25, 1.0, 1.0))));
+
+  // Simple checker pattern so the faces read without a texture
+  float checker = mod(floor(v_uv.x * 4.0) + floor(v_uv.y * 4.0), 2.0);
+  vec3 base = mix(vec3(1.0, 0.53, 0.27), vec3(0.9, 0.42, 0.18), checker);
+
+  fragment_color = vec4(base * light, 1.0);
+}`;
+
+const renderer = new Renderer();
+const camera = PerspectiveCamera.withWindowAspect();
+
+const cube = new Mesh(Geometry.box(), new Material(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE));
+cube.transform.translation.z = -5;
+
+const scene = [cube];
 
 const spin = new Quaternion();
 const yAxis = new Vector3(0, 1, 0);
-const xAxis = new Vector3(1, 0, 0);
+const zAxis = new Vector3(0, 0, 1);
 
-let previousTime = performance.now();
-function frame(currentTime: number) {
-  const deltaTime = Math.min((currentTime - previousTime) / 1000, 0.1);
-  previousTime = currentTime;
+startAnimationLoop(() => {
+  spin.setFromAxisAngle(yAxis, 0.01);
+  cube.transform.rotation.multiply(spin);
+  spin.setFromAxisAngle(zAxis, 0.005);
+  cube.transform.rotation.multiply(spin);
 
-  spin.setFromAxisAngle(yAxis, deltaTime * 0.9);
-  cube.quaternion.premultiply(spin);
-  spin.setFromAxisAngle(xAxis, deltaTime * 0.4);
-  cube.quaternion.premultiply(spin);
-
-  renderer.render(scene, camera);
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
+  renderer.renderScene(scene, camera);
+});

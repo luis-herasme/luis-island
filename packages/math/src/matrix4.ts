@@ -80,6 +80,43 @@ export class Matrix4 {
     return this;
   }
 
+  /** Split into position, rotation and scale (TRS). Inverse of compose. */
+  decompose(position: Vector3, quaternion: Quaternion, scale: Vector3): this {
+    const elements = this.elements;
+
+    let scaleX = Math.hypot(elements[0]!, elements[1]!, elements[2]!);
+    const scaleY = Math.hypot(elements[4]!, elements[5]!, elements[6]!);
+    const scaleZ = Math.hypot(elements[8]!, elements[9]!, elements[10]!);
+
+    // A negative determinant means the basis is mirrored; fold the flip into one axis.
+    const determinant =
+      elements[0]! * (elements[5]! * elements[10]! - elements[6]! * elements[9]!) -
+      elements[4]! * (elements[1]! * elements[10]! - elements[2]! * elements[9]!) +
+      elements[8]! * (elements[1]! * elements[6]! - elements[2]! * elements[5]!);
+    if (determinant < 0) scaleX = -scaleX;
+
+    position.set(elements[12]!, elements[13]!, elements[14]!);
+    scale.set(scaleX, scaleY, scaleZ);
+
+    const rotation = sharedDecomposeMatrix.copy(this);
+    const rotationElements = rotation.elements;
+    const inverseScaleX = 1 / scaleX;
+    const inverseScaleY = 1 / scaleY;
+    const inverseScaleZ = 1 / scaleZ;
+    rotationElements[0] = rotationElements[0]! * inverseScaleX;
+    rotationElements[1] = rotationElements[1]! * inverseScaleX;
+    rotationElements[2] = rotationElements[2]! * inverseScaleX;
+    rotationElements[4] = rotationElements[4]! * inverseScaleY;
+    rotationElements[5] = rotationElements[5]! * inverseScaleY;
+    rotationElements[6] = rotationElements[6]! * inverseScaleY;
+    rotationElements[8] = rotationElements[8]! * inverseScaleZ;
+    rotationElements[9] = rotationElements[9]! * inverseScaleZ;
+    rotationElements[10] = rotationElements[10]! * inverseScaleZ;
+    quaternion.setFromRotationMatrix(rotation);
+
+    return this;
+  }
+
   invert(): this {
     // general 4x4 inverse via cofactors (gl-matrix derivation);
     // a## are matrix entries, b## are 2x2 sub-determinants
@@ -217,3 +254,6 @@ export class Matrix4 {
     return this;
   }
 }
+
+/** Scratch matrix for decompose(), so extracting the rotation allocates nothing. */
+const sharedDecomposeMatrix = new Matrix4();

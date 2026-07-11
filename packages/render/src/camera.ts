@@ -1,20 +1,23 @@
 import { Matrix4 } from "@game/math";
-import { Node } from "./node";
+import { Transform3D } from "./transform";
 
-export class PerspectiveCamera extends Node {
+export class PerspectiveCamera {
+  transform = new Transform3D();
   projectionMatrix = new Matrix4();
-  /** World-to-camera transform, recomputed by the renderer each frame. */
-  viewMatrix = new Matrix4();
 
   constructor(
     /** Vertical field of view, radians. */
-    public fieldOfView = Math.PI / 3,
+    public fieldOfView = (45 * Math.PI) / 180,
     public aspect = 1,
     public near = 0.1,
-    public far = 1000,
+    public far = 100,
   ) {
-    super();
     this.updateProjectionMatrix();
+  }
+
+  /** A camera whose aspect ratio matches the browser window. */
+  static withWindowAspect(): PerspectiveCamera {
+    return new PerspectiveCamera(undefined, window.innerWidth / window.innerHeight);
   }
 
   updateProjectionMatrix(): void {
