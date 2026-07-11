@@ -78,6 +78,21 @@ export class Geometry {
     });
   }
 
+  /**
+   * A copy of this geometry set up for instanced drawing: instanceCount is
+   * set and a per-instance mat3 "transform" attribute (divisor 1, dynamic,
+   * initialized to identity) is added. Animate instances by writing to it:
+   * geometry.getVertexBuffer("transform")!.setVertex(index, values).
+   */
+  instanced(count: number): Geometry {
+    const copied = this.copy();
+    copied.instanceCount = count;
+    copied.vertexBuffers.push(
+      new VertexBuffer({ vertexData: identityTransforms(count), usage: BufferUsage.DynamicDraw }),
+    );
+    return copied;
+  }
+
   getVertexBuffer(name: string): VertexBuffer | null {
     return this.vertexBuffers.find((vertexBuffer) => vertexBuffer.layout.name === name) ?? null;
   }
@@ -136,33 +151,6 @@ export class Geometry {
     );
   }
 
-  static quadInstanced(count: number): Geometry {
-    const [position, color, uvs] = quadData();
-
-    return new Geometry({
-      vertexCount: 4,
-      instanceCount: count,
-      indices: IndexBuffer.fromUint8(QUAD_INDICES),
-      vertexBuffers: [
-        new VertexBuffer({ vertexData: color }),
-        new VertexBuffer({ vertexData: position }),
-        new VertexBuffer({ vertexData: uvs }),
-        new VertexBuffer({ vertexData: identityTransforms(count), usage: BufferUsage.DynamicDraw }),
-      ],
-    });
-  }
-
-  static quadInstancedAndInterleaved(count: number): Geometry {
-    const [position, color, uvs] = quadData();
-
-    return new Geometry({
-      vertexCount: 4,
-      instanceCount: count,
-      indices: IndexBuffer.fromUint8(QUAD_INDICES),
-      interleavedVertexBuffers: [new InterleavedVertexBuffer({ attributes: [position, color, uvs] })],
-      vertexBuffers: [new VertexBuffer({ vertexData: identityTransforms(count) })],
-    });
-  }
 }
 
 function quadData(): [VertexData, VertexData, VertexData] {

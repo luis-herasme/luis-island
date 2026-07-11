@@ -7,7 +7,7 @@
  * `pnpm check`; point the playground's import here to run it live.
  */
 import { Transform2D } from "@game/math";
-import { Geometry } from "../geometry";
+import { GEOMETRY_QUAD } from "../geometry";
 import { Material } from "../material";
 import { Mesh } from "../mesh";
 import { Renderer } from "../renderer";
@@ -40,12 +40,12 @@ void main() {
 
 const renderer = new Renderer();
 
-// quadInstanced(count) bundles the per-vertex quad data with a per-instance
-// "transform" attribute (DynamicDraw) and sets geometry.instanceCount, which
+// instanced(count) copies the quad template, adds a per-instance "transform"
+// attribute (DynamicDraw, identity) and sets geometry.instanceCount, which
 // is what turns the draw into drawElementsInstanced.
 const GRID_SIZE = 10;
 const grid = new Mesh({
-  geometry: Geometry.quadInstanced(GRID_SIZE * GRID_SIZE),
+  geometry: GEOMETRY_QUAD.instanced(GRID_SIZE * GRID_SIZE),
   material: new Material({
     vertexShaderSource: VERTEX_SHADER_SOURCE,
     fragmentShaderSource: FRAGMENT_SHADER_SOURCE,

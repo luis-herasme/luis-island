@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Transform2D } from "@game/math";
-import { GEOMETRY_BOX, GEOMETRY_QUAD_INTERLEAVED } from "./geometry";
+import { GEOMETRY_BOX, GEOMETRY_QUAD, GEOMETRY_QUAD_INTERLEAVED } from "./geometry";
 import { parseOBJ } from "./obj-parser";
 import {
   Data,
@@ -110,6 +110,19 @@ describe("geometry templates", () => {
     expect(first.indices!.buffer).not.toBe(GEOMETRY_BOX.indices!.buffer);
     expect(first.vertexBuffers[0]!.buffer).not.toBe(second.vertexBuffers[0]!.buffer);
     expect(first.vertexBuffers[0]!.layout).not.toBe(GEOMETRY_BOX.vertexBuffers[0]!.layout);
+  });
+
+  it("instanced() returns an instanced copy and leaves the template alone", () => {
+    const grid = GEOMETRY_QUAD.instanced(3);
+
+    expect(grid.instanceCount).toBe(3);
+    const transformBuffer = grid.getVertexBuffer("transform");
+    expect(transformBuffer).not.toBeNull();
+    expect(transformBuffer!.layout.divisor).toBe(1);
+    expect(transformBuffer!.vertexCount).toBe(3);
+
+    expect(GEOMETRY_QUAD.instanceCount).toBeNull();
+    expect(GEOMETRY_QUAD.getVertexBuffer("transform")).toBeNull();
   });
 
   it("copies interleaved buffers independently too", () => {

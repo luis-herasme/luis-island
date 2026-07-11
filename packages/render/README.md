@@ -127,8 +127,9 @@ new Mesh({ geometry: GEOMETRY_BOX.copy(), material });
 
 `GEOMETRY_QUAD` and `GEOMETRY_QUAD_INTERLEAVED` work the same way. Sharing a
 template directly across meshes is only safe for geometry nothing ever writes
-to. Parameterized shapes stay factories: `Geometry.quadInstanced(count)` and
-`Geometry.fromOBJ(parseOBJ(text))` build fresh geometry per call.
+to. `instanced(count)` builds on `copy()`: it returns an instanced copy of
+any geometry (see [Instancing](#instancing)). Loading stays a factory —
+`Geometry.fromOBJ(parseOBJ(text))` builds fresh geometry per call.
 
 ### Updating vertex data at runtime
 
@@ -198,10 +199,12 @@ check the name first.
 
 Instancing is not a feature bolted onto the renderer — it falls out of the
 data model. Give an attribute `divisor: 1` and it advances once per instance;
-set `instanceCount` on the geometry and the draw becomes instanced:
+set `instanceCount` on the geometry and the draw becomes instanced.
+`instanced(count)` does both to a copy of any geometry, adding a dynamic
+per-instance mat3 `transform` attribute initialized to identity:
 
 ```ts
-const geometry = Geometry.quadInstanced(100); // has a mat3 "transform" attribute, divisor 1
+const geometry = GEOMETRY_QUAD.instanced(100);
 
 const transforms = geometry.getVertexBuffer("transform")!;
 for (let instance = 0; instance < 100; instance++) {
