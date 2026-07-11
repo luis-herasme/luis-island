@@ -55,10 +55,13 @@ const camera = PerspectiveCamera.withWindowAspect();
 
 // Construction is GPU-free: Geometry.box() only builds CPU-side buffers
 // (positions, normals, uvs, indices). The first render uploads them.
-const cube = new Mesh(
-  Geometry.box(),
-  new Material(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE),
-);
+const cube = new Mesh({
+  geometry: Geometry.box(),
+  material: new Material({
+    vertexShaderSource: VERTEX_SHADER_SOURCE,
+    fragmentShaderSource: FRAGMENT_SHADER_SOURCE,
+  }),
+});
 cube.transform.translation.z = -5;
 cube.material.setUniform("base_color", Uniform.vector3([1, 0.53, 0.27]));
 
@@ -75,5 +78,5 @@ startAnimationLoop(() => {
 
   // renderScene clears, handles window resizes, injects the camera uniforms
   // and draws each mesh.
-  renderer.renderScene([cube], camera);
+  renderer.renderScene({ scene: [cube], camera });
 });

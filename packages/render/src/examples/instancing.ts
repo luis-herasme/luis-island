@@ -44,10 +44,13 @@ const renderer = new Renderer();
 // "transform" attribute (DynamicDraw) and sets geometry.instanceCount, which
 // is what turns the draw into drawElementsInstanced.
 const GRID_SIZE = 10;
-const grid = new Mesh(
-  Geometry.quadInstanced(GRID_SIZE * GRID_SIZE),
-  new Material(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE),
-);
+const grid = new Mesh({
+  geometry: Geometry.quadInstanced(GRID_SIZE * GRID_SIZE),
+  material: new Material({
+    vertexShaderSource: VERTEX_SHADER_SOURCE,
+    fragmentShaderSource: FRAGMENT_SHADER_SOURCE,
+  }),
+});
 
 // Each instance gets its own Transform2D, written into the shared buffer.
 const instanceTransforms: Transform2D[] = [];

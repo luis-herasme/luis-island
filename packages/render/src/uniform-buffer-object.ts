@@ -1,14 +1,23 @@
 import { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 import type { Renderer } from "./renderer";
 
+type UniformBufferObjectOptions = {
+  renderer: Renderer;
+  bufferCPU: Uint8Array;
+};
+
 export class UniformBufferObject {
   readonly gl: WebGL2RenderingContext;
   readonly buffer: BufferGPU;
   bindingPoint: number | null = null;
 
-  constructor(renderer: Renderer, bufferCPU: Uint8Array) {
-    this.gl = renderer.gl;
-    this.buffer = new BufferGPU(BufferKind.UniformBuffer, BufferUsage.DynamicDraw, bufferCPU.slice());
+  constructor(options: UniformBufferObjectOptions) {
+    this.gl = options.renderer.gl;
+    this.buffer = new BufferGPU({
+      kind: BufferKind.UniformBuffer,
+      usage: BufferUsage.DynamicDraw,
+      bufferCPU: options.bufferCPU.slice(),
+    });
     this.buffer.onBeforeRender(this.gl);
   }
 

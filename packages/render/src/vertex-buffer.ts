@@ -217,19 +217,29 @@ export class Data {
   }
 }
 
+type VertexDataOptions = {
+  /** Must match an `in` declaration in the vertex shader. */
+  name: string;
+  data: Data;
+  /** 0 advances per vertex (default); 1 advances per instance. */
+  divisor?: number;
+  /** Map integer data to [0, 1] / [-1, 1] in the shader. */
+  normalize?: boolean;
+};
+
 /**
  * A single attribute's raw data before it's processed into a VertexBuffer
  * or an InterleavedVertexBuffer.
  */
 export class VertexData {
+  readonly name: string;
+  readonly data: Data;
   divisor: number;
   normalize: boolean;
 
-  constructor(
-    readonly name: string,
-    readonly data: Data,
-    options: { divisor?: number; normalize?: boolean } = {},
-  ) {
+  constructor(options: VertexDataOptions) {
+    this.name = options.name;
+    this.data = options.data;
     this.divisor = options.divisor ?? 0;
     this.normalize = options.normalize ?? false;
   }
@@ -313,6 +323,11 @@ function alignTo(value: number, alignment: number): number {
   return value + (alignment - remainder);
 }
 
+type VertexBufferOptions = {
+  vertexData: VertexData;
+  usage?: BufferUsage;
+};
+
 /**
  * A buffer holding a single vertex attribute, with the layout describing
  * how the GPU should interpret it.
@@ -321,9 +336,13 @@ export class VertexBuffer {
   readonly layout: VertexLayout;
   readonly buffer: BufferGPU;
 
-  constructor(vertexData: VertexData, usage: BufferUsage = BufferUsage.StaticDraw) {
-    this.layout = vertexLayoutFromVertexData(vertexData);
-    this.buffer = new BufferGPU(BufferKind.ArrayBuffer, usage, vertexData.data.bytes);
+  constructor(options: VertexBufferOptions) {
+    this.layout = vertexLayoutFromVertexData(options.vertexData);
+    this.buffer = new BufferGPU({
+      kind: BufferKind.ArrayBuffer,
+      usage: options.usage ?? BufferUsage.StaticDraw,
+      bufferCPU: options.vertexData.data.bytes,
+    });
   }
 
   get vertexCount(): number {
@@ -335,16 +354,26 @@ export class VertexBuffer {
   }
 }
 
+type InterleavedVertexBufferOptions = {
+  attributes: readonly VertexData[];
+  usage?: BufferUsage;
+};
+
 /** A single buffer holding several vertex attributes interleaved per vertex. */
 export class InterleavedVertexBuffer {
   readonly buffer: BufferGPU;
   readonly layouts: VertexLayout[];
 
-  constructor(data: readonly VertexData[], usage: BufferUsage = BufferUsage.StaticDraw) {
-    if (data.length === 0) throw new Error("Vertex buffer cannot be empty");
+  constructor(options: InterleavedVertexBufferOptions) {
+    const { attributes } = options;
+    if (attributes.length === 0) throw new Error("Vertex buffer cannot be empty");
 
-    this.layouts = vertexLayoutsFromVertexDataArray(data);
-    this.buffer = new BufferGPU(BufferKind.ArrayBuffer, usage, interleave(data, this.layouts));
+    this.layouts = vertexLayoutsFromVertexDataArray(attributes);
+    this.buffer = new BufferGPU({
+      kind: BufferKind.ArrayBuffer,
+      usage: options.usage ?? BufferUsage.StaticDraw,
+      bufferCPU: interleave(attributes, this.layouts),
+    });
   }
 
   get vertexCount(): number {

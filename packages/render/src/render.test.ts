@@ -40,9 +40,9 @@ describe("Data", () => {
 
 describe("vertex layouts", () => {
   it("gives a single attribute a tightly packed layout", () => {
-    const vertexBuffer = new VertexBuffer(
-      new VertexData("position", Data.vector2([[0, 0], [1, 0], [1, 1]])),
-    );
+    const vertexBuffer = new VertexBuffer({
+      vertexData: new VertexData({ name: "position", data: Data.vector2([[0, 0], [1, 0], [1, 1]]) }),
+    });
 
     expect(vertexBuffer.layout.offset).toBe(0);
     expect(vertexBuffer.layout.stride).toBe(8);
@@ -51,8 +51,8 @@ describe("vertex layouts", () => {
 
   it("aligns interleaved attribute offsets to their component size", () => {
     const layouts = vertexLayoutsFromVertexDataArray([
-      new VertexData("color", Data.unsignedByteVector3([[255, 0, 0]]), { normalize: true }),
-      new VertexData("position", Data.vector2([[0, 0]])),
+      new VertexData({ name: "color", data: Data.unsignedByteVector3([[255, 0, 0]]), normalize: true }),
+      new VertexData({ name: "position", data: Data.vector2([[0, 0]]) }),
     ]);
 
     const [color, position] = layouts;
@@ -67,10 +67,12 @@ describe("vertex layouts", () => {
   });
 
   it("interleaves attribute bytes per vertex", () => {
-    const interleaved = new InterleavedVertexBuffer([
-      new VertexData("scalar", Data.unsignedByte([1, 2])),
-      new VertexData("pair", Data.unsignedShortVector2([[3, 4], [5, 6]])),
-    ]);
+    const interleaved = new InterleavedVertexBuffer({
+      attributes: [
+        new VertexData({ name: "scalar", data: Data.unsignedByte([1, 2]) }),
+        new VertexData({ name: "pair", data: Data.unsignedShortVector2([[3, 4], [5, 6]]) }),
+      ],
+    });
 
     expect(interleaved.stride).toBe(6);
     expect(interleaved.vertexCount).toBe(2);
@@ -81,10 +83,12 @@ describe("vertex layouts", () => {
   });
 
   it("updates a single vertex attribute in an interleaved buffer", () => {
-    const interleaved = new InterleavedVertexBuffer([
-      new VertexData("scalar", Data.unsignedByte([1, 2])),
-      new VertexData("pair", Data.unsignedShortVector2([[3, 4], [5, 6]])),
-    ]);
+    const interleaved = new InterleavedVertexBuffer({
+      attributes: [
+        new VertexData({ name: "scalar", data: Data.unsignedByte([1, 2]) }),
+        new VertexData({ name: "pair", data: Data.unsignedShortVector2([[3, 4], [5, 6]]) }),
+      ],
+    });
 
     expect(interleaved.updateVertex("pair", 1, [7, 8])).toBe(true);
     expect(interleaved.updateVertex("missing", 0, [0])).toBe(false);

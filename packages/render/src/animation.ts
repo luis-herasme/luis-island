@@ -25,21 +25,32 @@ export type Channel = {
   targetNodeProperty: NodeProperty;
 };
 
+type AnimationOptions = {
+  animationDuration: number;
+  /** Sparse: indices that are not part of the hierarchy hold null. */
+  nodes: (AnimationNode | null)[];
+  samplers: Sampler[];
+  channels: Channel[];
+};
+
 /**
  * A keyframe animation over a node hierarchy (e.g. a glTF skeleton).
  * Channels drive node-local transforms through samplers; global transforms
  * are recomputed by walking the hierarchy from the roots.
  */
 export class Animation {
+  private readonly animationDuration: number;
+  private readonly nodes: (AnimationNode | null)[];
+  private readonly samplers: Sampler[];
+  private readonly channels: Channel[];
   private currentTime = 0;
 
-  constructor(
-    private readonly animationDuration: number,
-    /** Sparse: indices that are not part of the hierarchy hold null. */
-    private readonly nodes: (AnimationNode | null)[],
-    private readonly samplers: Sampler[],
-    private readonly channels: Channel[],
-  ) {}
+  constructor(options: AnimationOptions) {
+    this.animationDuration = options.animationDuration;
+    this.nodes = options.nodes;
+    this.samplers = options.samplers;
+    this.channels = options.channels;
+  }
 
   update(deltaTime: number): void {
     this.currentTime = (this.currentTime + deltaTime) % this.animationDuration;

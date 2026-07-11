@@ -13,19 +13,29 @@ export const BufferUsage = {
 
 export type BufferUsage = (typeof BufferUsage)[keyof typeof BufferUsage];
 
+type BufferGPUOptions = {
+  kind: BufferKind;
+  usage: BufferUsage;
+  bufferCPU: Uint8Array;
+};
+
 /**
  * A buffer that lives on the CPU and, lazily, on the GPU. Writes go to the
  * CPU copy and are flushed to the GPU on the next onBeforeRender call.
  */
 export class BufferGPU {
+  readonly kind: BufferKind;
+  readonly usage: BufferUsage;
+
+  private readonly bufferCPU: Uint8Array;
   private bufferGPU: WebGLBuffer | null = null;
   private needsUpdate = false;
 
-  constructor(
-    readonly kind: BufferKind,
-    readonly usage: BufferUsage,
-    private readonly bufferCPU: Uint8Array,
-  ) {}
+  constructor(options: BufferGPUOptions) {
+    this.kind = options.kind;
+    this.usage = options.usage;
+    this.bufferCPU = options.bufferCPU;
+  }
 
   get size(): number {
     return this.bufferCPU.length;

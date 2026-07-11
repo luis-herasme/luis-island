@@ -54,7 +54,7 @@ add interpretation — *what the bytes mean*.
    The primitive is `mesh.renderPrimitive` (`Triangles` by default; points,
    lines and strips are available).
 
-`renderer.renderScene(scene, camera)` is the frame-level wrapper: it clears,
+`renderer.renderScene({ scene, camera })` is the frame-level wrapper: it clears,
 adapts to window resizes, and injects three uniforms into every mesh's
 material before drawing it:
 
@@ -90,17 +90,17 @@ in your vertex shader; that is the whole contract. Options:
   vertex. This is the entire instancing API; see below.
 
 ```ts
-new VertexData("color", Data.unsignedByteVector3(colors), { normalize: true });
+new VertexData({ name: "color", data: Data.unsignedByteVector3(colors), normalize: true });
 ```
 
 **Buffers — where attributes live.** Two options:
 
 ```ts
 // One attribute per buffer — simple, update one attribute freely:
-new VertexBuffer(new VertexData("position", Data.vector3(positions)));
+new VertexBuffer({ vertexData: new VertexData({ name: "position", data: Data.vector3(positions) }) });
 
 // Several attributes interleaved per vertex — one buffer, cache-friendly:
-new InterleavedVertexBuffer([position, normal, uv]);
+new InterleavedVertexBuffer({ attributes: [position, normal, uv] });
 ```
 
 For interleaved buffers the package computes the layout for you: each
@@ -139,7 +139,10 @@ grow — `count` is fixed at construction, so size for the maximum you need.
 A `Material` is your GLSL plus a uniform map:
 
 ```ts
-const material = new Material(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE);
+const material = new Material({
+  vertexShaderSource: VERTEX_SHADER_SOURCE,
+  fragmentShaderSource: FRAGMENT_SHADER_SOURCE,
+});
 material.setUniform("light_direction", Uniform.vector3([0.25, 1, 1]));
 material.setUniform("albedo", Uniform.texture(await Texture.fromImageUrl("/crate.png")));
 ```
@@ -159,7 +162,7 @@ give it a binding point, and point the material's block at the same binding
 point (after the material's first render, when the program exists):
 
 ```ts
-const ubo = new UniformBufferObject(renderer, initialBytes);
+const ubo = new UniformBufferObject({ renderer, bufferCPU: initialBytes });
 ubo.setBindingPoint(0);
 material.resources!.setUniformBlock("Settings", 0);
 ubo.setBytes(byteOffset, newBytes); // flushes immediately

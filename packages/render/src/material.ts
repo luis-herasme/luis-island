@@ -2,24 +2,31 @@ import type { Uniform } from "./uniforms";
 import type { VertexLayout } from "./vertex-buffer";
 import { componentTypeSizeInBytes } from "./vertex-buffer";
 
+type MaterialOptions = {
+  vertexShaderSource: string;
+  fragmentShaderSource: string;
+};
+
 /** User-written GLSL plus the uniform values to feed it. */
 export class Material {
+  readonly vertexShaderSource: string;
+  readonly fragmentShaderSource: string;
   readonly uniforms = new Map<string, Uniform>();
 
   // WebGL resources, created lazily on first render
   resources: MaterialResources | null = null;
 
-  constructor(
-    readonly vertexShaderSource: string,
-    readonly fragmentShaderSource: string,
-  ) {}
+  constructor(options: MaterialOptions) {
+    this.vertexShaderSource = options.vertexShaderSource;
+    this.fragmentShaderSource = options.fragmentShaderSource;
+  }
 
   setUniform(uniformName: string, uniform: Uniform): void {
     this.uniforms.set(uniformName, uniform);
   }
 
   onBeforeRender(gl: WebGL2RenderingContext): void {
-    if (!this.resources) this.resources = new MaterialResources(gl, this);
+    if (!this.resources) this.resources = new MaterialResources({ gl, material: this });
 
     gl.useProgram(this.resources.program);
 
@@ -35,18 +42,24 @@ export class Material {
   }
 }
 
+type MaterialResourcesOptions = {
+  gl: WebGL2RenderingContext;
+  material: Material;
+};
+
 /** The compiled program and the uniform/attribute locations discovered in it. */
 export class MaterialResources {
   readonly program: WebGLProgram;
 
+  private readonly gl: WebGL2RenderingContext;
   private readonly uniformLocations = new Map<string, WebGLUniformLocation>();
   private readonly attributeLocations = new Map<string, number>();
   private readonly uniformBlockLocations = new Map<string, number>();
 
-  constructor(
-    private readonly gl: WebGL2RenderingContext,
-    material: Material,
-  ) {
+  constructor(options: MaterialResourcesOptions) {
+    const { gl, material } = options;
+    this.gl = gl;
+
     const program = gl.createProgram();
     if (!program) throw new Error("Failed to create WebGL program");
 

@@ -2,6 +2,11 @@ import type { PerspectiveCamera } from "./camera";
 import type { Mesh } from "./mesh";
 import { Uniform } from "./uniforms";
 
+type RenderSceneOptions = {
+  scene: Mesh[];
+  camera: PerspectiveCamera;
+};
+
 export class Renderer {
   /** The WebGL2 context. `gl` is the domain-standard name for it, kept as-is. */
   readonly gl: WebGL2RenderingContext;
@@ -40,7 +45,9 @@ export class Renderer {
     }
   }
 
-  renderScene(scene: Mesh[], camera: PerspectiveCamera): void {
+  renderScene(options: RenderSceneOptions): void {
+    const { scene, camera } = options;
+
     this.clear();
     this.handleWindowResize(camera);
 

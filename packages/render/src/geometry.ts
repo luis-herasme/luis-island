@@ -34,6 +34,14 @@ const QUAD_INDICES: number[] = [
   2, 3, 0, // Triangle #2
 ];
 
+type GeometryOptions = {
+  vertexCount: number;
+  instanceCount?: number | null;
+  indices?: IndexBuffer | null;
+  vertexBuffers?: VertexBuffer[];
+  interleavedVertexBuffers?: InterleavedVertexBuffer[];
+};
+
 /**
  * The vertex data of a mesh: any number of single-attribute and interleaved
  * buffers, optional indices, and an optional instance count.
@@ -45,13 +53,7 @@ export class Geometry {
   vertexBuffers: VertexBuffer[];
   interleavedVertexBuffers: InterleavedVertexBuffer[];
 
-  constructor(options: {
-    vertexCount: number;
-    instanceCount?: number | null;
-    indices?: IndexBuffer | null;
-    vertexBuffers?: VertexBuffer[];
-    interleavedVertexBuffers?: InterleavedVertexBuffer[];
-  }) {
+  constructor(options: GeometryOptions) {
     this.vertexCount = options.vertexCount;
     this.instanceCount = options.instanceCount ?? null;
     this.indices = options.indices ?? null;
@@ -107,11 +109,13 @@ export class Geometry {
     }
 
     return Geometry.fromInterleavedVertexBuffer(
-      new InterleavedVertexBuffer([
-        new VertexData("position", Data.vector3(positions)),
-        new VertexData("normal", Data.vector3(normals)),
-        new VertexData("uv", Data.vector2(uvs)),
-      ]),
+      new InterleavedVertexBuffer({
+        attributes: [
+          new VertexData({ name: "position", data: Data.vector3(positions) }),
+          new VertexData({ name: "normal", data: Data.vector3(normals) }),
+          new VertexData({ name: "uv", data: Data.vector2(uvs) }),
+        ],
+      }),
     );
   }
 
@@ -196,9 +200,9 @@ export class Geometry {
       vertexCount: 24,
       indices: IndexBuffer.fromUint8(indices),
       vertexBuffers: [
-        new VertexBuffer(new VertexData("position", Data.vector3(positions))),
-        new VertexBuffer(new VertexData("normal", Data.vector3(normals))),
-        new VertexBuffer(new VertexData("uv", Data.vector2(uvs))),
+        new VertexBuffer({ vertexData: new VertexData({ name: "position", data: Data.vector3(positions) }) }),
+        new VertexBuffer({ vertexData: new VertexData({ name: "normal", data: Data.vector3(normals) }) }),
+        new VertexBuffer({ vertexData: new VertexData({ name: "uv", data: Data.vector2(uvs) }) }),
       ],
     });
   }
@@ -209,7 +213,11 @@ export class Geometry {
     return new Geometry({
       vertexCount: 4,
       indices: IndexBuffer.fromUint8(QUAD_INDICES),
-      vertexBuffers: [new VertexBuffer(position), new VertexBuffer(color), new VertexBuffer(uvs)],
+      vertexBuffers: [
+        new VertexBuffer({ vertexData: position }),
+        new VertexBuffer({ vertexData: color }),
+        new VertexBuffer({ vertexData: uvs }),
+      ],
     });
   }
 
@@ -219,7 +227,7 @@ export class Geometry {
     return new Geometry({
       vertexCount: 4,
       indices: IndexBuffer.fromUint8(QUAD_INDICES),
-      interleavedVertexBuffers: [new InterleavedVertexBuffer([position, color, uvs])],
+      interleavedVertexBuffers: [new InterleavedVertexBuffer({ attributes: [position, color, uvs] })],
     });
   }
 
@@ -231,10 +239,10 @@ export class Geometry {
       instanceCount: count,
       indices: IndexBuffer.fromUint8(QUAD_INDICES),
       vertexBuffers: [
-        new VertexBuffer(color),
-        new VertexBuffer(position),
-        new VertexBuffer(uvs),
-        new VertexBuffer(identityTransforms(count), BufferUsage.DynamicDraw),
+        new VertexBuffer({ vertexData: color }),
+        new VertexBuffer({ vertexData: position }),
+        new VertexBuffer({ vertexData: uvs }),
+        new VertexBuffer({ vertexData: identityTransforms(count), usage: BufferUsage.DynamicDraw }),
       ],
     });
   }
@@ -246,17 +254,17 @@ export class Geometry {
       vertexCount: 4,
       instanceCount: count,
       indices: IndexBuffer.fromUint8(QUAD_INDICES),
-      interleavedVertexBuffers: [new InterleavedVertexBuffer([position, color, uvs])],
-      vertexBuffers: [new VertexBuffer(identityTransforms(count))],
+      interleavedVertexBuffers: [new InterleavedVertexBuffer({ attributes: [position, color, uvs] })],
+      vertexBuffers: [new VertexBuffer({ vertexData: identityTransforms(count) })],
     });
   }
 }
 
 function quadData(): [VertexData, VertexData, VertexData] {
   return [
-    new VertexData("position", Data.vector2(QUAD_POSITIONS)),
-    new VertexData("color", Data.unsignedByteVector3(QUAD_COLORS), { normalize: true }),
-    new VertexData("uv", Data.vector2(QUAD_UVS)),
+    new VertexData({ name: "position", data: Data.vector2(QUAD_POSITIONS) }),
+    new VertexData({ name: "color", data: Data.unsignedByteVector3(QUAD_COLORS), normalize: true }),
+    new VertexData({ name: "uv", data: Data.vector2(QUAD_UVS) }),
   ];
 }
 
@@ -267,5 +275,5 @@ function identityTransforms(count: number): VertexData {
     transforms.push(new Transform2D().toArray());
   }
 
-  return new VertexData("transform", Data.matrix3(transforms), { divisor: 1 });
+  return new VertexData({ name: "transform", data: Data.matrix3(transforms), divisor: 1 });
 }

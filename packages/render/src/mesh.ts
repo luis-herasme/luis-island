@@ -15,15 +15,22 @@ export const RenderPrimitive = {
 
 export type RenderPrimitive = (typeof RenderPrimitive)[keyof typeof RenderPrimitive];
 
+type MeshOptions = {
+  geometry: Geometry;
+  material: Material;
+};
+
 export class Mesh {
+  geometry: Geometry;
+  material: Material;
   transform = new Transform3D();
   renderPrimitive: RenderPrimitive = RenderPrimitive.Triangles;
   vertexArrayObject: WebGLVertexArrayObject | null = null;
 
-  constructor(
-    public geometry: Geometry,
-    public material: Material,
-  ) {}
+  constructor(options: MeshOptions) {
+    this.geometry = options.geometry;
+    this.material = options.material;
+  }
 
   getOrCreateVertexArrayObject(gl: WebGL2RenderingContext): WebGLVertexArrayObject {
     if (!this.vertexArrayObject) this.vertexArrayObject = this.createVertexArrayObject(gl);
