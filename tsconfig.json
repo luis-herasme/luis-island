@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "@game/math": ["./packages/math/src/index.ts"],
+      "@game/render": ["./packages/render/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src", "apps/*/src"]
+}
