@@ -11,6 +11,7 @@
     "@game/ecs": "workspace:*",
     "@game/input": "workspace:*",
     "@game/math": "workspace:*",
+    "@game/physics": "workspace:*",
     "@game/render": "workspace:*"
   },
   "devDependencies": {

@@ -1,14 +1,14 @@
 /**
  * The first demo wiring the packages together: the ECS owns the world, the
- * renderer draws it, @game/math carries the transforms, and @game/input
- * feeds a movement system. Drive the orange cube with WASD or the arrows.
- *
- * The boxes standing around are inert for now — they become interesting once
- * the collision system exists.
+ * renderer draws it, @game/math carries the transforms, @game/input feeds a
+ * movement system and @game/physics makes it all solid. Drive the orange
+ * cube with WASD or the arrows — it falls onto the ground when the page
+ * loads and the obstacle boxes block its way.
  */
 import { ECS } from "@game/ecs";
 import { Keyboard } from "@game/input";
 import { AXIS_Y, Matrix4x4, Transform3D, Vector3 } from "@game/math";
+import { Collider, PhysicsWorld, RigidBody } from "@game/physics";
 import { GEOMETRY_BOX, Material, Mesh, PerspectiveCamera, Renderer, Uniform, startAnimationLoop } from "@game/render";
 
 // ---------------------------------------------------------------------------
@@ -57,19 +57,23 @@ camera.transform.rotation.setFromRotationMatrix(
 // ---------------------------------------------------------------------------
 
 type Components = {
-  /** Source of truth for where an entity is; the render system copies it into the mesh. */
+  /** Source of truth for rendering; the physics system writes it from the body. */
   transform: Transform3D;
   mesh: Mesh;
+  /** Source of truth for where an entity is and how it moves. */
+  body: RigidBody;
   player: { speed: number };
 };
 
 const ecs = new ECS<Components>();
 const keyboard = new Keyboard();
+const physicsWorld = new PhysicsWorld();
 
 function spawnBox(options: {
   color: [number, number, number];
   position: [number, number, number];
   scale?: [number, number, number];
+  bodyType?: "dynamic" | "static";
 }) {
   const material = new Material({
     vertexShaderSource: VERTEX_SHADER_SOURCE,
@@ -81,8 +85,18 @@ function spawnBox(options: {
   transform.translation.set(...options.position);
   if (options.scale) transform.scale.set(...options.scale);
 
+  // The mesh is a unit box scaled by the transform, so the collider's half
+  // extents are half the scale.
+  const body = new RigidBody({
+    collider: Collider.box({ halfExtents: transform.scale.clone().multiplyScalar(0.5) }),
+    type: options.bodyType ?? "static",
+    translation: new Vector3(...options.position),
+  });
+  physicsWorld.addBody(body);
+
   const entity = ecs.addEntity();
   ecs.addComponent(entity, "transform", transform);
+  ecs.addComponent(entity, "body", body);
   ecs.addComponent(entity, "mesh", new Mesh({ geometry: GEOMETRY_BOX.copy(), material }));
   return entity;
 }
@@ -90,39 +104,55 @@ function spawnBox(options: {
 // Ground slab; its top sits at y = -0.5, flush with the cubes' bottoms.
 spawnBox({ color: [0.2, 0.27, 0.33], position: [0, -0.6, 0], scale: [20, 0.2, 20] });
 
-// Obstacles — inert until the collision system exists.
+// Obstacles — static bodies the player collides with.
 spawnBox({ color: [0.55, 0.36, 0.68], position: [3, 0, -2] });
 spawnBox({ color: [0.36, 0.55, 0.68], position: [-4, 0, 1] });
 spawnBox({ color: [0.42, 0.68, 0.36], position: [2, 0, 3] });
 
-// The player.
-const player = spawnBox({ color: [1, 0.53, 0.27], position: [0, 0, 0] });
+// The player: dynamic, spawned above the ground so it falls in on load.
+const player = spawnBox({ color: [1, 0.53, 0.27], position: [0, 3, 0], bodyType: "dynamic" });
 ecs.addComponent(player, "player", { speed: 6 });
 
 // ---------------------------------------------------------------------------
-// Systems, in frame order: input → (someday: physics) → render
+// Systems, in frame order: input → physics → render
 // ---------------------------------------------------------------------------
 
+/** Input writes velocities; the physics step decides where things end up. */
 const playerMovementSystem = ecs.createSystem({
-  requiredComponents: ["transform", "player"],
+  requiredComponents: ["body", "player"],
 
-  update({ entities, components, deltaTime }) {
+  update({ entities, components }) {
     // W/up is -Z: away from the camera, which looks down the -Z axis.
     const moveX = keyboard.axis({ negative: "KeyA", positive: "KeyD" }) + keyboard.axis({ negative: "ArrowLeft", positive: "ArrowRight" });
     const moveZ = keyboard.axis({ negative: "KeyW", positive: "KeyS" }) + keyboard.axis({ negative: "ArrowUp", positive: "ArrowDown" });
 
     // Normalize so diagonals are not faster than straight lines.
     const length = Math.hypot(moveX, moveZ);
-    if (length === 0) return;
+    const directionX = length === 0 ? 0 : moveX / length;
+    const directionZ = length === 0 ? 0 : moveZ / length;
 
-    const directionX = moveX / length;
-    const directionZ = moveZ / length;
+    for (const entity of entities) {
+      const body = components.get(entity, "body");
+      const { speed } = components.get(entity, "player");
+
+      // Horizontal velocity comes from input; vertical stays with gravity.
+      body.velocity.x = directionX * speed;
+      body.velocity.z = directionZ * speed;
+    }
+  },
+});
+
+/** Steps the world, then hands the resulting positions to the transforms. */
+const physicsSystem = ecs.createSystem({
+  requiredComponents: ["transform", "body"],
+
+  update({ entities, components, deltaTime }) {
+    physicsWorld.step(deltaTime);
 
     for (const entity of entities) {
       const transform = components.get(entity, "transform");
-      const { speed } = components.get(entity, "player");
-      transform.translation.x += directionX * speed * deltaTime;
-      transform.translation.z += directionZ * speed * deltaTime;
+      const body = components.get(entity, "body");
+      transform.translation.copy(body.translation);
     }
   },
 });
@@ -151,6 +181,7 @@ const renderSystem = ecs.createSystem({
 });
 
 ecs.addSystem(playerMovementSystem);
+ecs.addSystem(physicsSystem);
 ecs.addSystem(renderSystem);
 
 // ---------------------------------------------------------------------------
