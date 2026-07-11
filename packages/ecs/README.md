@@ -11,22 +11,22 @@ ID that components attach to. `addEntity()` hands you the next one.
 
 **Components are plain data.** A component is any value — an object, a number —
 stored under a name. There are no component classes and no registration step.
-Instead, you describe your game's components as a single TypeScript interface
+Instead, you describe your game's components as a single TypeScript type
 and give it to the world:
 
 ```ts
 import { ECS } from "@game/ecs";
 
-interface Components {
+type Components = {
   position: { x: number; y: number; z: number };
   velocity: { x: number; y: number; z: number };
   health: number;
-}
+};
 
 const ecs = new ECS<Components>();
 ```
 
-Every API is typed against that interface: component names autocomplete, and a
+Every API is typed against that type map: component names autocomplete, and a
 component's value has the right type everywhere. Because components are plain
 data, an entity's whole state can be serialized — which the game server's
 snapshots will rely on.

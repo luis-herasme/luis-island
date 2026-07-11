@@ -14,15 +14,15 @@ import {
   POSITION_ATTRIBUTE_LOCATION,
 } from "./shaders";
 
-interface ProgramInfo {
+type ProgramInfo = {
   program: WebGLProgram;
   uniforms: Map<string, WebGLUniformLocation>;
-}
+};
 
-interface GpuGeometry {
+type GpuGeometry = {
   vertexArray: WebGLVertexArrayObject;
   indexCount: number;
-}
+};
 
 export class Renderer {
   /** The WebGL2 context. `gl` is the domain-standard name for it, kept as-is. */

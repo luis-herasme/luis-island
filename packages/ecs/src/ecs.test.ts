@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { ECS, type Entity } from "./index";
 
-interface TestComponents {
+type TestComponents = {
   position: { x: number; y: number };
   velocity: { x: number; y: number };
   health: number;
-}
+};
 
 const createWorld = () => new ECS<TestComponents>();
 

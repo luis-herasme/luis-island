@@ -4,6 +4,10 @@
 
 - **Plan before writing code.** For any non-trivial task, present the design and get agreement before creating or editing files. Don't scaffold, refactor, or implement on the strength of a discussion alone — wait for an explicit go-ahead.
 
+## TypeScript conventions
+
+- **Prefer `type` over `interface`.** Declare object shapes as type aliases (`type Foo = { ... }`), not interfaces — in docs and examples too.
+
 ## Naming conventions
 
 - **No single-letter variable names.** The exception is mathematical component context, where the letter is the actual domain name: `x`, `y`, `z`, `w` on vectors and quaternions, `r`, `g`, `b` on colors. Outside of that, spell it out — `index` not `i`, `matrix` not `m`, `quaternion` not `q`.

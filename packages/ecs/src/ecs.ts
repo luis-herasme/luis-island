@@ -1,29 +1,29 @@
 export type Entity = number;
 
 /** Read access to the components a system declared in requiredComponents. */
-export interface ComponentAccessor<Components, Required extends keyof Components> {
+export type ComponentAccessor<Components, Required extends keyof Components> = {
   /**
    * Returns the entity's component, without `| undefined`: membership in the
    * system's entity set guarantees presence. Throws if the component is
    * missing, which is only possible for entities from somewhere else.
    */
   get<Name extends Required>(entity: Entity, name: Name): Components[Name];
-}
+};
 
 /** Everything a system receives on each update tick. */
-export interface SystemContext<Components, Required extends keyof Components> {
+export type SystemContext<Components, Required extends keyof Components> = {
   entities: ReadonlySet<Entity>;
   components: ComponentAccessor<Components, Required>;
   deltaTime: number;
   ecs: ECS<Components>;
-}
+};
 
-export interface System<Components, Required extends keyof Components = keyof Components> {
+export type System<Components, Required extends keyof Components = keyof Components> = {
   readonly requiredComponents: readonly Required[];
   update?(context: SystemContext<Components, Required>): void;
   onEntityAdded?(entity: Entity, ecs: ECS<Components>): void;
   onEntityRemoved?(entity: Entity, ecs: ECS<Components>): void;
-}
+};
 
 export class ECS<Components> {
   private systems = new Map<System<Components, keyof Components>, Set<Entity>>();
