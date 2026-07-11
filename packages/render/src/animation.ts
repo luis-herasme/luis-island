@@ -1,5 +1,4 @@
-import { Quaternion, Vector3 } from "@game/math";
-import { Transform3D } from "./transform";
+import { Quaternion, Transform3D, Vector3 } from "@game/math";
 
 export type AnimationNode = {
   parentIndex: number | null;

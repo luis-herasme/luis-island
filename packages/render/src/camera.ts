@@ -1,5 +1,4 @@
-import { Matrix4 } from "@game/math";
-import { Transform3D } from "./transform";
+import { Matrix4, Transform3D } from "@game/math";
 
 export class PerspectiveCamera {
   transform = new Transform3D();

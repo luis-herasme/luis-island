@@ -1,6 +1,6 @@
+import { Transform3D } from "@game/math";
 import type { Geometry } from "./geometry";
 import type { Material } from "./material";
-import { Transform3D } from "./transform";
 
 /** https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawArraysInstanced#mode */
 export const RenderPrimitive = {

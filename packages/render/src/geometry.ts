@@ -1,7 +1,7 @@
 import { BufferUsage } from "./bufferGPU";
 import { IndexBuffer } from "./indexBuffer";
 import type { OBJ } from "./objParser";
-import { Transform2D } from "./transform";
+import { Transform2D } from "@game/math";
 import { Data, InterleavedVertexBuffer, VertexBuffer, VertexData } from "./vertexBuffer";
 
 // prettier-ignore

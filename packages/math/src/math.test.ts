@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Matrix3, Matrix4, Quaternion, Vector3 } from "./index";
+import { Matrix3, Matrix4, Quaternion, Transform2D, Transform3D, Vector3 } from "./index";
 
 const closeTo = (actual: number, expected: number) => expect(actual).toBeCloseTo(expected, 5);
 
@@ -67,6 +67,64 @@ describe("Matrix4", () => {
     const matrix = new Matrix4().lookAt(new Vector3(0, 0, 5), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
     const vector = new Vector3(0, 0, 0).applyMatrix4(matrix);
     closeTo(vector.z, -5);
+  });
+});
+
+describe("Transform2D", () => {
+  it("builds a column-major scale/rotation/translation matrix", () => {
+    const transform = new Transform2D();
+    transform.scale.set(2, 3);
+    transform.rotation = Math.PI / 2;
+    transform.translation.set(4, 5);
+
+    const [m00, m01, m02, m10, m11, m12, m20, m21, m22] = transform.toArray();
+
+    closeTo(m00, 0);
+    closeTo(m01, 2);
+    closeTo(m02, 0);
+    closeTo(m10, -3);
+    closeTo(m11, 0);
+    closeTo(m12, 0);
+    closeTo(m20, 4);
+    closeTo(m21, 5);
+    closeTo(m22, 1);
+  });
+});
+
+describe("Transform3D", () => {
+  it("round-trips through a matrix", () => {
+    const transform = new Transform3D();
+    transform.translation.set(1, 2, 3);
+    transform.scale.set(2, 2, 2);
+    transform.rotation.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 3);
+
+    const recovered = Transform3D.fromMatrix4(transform.toMatrix4());
+
+    closeTo(recovered.translation.x, 1);
+    closeTo(recovered.translation.y, 2);
+    closeTo(recovered.translation.z, 3);
+    closeTo(recovered.scale.x, 2);
+    closeTo(recovered.scale.y, 2);
+    closeTo(recovered.scale.z, 2);
+
+    // q and -q are the same rotation, so compare via |dot| instead of components.
+    const expected = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 3);
+    const rotation = recovered.rotation;
+    const dot = rotation.x * expected.x + rotation.y * expected.y + rotation.z * expected.z + rotation.w * expected.w;
+    closeTo(Math.abs(dot), 1);
+  });
+
+  it("writes the transform into a provided matrix", () => {
+    const transform = new Transform3D();
+    transform.translation.set(7, 8, 9);
+
+    const target = new Matrix4();
+    const result = transform.toMatrix4(target);
+
+    expect(result).toBe(target);
+    closeTo(target.elements[12]!, 7);
+    closeTo(target.elements[13]!, 8);
+    closeTo(target.elements[14]!, 9);
   });
 });
 

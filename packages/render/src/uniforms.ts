@@ -1,6 +1,5 @@
-import type { Matrix3, Matrix4 } from "@game/math";
+import type { Matrix3, Matrix4, Transform2D, Transform3D } from "@game/math";
 import type { Texture } from "./texture";
-import type { Transform2D, Transform3D } from "./transform";
 
 // Mutable arrays because the WebGL uniform setters take Float32List/Int32List/Uint32List.
 type NumberList = number[] | Float32Array;

@@ -203,11 +203,11 @@ One draw call renders all 100 quads; per-frame animation is just more
 
 ## Transforms and the camera
 
-`Transform3D` is scale + rotation (quaternion) + translation, composed into a
-`Matrix4` on demand (`toMatrix4()`, `toArray()`); `Transform3D.fromMatrix4`
-decomposes back. `Transform2D` is the 2D analog producing a column-major 3×3.
-Both use `@game/math` — there is no parent/child hierarchy here on purpose;
-composing transforms is the ECS's job.
+`Transform3D` (scale + quaternion rotation + translation, composed into a
+`Matrix4` on demand) and its 2D analog `Transform2D` **live in `@game/math`**,
+not here — the TRS value type is math, and this package is just one of its
+consumers. There is no parent/child hierarchy anywhere on purpose; composing
+transforms is the ECS's job.
 
 `PerspectiveCamera` is projection parameters plus a `Transform3D`. Move the
 camera by setting its transform; `renderScene` derives the view matrix by
@@ -254,6 +254,9 @@ directly to opt out of the convention (as the instanced example does).
 
 - `glam` is replaced by `@game/math` (`Vector2`, `Vector3`, `Quaternion`,
   `Matrix4`), and Rust enums by `as const` objects or discriminated unions.
+- suricato's `transform.rs` has no counterpart file here: `Transform2D` and
+  `Transform3D` moved to `@game/math`, since the TRS value type is math and
+  the renderer should not own the concept.
 - Setting a uniform the shader does not use is a silent no-op instead of a
   panic — GLSL compilers drop unused declarations, so they never get
   locations.

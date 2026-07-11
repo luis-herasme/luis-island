@@ -18,7 +18,6 @@ export {
   Wrap,
 } from "./texture";
 export type { ImagePixelData, TextureData } from "./texture";
-export { Transform2D, Transform3D } from "./transform";
 export { UniformBufferObject } from "./uniformBufferObject";
 export { Uniform } from "./uniforms";
 export { fetchBytes, fetchImage, fetchText, generateId, startAnimationLoop } from "./utils";

@@ -6,7 +6,7 @@
  * setVertex writes into that buffer. This file typechecks as part of
  * `pnpm check`; point the playground's import here to run it live.
  */
-import { Transform2D } from "../transform";
+import { Transform2D } from "@game/math";
 import { Geometry } from "../geometry";
 import { Material } from "../material";
 import { Mesh } from "../mesh";

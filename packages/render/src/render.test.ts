@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Matrix4, Quaternion, Vector3 } from "@game/math";
+import { Transform2D } from "@game/math";
 import { parseOBJ } from "./objParser";
-import { Transform2D, Transform3D } from "./transform";
 import {
   Data,
   InterleavedVertexBuffer,
@@ -139,62 +138,3 @@ describe("parseOBJ", () => {
   });
 });
 
-describe("Transform2D", () => {
-  it("builds a column-major scale/rotation/translation matrix", () => {
-    const transform = new Transform2D();
-    transform.scale.set(2, 3);
-    transform.rotation = Math.PI / 2;
-    transform.translation.set(4, 5);
-
-    const [m00, m01, m02, m10, m11, m12, m20, m21, m22] = transform.toArray();
-
-    expect(m00).toBeCloseTo(0);
-    expect(m01).toBeCloseTo(2);
-    expect(m02).toBe(0);
-    expect(m10).toBeCloseTo(-3);
-    expect(m11).toBeCloseTo(0);
-    expect(m12).toBe(0);
-    expect(m20).toBe(4);
-    expect(m21).toBe(5);
-    expect(m22).toBe(1);
-  });
-});
-
-describe("Transform3D", () => {
-  it("round-trips through a matrix", () => {
-    const transform = new Transform3D();
-    transform.translation.set(1, 2, 3);
-    transform.scale.set(2, 2, 2);
-    transform.rotation.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 3);
-
-    const recovered = Transform3D.fromMatrix4(transform.toMatrix4());
-
-    expect(recovered.translation.x).toBeCloseTo(1);
-    expect(recovered.translation.y).toBeCloseTo(2);
-    expect(recovered.translation.z).toBeCloseTo(3);
-    expect(recovered.scale.x).toBeCloseTo(2);
-    expect(recovered.scale.y).toBeCloseTo(2);
-    expect(recovered.scale.z).toBeCloseTo(2);
-
-    // q and -q are the same rotation, so compare via |dot| instead of components.
-    const expected = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 3);
-    expect(Math.abs(quaternionDot(recovered.rotation, expected))).toBeCloseTo(1);
-  });
-
-  it("writes the transform into a provided matrix", () => {
-    const transform = new Transform3D();
-    transform.translation.set(7, 8, 9);
-
-    const target = new Matrix4();
-    const result = transform.toMatrix4(target);
-
-    expect(result).toBe(target);
-    expect(target.elements[12]).toBe(7);
-    expect(target.elements[13]).toBe(8);
-    expect(target.elements[14]).toBe(9);
-  });
-});
-
-function quaternionDot(left: Quaternion, right: Quaternion): number {
-  return left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w;
-}
