@@ -3,7 +3,7 @@ export type { AnimationNode, Channel, Interpolation, NodeProperty, Sampler, Samp
 export { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 export { PerspectiveCamera } from "./camera";
 export { Geometry } from "./geometry";
-export { IndexBuffer } from "./index-buffer";
+export { IndexBuffer, IndexKind } from "./index-buffer";
 export { Material, MaterialResources } from "./material";
 export { Mesh, RenderPrimitive } from "./mesh";
 export { parseOBJ } from "./obj-parser";

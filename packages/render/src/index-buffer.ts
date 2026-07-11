@@ -1,15 +1,23 @@
 import { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 
+/** The GL type of each index, passed to gl.drawElements. */
+export const IndexKind = {
+  UnsignedByte: 0x1401, // gl.UNSIGNED_BYTE
+  UnsignedShort: 0x1403, // gl.UNSIGNED_SHORT
+  UnsignedInt: 0x1405, // gl.UNSIGNED_INT
+} as const;
+
+export type IndexKind = (typeof IndexKind)[keyof typeof IndexKind];
+
 type IndexBufferOptions = {
-  /** The GL type of each index (gl.UNSIGNED_BYTE / _SHORT / _INT). */
-  kind: number;
+  kind: IndexKind;
   count: number;
   buffer: BufferGPU;
 };
 
 /** Element indices for indexed drawing (gl.drawElements). */
 export class IndexBuffer {
-  readonly kind: number;
+  readonly kind: IndexKind;
   readonly count: number;
   readonly buffer: BufferGPU;
   offset = 0;
@@ -23,7 +31,7 @@ export class IndexBuffer {
   static fromUint8(values: Uint8Array | readonly number[], usage: BufferUsage = BufferUsage.StaticDraw): IndexBuffer {
     const bytes = values instanceof Uint8Array ? values : Uint8Array.from(values);
     return new IndexBuffer({
-      kind: 0x1401, // gl.UNSIGNED_BYTE
+      kind: IndexKind.UnsignedByte,
       count: bytes.length,
       buffer: new BufferGPU({ kind: BufferKind.ElementArrayBuffer, usage, bufferCPU: bytes }),
     });
@@ -33,7 +41,7 @@ export class IndexBuffer {
     const indices = values instanceof Uint16Array ? values : Uint16Array.from(values);
     const bytes = new Uint8Array(indices.buffer, indices.byteOffset, indices.byteLength);
     return new IndexBuffer({
-      kind: 0x1403, // gl.UNSIGNED_SHORT
+      kind: IndexKind.UnsignedShort,
       count: indices.length,
       buffer: new BufferGPU({ kind: BufferKind.ElementArrayBuffer, usage, bufferCPU: bytes }),
     });
@@ -43,7 +51,7 @@ export class IndexBuffer {
     const indices = values instanceof Uint32Array ? values : Uint32Array.from(values);
     const bytes = new Uint8Array(indices.buffer, indices.byteOffset, indices.byteLength);
     return new IndexBuffer({
-      kind: 0x1405, // gl.UNSIGNED_INT
+      kind: IndexKind.UnsignedInt,
       count: indices.length,
       buffer: new BufferGPU({ kind: BufferKind.ElementArrayBuffer, usage, bufferCPU: bytes }),
     });

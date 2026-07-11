@@ -22,3 +22,4 @@
   - **Key–value setters** following the `Map.set` convention: `material.setUniform("base_color", value)`.
   - **Typed lookups** where the compiler already prevents confusion: `ecs.get(entity, "position")`.
   - A single required parameter plus one optional trailing parameter is fine positionally: `IndexBuffer.fromUint8(values, usage?)`.
+- **No magic constants.** A literal with domain meaning (a WebGL enum value, a byte size, a format tag) is written exactly once, inside a named `as const` definition (`BufferKind`, `VertexComponentType`); every other place references the name. `kind: 0x1405 // gl.UNSIGNED_INT` at a use site is not acceptable — the comment is the name the constant should have had.
