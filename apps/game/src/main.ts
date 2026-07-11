@@ -1,9 +1,12 @@
 /**
  * The first demo wiring the packages together: the ECS owns the world, the
  * renderer draws it, @game/math carries the transforms, @game/input feeds a
- * movement system and @game/physics makes it all solid. Drive the orange
- * cube with WASD or the arrows — it falls onto the ground when the page
- * loads and the obstacle boxes block its way.
+ * movement system and @game/physics makes it all solid.
+ *
+ * Drive the orange cube with WASD or the arrows — it falls onto the ground
+ * when the page loads, the obstacle boxes block its way, and the staircase
+ * is walkable thanks to the body's stepHeight. Space throws a small box in
+ * the direction you last moved, arcing under gravity.
  */
 import { ECS } from "@game/ecs";
 import { Keyboard } from "@game/input";
@@ -62,19 +65,26 @@ type Components = {
   mesh: Mesh;
   /** Source of truth for where an entity is and how it moves. */
   body: RigidBody;
-  player: { speed: number };
+  /** facing is the last movement direction — where thrown boxes go. */
+  player: { speed: number; facing: Vector3 };
 };
 
 const ecs = new ECS<Components>();
 const keyboard = new Keyboard();
 const physicsWorld = new PhysicsWorld();
 
-function spawnBox(options: {
+type SpawnBoxOptions = {
   color: [number, number, number];
   position: [number, number, number];
   scale?: [number, number, number];
   bodyType?: "dynamic" | "static";
-}) {
+  velocity?: [number, number, number];
+  restitution?: number;
+  damping?: number;
+  stepHeight?: number;
+};
+
+function spawnBox(options: SpawnBoxOptions) {
   const material = new Material({
     vertexShaderSource: VERTEX_SHADER_SOURCE,
     fragmentShaderSource: FRAGMENT_SHADER_SOURCE,
@@ -91,6 +101,10 @@ function spawnBox(options: {
     collider: Collider.box({ halfExtents: transform.scale.clone().multiplyScalar(0.5) }),
     type: options.bodyType ?? "static",
     translation: new Vector3(...options.position),
+    velocity: options.velocity ? new Vector3(...options.velocity) : undefined,
+    restitution: options.restitution,
+    damping: options.damping,
+    stepHeight: options.stepHeight,
   });
   physicsWorld.addBody(body);
 
@@ -109,9 +123,55 @@ spawnBox({ color: [0.55, 0.36, 0.68], position: [3, 0, -2] });
 spawnBox({ color: [0.36, 0.55, 0.68], position: [-4, 0, 1] });
 spawnBox({ color: [0.42, 0.68, 0.36], position: [2, 0, 3] });
 
+// A staircase: rises of 0.4, below the player's 0.5 stepHeight, so it is
+// walkable — while its total height would block anything that cannot step.
+const STAIR_STEP_COUNT = 4;
+const STAIR_STEP_RISE = 0.4;
+for (let stepIndex = 0; stepIndex < STAIR_STEP_COUNT; stepIndex++) {
+  const shade = 0.45 + stepIndex * 0.08;
+  spawnBox({
+    color: [shade, shade, shade],
+    position: [-1, -0.5 + STAIR_STEP_RISE * (stepIndex + 0.5), -3 - stepIndex],
+    scale: [2, STAIR_STEP_RISE, 1],
+  });
+}
+
 // The player: dynamic, spawned above the ground so it falls in on load.
-const player = spawnBox({ color: [1, 0.53, 0.27], position: [0, 3, 0], bodyType: "dynamic" });
-ecs.addComponent(player, "player", { speed: 6 });
+const player = spawnBox({
+  color: [1, 0.53, 0.27],
+  position: [0, 3, 0],
+  bodyType: "dynamic",
+  stepHeight: 0.5,
+});
+ecs.addComponent(player, "player", { speed: 6, facing: new Vector3(0, 0, -1) });
+
+// Thrown boxes arc toward where the player last moved.
+const THROW_COLORS: [number, number, number][] = [
+  [0.95, 0.77, 0.06],
+  [0.9, 0.49, 0.13],
+  [0.61, 0.35, 0.71],
+  [0.2, 0.6, 0.86],
+  [0.9, 0.3, 0.24],
+  [0.15, 0.68, 0.38],
+];
+const THROW_HORIZONTAL_SPEED = 9;
+const THROW_UPWARD_SPEED = 5.5;
+
+function throwBox(from: Vector3, facing: Vector3) {
+  const color = THROW_COLORS[Math.floor(Math.random() * THROW_COLORS.length)]!;
+
+  spawnBox({
+    color,
+    position: [from.x + facing.x * 1.2, from.y + 0.3, from.z + facing.z * 1.2],
+    scale: [0.4, 0.4, 0.4],
+    bodyType: "dynamic",
+    restitution: 0.4,
+    // There is no contact friction yet, so damping is what makes a landed
+    // box skid to a stop instead of sliding off the world.
+    damping: 1.5,
+    velocity: [facing.x * THROW_HORIZONTAL_SPEED, THROW_UPWARD_SPEED, facing.z * THROW_HORIZONTAL_SPEED],
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Systems, in frame order: input → physics → render
@@ -133,11 +193,32 @@ const playerMovementSystem = ecs.createSystem({
 
     for (const entity of entities) {
       const body = components.get(entity, "body");
-      const { speed } = components.get(entity, "player");
+      const player = components.get(entity, "player");
 
       // Horizontal velocity comes from input; vertical stays with gravity.
-      body.velocity.x = directionX * speed;
-      body.velocity.z = directionZ * speed;
+      body.velocity.x = directionX * player.speed;
+      body.velocity.z = directionZ * player.speed;
+
+      if (length > 0) player.facing.set(directionX, 0, directionZ);
+    }
+  },
+});
+
+/** Space throws a box in the facing direction, arcing under gravity. */
+let throwKeyWasPressed = false;
+const throwSystem = ecs.createSystem({
+  requiredComponents: ["body", "player"],
+
+  update({ entities, components }) {
+    const throwKeyIsPressed = keyboard.isPressed("Space");
+    const shouldThrow = throwKeyIsPressed && !throwKeyWasPressed;
+    throwKeyWasPressed = throwKeyIsPressed;
+    if (!shouldThrow) return;
+
+    for (const entity of entities) {
+      const body = components.get(entity, "body");
+      const { facing } = components.get(entity, "player");
+      throwBox(body.translation, facing);
     }
   },
 });
@@ -181,6 +262,7 @@ const renderSystem = ecs.createSystem({
 });
 
 ecs.addSystem(playerMovementSystem);
+ecs.addSystem(throwSystem);
 ecs.addSystem(physicsSystem);
 ecs.addSystem(renderSystem);
 
