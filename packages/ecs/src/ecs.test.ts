@@ -174,6 +174,41 @@ describe("system update context", () => {
     expect(ecs.getComponent(entity, "position")).toEqual({ x: 6, y: 8 });
   });
 
+  it("rejects unproven entities at compile time", () => {
+    const ecs = createWorld();
+    // never added to the world; this test is a compile-time assertion
+    ecs.createSystem({
+      requiredComponents: ["position"],
+      update({ components }) {
+        // @ts-expect-error a bare number is not proof the entity has "position"
+        components.get(123, "position");
+      },
+    });
+    expect(true).toBe(true);
+  });
+
+  it("hasComponent proves an entity for typed access", () => {
+    const ecs = createWorld();
+    const entity = ecs.addEntity();
+    ecs.addComponent(entity, "position", { x: 7, y: 8 });
+    const unproven: number = entity;
+
+    let observed: { x: number; y: number } | undefined;
+    ecs.addSystem(
+      ecs.createSystem({
+        requiredComponents: ["position"],
+        update({ components }) {
+          if (ecs.hasComponent(unproven, "position")) {
+            observed = components.get(unproven, "position");
+          }
+        },
+      }),
+    );
+
+    ecs.update(0);
+    expect(observed).toEqual({ x: 7, y: 8 });
+  });
+
   it("rejects undeclared component names at compile time", () => {
     const ecs = createWorld();
     // never added to the world; this test is a compile-time assertion

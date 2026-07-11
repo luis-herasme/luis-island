@@ -1,18 +1,37 @@
 export type Entity = number;
 
+declare const hasComponentsBrand: unique symbol;
+
+/**
+ * An entity the type system has proof about: it is known to have the Required
+ * components. The brand exists only at compile time — at runtime these are
+ * plain numbers. Proof comes from iterating a system's entities set or from
+ * a hasComponent() check.
+ */
+export type EntityWith<Components, Required extends keyof Components> = Entity & {
+  readonly [hasComponentsBrand]: { [Name in Required]: true };
+};
+
+/**
+ * Internal: entities handed to stored systems, branded as having every
+ * component. Each stored system's real requirement is narrower, and membership
+ * bookkeeping guarantees the narrow claim, so the wide cast is safe here.
+ */
+type ProvenEntity<Components> = EntityWith<Components, keyof Components>;
+
 /** Read access to the components a system declared in requiredComponents. */
 export type ComponentAccessor<Components, Required extends keyof Components> = {
   /**
-   * Returns the entity's component, without `| undefined`: membership in the
-   * system's entity set guarantees presence. Throws if the component is
-   * missing, which is only possible for entities from somewhere else.
+   * Returns the entity's component, without `| undefined`. Only accepts
+   * entities proven to have the component: taken from a system's entities set,
+   * or narrowed through a hasComponent() check.
    */
-  get<Name extends Required>(entity: Entity, name: Name): Components[Name];
+  get<Name extends Required>(entity: EntityWith<Components, Name>, name: Name): Components[Name];
 };
 
 /** Everything a system receives on each update tick. */
 export type SystemContext<Components, Required extends keyof Components> = {
-  entities: ReadonlySet<Entity>;
+  entities: ReadonlySet<EntityWith<Components, Required>>;
   components: ComponentAccessor<Components, Required>;
   deltaTime: number;
   ecs: ECS<Components>;
@@ -21,12 +40,12 @@ export type SystemContext<Components, Required extends keyof Components> = {
 export type System<Components, Required extends keyof Components = keyof Components> = {
   readonly requiredComponents: readonly Required[];
   update?(context: SystemContext<Components, Required>): void;
-  onEntityAdded?(entity: Entity, ecs: ECS<Components>): void;
-  onEntityRemoved?(entity: Entity, ecs: ECS<Components>): void;
+  onEntityAdded?(entity: EntityWith<Components, Required>, ecs: ECS<Components>): void;
+  onEntityRemoved?(entity: EntityWith<Components, Required>, ecs: ECS<Components>): void;
 };
 
 export class ECS<Components> {
-  private systems = new Map<System<Components, keyof Components>, Set<Entity>>();
+  private systems = new Map<System<Components, keyof Components>, Set<ProvenEntity<Components>>>();
   private entities = new Map<Entity, Map<keyof Components, Components[keyof Components]>>();
 
   private nextEntityId = 0;
@@ -64,7 +83,11 @@ export class ECS<Components> {
     return component as Components[Name];
   }
 
-  hasComponent(entity: Entity, name: keyof Components): boolean {
+  /** Doubles as a type guard: a true result proves the entity for typed access. */
+  hasComponent<Name extends keyof Components>(
+    entity: Entity,
+    name: Name,
+  ): entity is EntityWith<Components, Name> {
     return this.entities.get(entity)?.has(name) ?? false;
   }
 
@@ -124,29 +147,31 @@ export class ECS<Components> {
 
   // Internals
   private updateEntitySystems(entity: Entity): void {
+    const provenEntity = entity as ProvenEntity<Components>;
     for (const [system, systemEntities] of this.systems) {
       const components = this.entities.get(entity)!;
-      const hasEntity = systemEntities.has(entity);
+      const hasEntity = systemEntities.has(provenEntity);
       const hasRequiredComponents = system.requiredComponents.every((name) =>
         components.has(name),
       );
 
       if (hasRequiredComponents && !hasEntity) {
-        systemEntities.add(entity);
-        system.onEntityAdded?.(entity, this);
+        systemEntities.add(provenEntity);
+        system.onEntityAdded?.(provenEntity, this);
       } else if (!hasRequiredComponents && hasEntity) {
-        systemEntities.delete(entity);
-        system.onEntityRemoved?.(entity, this);
+        systemEntities.delete(provenEntity);
+        system.onEntityRemoved?.(provenEntity, this);
       }
     }
   }
 
   private destroyEntities(): void {
     for (const entity of this.entitiesToDestroy) {
+      const provenEntity = entity as ProvenEntity<Components>;
       for (const [system, systemEntities] of this.systems) {
-        if (systemEntities.has(entity)) {
-          systemEntities.delete(entity);
-          system.onEntityRemoved?.(entity, this);
+        if (systemEntities.has(provenEntity)) {
+          systemEntities.delete(provenEntity);
+          system.onEntityRemoved?.(provenEntity, this);
         }
       }
       this.entities.delete(entity);

@@ -1,2 +1,2 @@
 export { ECS } from "./ecs";
-export type { ComponentAccessor, Entity, System, SystemContext } from "./ecs";
+export type { ComponentAccessor, Entity, EntityWith, System, SystemContext } from "./ecs";
