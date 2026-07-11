@@ -8,7 +8,7 @@
  */
 import { ECS } from "@game/ecs";
 import { Keyboard } from "@game/input";
-import { Matrix4x4, Transform3D, Vector3 } from "@game/math";
+import { AXIS_Y, Matrix4x4, Transform3D, Vector3 } from "@game/math";
 import { GEOMETRY_BOX, Material, Mesh, PerspectiveCamera, Renderer, Uniform, startAnimationLoop } from "@game/render";
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ const renderer = new Renderer();
 const camera = new PerspectiveCamera({ aspect: window.innerWidth / window.innerHeight });
 camera.transform.translation.set(0, 9, 12);
 camera.transform.rotation.setFromRotationMatrix(
-  new Matrix4x4().targetTo(camera.transform.translation, new Vector3(0, 0, 0), new Vector3(0, 1, 0)),
+  new Matrix4x4().targetTo(camera.transform.translation, new Vector3(0, 0, 0), AXIS_Y),
 );
 
 // ---------------------------------------------------------------------------

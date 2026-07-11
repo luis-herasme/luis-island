@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Matrix3x3, Matrix4x4, Quaternion, Transform2D, Transform3D, Vector3 } from "./index";
+import { AXIS_Y, Matrix3x3, Matrix4x4, Quaternion, Transform2D, Transform3D, Vector3 } from "./index";
 
 const closeTo = (actual: number, expected: number) => expect(actual).toBeCloseTo(expected, 5);
 
@@ -33,6 +33,22 @@ describe("Quaternion", () => {
     closeTo(rotatedByQuaternion.x, rotatedByMatrix.x);
     closeTo(rotatedByQuaternion.y, rotatedByMatrix.y);
     closeTo(rotatedByQuaternion.z, rotatedByMatrix.z);
+  });
+});
+
+describe("axis constants", () => {
+  it("Quaternion.fromAxisAngle matches setFromAxisAngle", () => {
+    const fromStatic = Quaternion.fromAxisAngle(AXIS_Y, Math.PI / 4);
+    const fromInstance = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 4);
+    closeTo(fromStatic.x, fromInstance.x);
+    closeTo(fromStatic.y, fromInstance.y);
+    closeTo(fromStatic.z, fromInstance.z);
+    closeTo(fromStatic.w, fromInstance.w);
+  });
+
+  it("mutating a frozen axis throws instead of corrupting it", () => {
+    expect(() => (AXIS_Y as Vector3).set(1, 2, 3)).toThrow(TypeError);
+    closeTo(AXIS_Y.y, 1);
   });
 });
 

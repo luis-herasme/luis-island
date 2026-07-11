@@ -127,3 +127,10 @@ export class Vector3 {
     return this.set(array[offset]!, array[offset + 1]!, array[offset + 2]!);
   }
 }
+
+// The world axes as shared read-only constants. They are frozen, so calling a
+// mutating method on one throws instead of silently corrupting every user of
+// the constant — clone() one when you need a vector to write to.
+export const AXIS_X = Object.freeze(new Vector3(1, 0, 0));
+export const AXIS_Y = Object.freeze(new Vector3(0, 1, 0));
+export const AXIS_Z = Object.freeze(new Vector3(0, 0, 1));

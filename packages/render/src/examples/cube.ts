@@ -5,7 +5,7 @@
  * name, and let renderScene inject the camera matrices. This file typechecks
  * as part of `pnpm check`; the playground app runs it live (`pnpm dev`).
  */
-import { Quaternion, Vector3 } from "@game/math";
+import { AXIS_Y, AXIS_Z, Quaternion } from "@game/math";
 import { PerspectiveCamera } from "../camera";
 import { GEOMETRY_BOX } from "../geometry";
 import { Material } from "../material";
@@ -68,8 +68,8 @@ cube.material.setUniform("base_color", Uniform.vector3([1, 0.53, 0.27]));
 
 // The per-frame rotation increments are constant, so the quaternions are
 // built once and reused every frame.
-const spinAroundY = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), 0.01);
-const spinAroundZ = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 0.005);
+const spinAroundY = Quaternion.fromAxisAngle(AXIS_Y, 0.01);
+const spinAroundZ = Quaternion.fromAxisAngle(AXIS_Z, 0.005);
 
 startAnimationLoop(() => {
   // Animate by mutating the transform; renderScene turns it into the

@@ -29,6 +29,11 @@ export class Quaternion {
     return this.set(0, 0, 0, 1);
   }
 
+  /** A new quaternion rotating by angle (radians) around the normalized axis. */
+  static fromAxisAngle(axis: Vector3, angle: number): Quaternion {
+    return new Quaternion().setFromAxisAngle(axis, angle);
+  }
+
   setFromAxisAngle(axis: Vector3, angle: number): this {
     // axis must be normalized
     const halfAngle = angle / 2;
