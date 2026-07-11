@@ -12,6 +12,25 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
+  apps/game:
+    dependencies:
+      '@game/ecs':
+        specifier: workspace:*
+        version: link:../../packages/ecs
+      '@game/input':
+        specifier: workspace:*
+        version: link:../../packages/input
+      '@game/math':
+        specifier: workspace:*
+        version: link:../../packages/math
+      '@game/render':
+        specifier: workspace:*
+        version: link:../../packages/render
+    devDependencies:
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.3
+
   apps/playground:
     dependencies:
       '@game/math':
@@ -26,6 +45,12 @@ importers:
         version: 6.4.3
 
   packages/ecs:
+    devDependencies:
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7
+
+  packages/input:
     devDependencies:
       vitest:
         specifier: ^3.0.0
