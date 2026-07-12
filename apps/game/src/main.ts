@@ -13,6 +13,7 @@
 import { startAnimationLoop } from "@game/render";
 import { context } from "./game-context";
 import { setCoinCount } from "./hud";
+import { preloadAssets } from "./rendering/asset-cache";
 import { spawnEntity } from "./spawn-entity";
 import { WORLD_ENTITIES } from "./world";
 import { bodySystem } from "./systems/body-system";
@@ -47,6 +48,11 @@ context.ecs.addSystem(coinSystem);
 context.ecs.addSystem(playerAvatarSystem);
 context.ecs.addSystem(cameraFollowSystem);
 context.ecs.addSystem(renderSystem);
+
+// The world data is also the asset manifest: everything it references is
+// loaded before anything spawns, so materialization is synchronous and a
+// failed fetch is a loud startup error.
+await preloadAssets(WORLD_ENTITIES);
 
 for (const definition of WORLD_ENTITIES) {
   spawnEntity(definition);

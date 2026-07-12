@@ -3,7 +3,7 @@ import { GEOMETRY_BOX, Material, Mesh, Uniform } from "@game/render";
 import type { Geometry } from "@game/render";
 import type { Components } from "../components";
 import { context } from "../game-context";
-import { loadObjGeometry, loadTexture } from "../rendering/asset-cache";
+import { getObjGeometry, getTexture } from "../rendering/asset-cache";
 import {
   BASIC_FRAGMENT_SHADER_SOURCE,
   BASIC_TEXTURED_FRAGMENT_SHADER_SOURCE,
@@ -17,19 +17,16 @@ import {
   LIT_VERTEX_SHADER_SOURCE,
 } from "../rendering/lit-shader";
 
-/** Materialized meshes are render memory, private to this system (null while loading). */
-const meshes = new Map<Entity, Mesh | null>();
+/** Materialized meshes are render memory, private to this system. */
+const meshes = new Map<Entity, Mesh>();
 
 const frameMeshes: Mesh[] = [];
 
 /**
  * Owns the visual side of every `renderable` entity: the description is
- * materialized into a mesh (through the asset cache, so geometries and
- * textures are shared) when the entity appears, kept in sync with the
- * transform every frame, and dropped when the entity goes. Materializing is
- * asynchronous — a box resolves within a microtask, an OBJ url when its
- * fetch lands — and the mesh joins the scene once ready, unless the entity
- * died while loading.
+ * materialized into a mesh when the entity appears — synchronously, since
+ * every asset was preloaded before the world spawned — kept in sync with
+ * the transform every frame, and dropped when the entity goes.
  *
  * The frame is drawn from context.sceneMeshes, which also carries meshes
  * other systems own and registered themselves, like the avatar's body parts
@@ -40,29 +37,25 @@ export const renderSystem = context.ecs.createSystem({
 
   onEntityAdded(entity, ecs) {
     const renderable = ecs.get(entity, "renderable");
-    meshes.set(entity, null); // loading
+    if (!renderable) return;
 
-    void (async () => {
-      const mesh = await materializeMesh(renderable);
-
-      // The entity may have been removed while the assets were in flight.
-      if (!meshes.has(entity)) return;
-
-      meshes.set(entity, mesh);
-      context.sceneMeshes.add(mesh);
-    })();
+    const mesh = materializeMesh(renderable);
+    meshes.set(entity, mesh);
+    context.sceneMeshes.add(mesh);
   },
 
   onEntityRemoved(entity) {
     const mesh = meshes.get(entity);
+    if (!mesh) return;
+
     meshes.delete(entity);
-    if (mesh) context.sceneMeshes.delete(mesh);
+    context.sceneMeshes.delete(mesh);
   },
 
   update({ entities, components }) {
     for (const entity of entities) {
       const mesh = meshes.get(entity);
-      if (!mesh) continue; // still loading
+      if (!mesh) continue;
 
       const transform = components.get(entity, "transform");
       const { geometry } = components.get(entity, "renderable");
@@ -100,19 +93,18 @@ const SHADER_VARIANTS = {
 } as const;
 
 /**
- * Turns a description into a mesh. The geometry comes from the asset cache;
- * the material is built per entity, since it carries per-entity uniforms.
- * Each material kind has two shader variants of the same look, picked by
- * whether the description carries a texture map.
+ * Turns a description into a mesh, reading every asset from the preloaded
+ * cache. The geometry is shared (meshes only read it; copy() is for callers
+ * that customize their copy); the material is built per entity, since it
+ * carries per-entity uniforms. Each material kind has two shader variants
+ * of the same look, picked by whether the description carries a texture.
  */
-async function materializeMesh(renderable: Components["renderable"]): Promise<Mesh> {
-  // Meshes only read their geometry, so every box shares the template
-  // directly — copy() is for callers that customize their copy.
+function materializeMesh(renderable: Components["renderable"]): Mesh {
   let geometry: Geometry;
   if (renderable.geometry.kind === "box") {
     geometry = GEOMETRY_BOX;
   } else {
-    geometry = await loadObjGeometry(renderable.geometry.url);
+    geometry = getObjGeometry(renderable.geometry.url);
   }
 
   const { kind, color, textureUrl } = renderable.material;
@@ -126,7 +118,7 @@ async function materializeMesh(renderable: Components["renderable"]): Promise<Me
 
   const material = new Material({ vertexShaderSource: shaders.vertex, fragmentShaderSource: shaders.fragment });
   material.setUniform("base_color", Uniform.vector3(baseColor));
-  if (textureUrl) material.setUniform("texture_sampler", Uniform.texture(await loadTexture(textureUrl)));
+  if (textureUrl) material.setUniform("texture_sampler", Uniform.texture(getTexture(textureUrl)));
 
   return new Mesh({ geometry, material });
 }
