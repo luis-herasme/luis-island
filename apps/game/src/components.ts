@@ -91,6 +91,19 @@ export type Components = {
   coin: { value: number };
 
   /**
+   * A camera-facing text label floating `offsetY` above the transform,
+   * rendered from a hidden canvas. Set `text` to "" to show nothing; the
+   * label system regenerates the texture whenever the text changes.
+   */
+  label: { text: string; offsetY: number };
+
+  /**
+   * A jukebox: walk close and it offers to play a song for `songCost`
+   * coins through its label.
+   */
+  jukebox: { songCost: number };
+
+  /**
    * A box region (centered on the transform) that pushes dynamic bodies.
    * The force is strongest at the region's base and decays linearly to zero
    * at its top, like the airflow of a fan.

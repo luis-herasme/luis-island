@@ -5,8 +5,6 @@ import { playCoinSound } from "../sounds";
 /** How close the player's center must be to a coin's center to collect it. */
 const COLLECT_DISTANCE = 0.8;
 
-let collectedTotal = 0;
-
 /**
  * Collects coins: when the player comes within reach of a `coin` entity,
  * the entity is destroyed — every owning system releases its resources
@@ -28,9 +26,9 @@ export const coinSystem = context.ecs.createSystem({
       const distance = Math.hypot(coin.x - player.x, coin.y - player.y, coin.z - player.z);
       if (distance > COLLECT_DISTANCE) continue;
 
-      collectedTotal += components.get(entity, "coin").value;
+      context.coins += components.get(entity, "coin").value;
       ecs.destroyEntity(entity);
-      setCoinCount(collectedTotal);
+      setCoinCount(context.coins);
       playCoinSound();
     }
   },

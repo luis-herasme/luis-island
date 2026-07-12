@@ -19,6 +19,8 @@ import { WORLD_ENTITIES } from "./world";
 import { bodySystem } from "./systems/body-system";
 import { cameraFollowSystem } from "./systems/camera-follow-system";
 import { coinSystem } from "./systems/coin-system";
+import { jukeboxSystem } from "./systems/jukebox-system";
+import { labelSystem } from "./systems/label-system";
 import { physicsSystem } from "./systems/physics-system";
 import { playerAvatarSystem } from "./systems/player-avatar-system";
 import { playerMovementSystem } from "./systems/player-movement-system";
@@ -44,8 +46,10 @@ context.ecs.addSystem(spinSystem);
 context.ecs.addSystem(physicsSystem);
 context.ecs.addSystem(respawnSystem);
 context.ecs.addSystem(coinSystem);
+context.ecs.addSystem(jukeboxSystem);
 // After physics (reads the settled transform), before render (writes meshes).
 context.ecs.addSystem(playerAvatarSystem);
+context.ecs.addSystem(labelSystem);
 context.ecs.addSystem(cameraFollowSystem);
 context.ecs.addSystem(renderSystem);
 

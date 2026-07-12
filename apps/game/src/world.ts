@@ -321,6 +321,22 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     coin: { value: 1 },
   },
 
+  // The jukebox: come close and its label offers a song for coins.
+  {
+    transform: {
+      translation: { x: 7, y: 0.25, z: -1 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.9, y: 1.5, z: 0.7 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", color: [0.85, 0.25, 0.4] },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+    jukebox: { songCost: 3 },
+    label: { text: "", offsetY: 1.2 },
+  },
+
   // The player: dynamic, spawned above the ground so it falls in on load.
   // No renderable — the avatar system draws it as an animated box figure.
   {
@@ -336,5 +352,6 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
       stepHeight: 0.5,
     },
     player: { speed: 6, facing: { x: 0, y: 0, z: -1 } },
+    label: { text: "Luis", offsetY: 0.95 },
   },
 ];

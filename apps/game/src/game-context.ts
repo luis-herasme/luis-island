@@ -40,4 +40,6 @@ export const context = {
   bodies: new Map<Entity, RigidBody>(),
   /** Set by spawnWorld — the entity systems read when they need "the player". */
   playerEntity: null as Entity | null,
+  /** The player's coins: earned by the coin system, spent by the jukebox. */
+  coins: 0,
 };
