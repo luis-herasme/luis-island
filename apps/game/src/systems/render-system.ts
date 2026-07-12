@@ -66,15 +66,13 @@ export const renderSystem = context.ecs.createSystem({
       const transform = components.get(entity, "transform");
       const { geometry } = components.get(entity, "renderable");
 
-      mesh.transform.translation.set(...transform.translation);
+      mesh.transform.translation.copy(transform.translation);
       if (geometry.kind === "obj" && geometry.offset) {
-        mesh.transform.translation.x += geometry.offset[0];
-        mesh.transform.translation.y += geometry.offset[1];
-        mesh.transform.translation.z += geometry.offset[2];
+        mesh.transform.translation.add(geometry.offset);
       }
 
-      mesh.transform.rotation.set(...transform.rotation);
-      mesh.transform.scale.set(...transform.scale);
+      mesh.transform.rotation.copy(transform.rotation);
+      mesh.transform.scale.copy(transform.scale);
     }
 
     frameMeshes.length = 0;

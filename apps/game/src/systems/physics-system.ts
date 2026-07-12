@@ -12,9 +12,9 @@ export const physicsSystem = context.ecs.createSystem({
       if (!body) continue;
 
       const { translation } = components.get(entity, "transform");
-      translation[0] = body.translation.x;
-      translation[1] = body.translation.y;
-      translation[2] = body.translation.z;
+      translation.x = body.translation.x;
+      translation.y = body.translation.y;
+      translation.z = body.translation.z;
     }
   },
 });

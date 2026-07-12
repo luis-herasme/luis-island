@@ -18,7 +18,7 @@ export const throwSystem = context.ecs.createSystem({
       if (!body) continue;
 
       const { facing } = components.get(entity, "player");
-      throwBox({ from: [body.translation.x, body.translation.y, body.translation.z], facing });
+      throwBox({ from: body.translation, facing });
     }
   },
 });

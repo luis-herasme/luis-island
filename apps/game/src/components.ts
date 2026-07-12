@@ -1,20 +1,24 @@
+import type { QuaternionLike, Vector3Like } from "@game/math";
+
 /**
  * Everything an entity can be, in one place — and all of it plain,
  * JSON-serializable data. A component is never a class: vectors and
- * quaternions are number tuples, and `JSON.stringify` round-trips every
- * component. Systems that need math build scratch `Vector3`/`Quaternion`
- * instances from the tuples.
+ * quaternions are plain `{ x, y, z(, w) }` records (the math package's
+ * `Vector3Like`/`QuaternionLike` shapes), and `JSON.stringify` round-trips
+ * every component. Read-only math methods accept the shapes directly;
+ * colors stay `[r, g, b]` tuples because they are GPU upload payloads, not
+ * math operands.
  *
  * Runtime state and resources are not components: meshes live in the render
  * system's memory, rigid bodies in `context.bodies` — materialized in
  * onEntityAdded and released in onEntityRemoved.
  */
 
-/** Scale, rotation (a quaternion, identity `[0, 0, 0, 1]`) and translation. */
+/** Scale, rotation (a quaternion, identity `{x:0, y:0, z:0, w:1}`) and translation. */
 export type Transform = {
-  translation: [number, number, number];
-  rotation: [number, number, number, number];
-  scale: [number, number, number];
+  translation: Vector3Like;
+  rotation: QuaternionLike;
+  scale: Vector3Like;
 };
 
 /**
@@ -30,7 +34,7 @@ export type GeometryDescription =
   | {
       kind: "obj";
       url: string;
-      offset?: [number, number, number];
+      offset?: Vector3Like;
     };
 
 /**
@@ -77,11 +81,11 @@ export type Components = {
     restitution: number;
     damping: number;
     stepHeight: number;
-    size?: [number, number, number];
+    size?: Vector3Like;
   };
 
   /** The player: facing is the last movement direction — where throws go. */
-  player: { speed: number; facing: [number, number, number] };
+  player: { speed: number; facing: Vector3Like };
 
   /** A collectible: the player walking into it picks it up. */
   coin: { value: number };
@@ -91,7 +95,7 @@ export type Components = {
    * The force is strongest at the region's base and decays linearly to zero
    * at its top, like the airflow of a fan.
    */
-  windZone: { size: [number, number, number]; force: [number, number, number] };
+  windZone: { size: Vector3Like; force: Vector3Like };
 
   /** Purely visual rotation around the Y axis, radians per second. */
   spin: { speed: number };

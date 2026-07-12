@@ -1,10 +1,11 @@
 import type { Entity } from "@game/ecs";
+import type { Vector3Like } from "@game/math";
 import { context } from "../game-context";
 
 type SpawnBoxOptions = {
   color: [number, number, number];
-  position: [number, number, number];
-  scale?: [number, number, number];
+  position: Vector3Like;
+  scale?: Vector3Like;
   /** Omit for a purely visual box with no physics body. */
   body?: {
     type: "dynamic" | "static";
@@ -25,8 +26,8 @@ export function spawnBox(options: SpawnBoxOptions): Entity {
   const entity = ecs.addEntity();
   ecs.addComponent(entity, "transform", {
     translation: options.position,
-    rotation: [0, 0, 0, 1],
-    scale: options.scale ?? [1, 1, 1],
+    rotation: { x: 0, y: 0, z: 0, w: 1 },
+    scale: options.scale ?? { x: 1, y: 1, z: 1 },
   });
   ecs.addComponent(entity, "renderable", {
     geometry: { kind: "box" },

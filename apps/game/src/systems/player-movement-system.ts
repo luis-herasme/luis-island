@@ -45,9 +45,9 @@ export const playerMovementSystem = context.ecs.createSystem({
       if (shouldJump && body.velocity.y === 0) body.velocity.y = JUMP_SPEED;
 
       if (length > 0) {
-        player.facing[0] = directionX;
-        player.facing[1] = 0;
-        player.facing[2] = directionZ;
+        player.facing.x = directionX;
+        player.facing.y = 0;
+        player.facing.z = directionZ;
       }
     }
   },

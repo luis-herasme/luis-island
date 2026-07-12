@@ -14,12 +14,12 @@ export const spinSystem = context.ecs.createSystem({
       const { speed } = components.get(entity, "spin");
 
       spinRotation.setFromAxisAngle(AXIS_Y, speed * deltaTime);
-      currentRotation.set(...rotation).multiply(spinRotation);
+      currentRotation.copy(rotation).multiply(spinRotation);
 
-      rotation[0] = currentRotation.x;
-      rotation[1] = currentRotation.y;
-      rotation[2] = currentRotation.z;
-      rotation[3] = currentRotation.w;
+      rotation.x = currentRotation.x;
+      rotation.y = currentRotation.y;
+      rotation.z = currentRotation.z;
+      rotation.w = currentRotation.w;
     }
   },
 });

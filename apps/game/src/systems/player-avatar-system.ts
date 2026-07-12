@@ -110,9 +110,9 @@ export const playerAvatarSystem = context.ecs.createSystem({
       // The root carries the body: position from physics, and a smooth turn
       // toward the last movement direction. The avatar's front is its -Z.
       const root = nodes[avatar.rootIndex]!;
-      root.localTransform.translation.set(...transform.translation);
+      root.localTransform.translation.copy(transform.translation);
 
-      const yaw = Math.atan2(-player.facing[0], -player.facing[2]);
+      const yaw = Math.atan2(-player.facing.x, -player.facing.z);
       targetRotation.setFromAxisAngle(AXIS_Y, yaw);
       root.localTransform.rotation.slerp(targetRotation, 1 - Math.exp(-TURN_EASE_RATE * deltaTime));
 
