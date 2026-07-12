@@ -1,5 +1,10 @@
 import { context } from "../game-context";
 
+/** Vertical takeoff speed: apex height is speed² / (2 · gravity) ≈ 1.27. */
+const JUMP_SPEED = 5;
+
+let jumpKeyWasPressed = false;
+
 /** Input writes velocities; the physics step decides where things end up. */
 export const playerMovementSystem = context.ecs.createSystem({
   requiredComponents: ["body", "player"],
@@ -20,6 +25,10 @@ export const playerMovementSystem = context.ecs.createSystem({
     const directionX = length === 0 ? 0 : moveX / length;
     const directionZ = length === 0 ? 0 : moveZ / length;
 
+    const jumpKeyIsPressed = keyboard.isPressed("Space");
+    const shouldJump = jumpKeyIsPressed && !jumpKeyWasPressed;
+    jumpKeyWasPressed = jumpKeyIsPressed;
+
     for (const entity of entities) {
       const body = components.get(entity, "body");
       if (body.type !== "dynamic") continue;
@@ -29,6 +38,11 @@ export const playerMovementSystem = context.ecs.createSystem({
       // Horizontal velocity comes from input; vertical stays with gravity.
       body.velocity.x = directionX * player.speed;
       body.velocity.z = directionZ * player.speed;
+
+      // Grounded means the last physics step zeroed the vertical velocity
+      // against the floor (restitution 0): airborne bodies always carry
+      // some vertical speed when input runs.
+      if (shouldJump && body.velocity.y === 0) body.velocity.y = JUMP_SPEED;
 
       if (length > 0) player.facing.set(directionX, 0, directionZ);
     }

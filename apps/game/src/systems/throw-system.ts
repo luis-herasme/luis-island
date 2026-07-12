@@ -3,12 +3,12 @@ import { context } from "../game-context";
 
 let throwKeyWasPressed = false;
 
-/** Space throws a box in the facing direction, arcing under gravity. */
+/** E throws a box in the facing direction, arcing under gravity. */
 export const throwSystem = context.ecs.createSystem({
   requiredComponents: ["body", "player"],
 
   update({ entities, components }) {
-    const throwKeyIsPressed = context.keyboard.isPressed("Space");
+    const throwKeyIsPressed = context.keyboard.isPressed("KeyE");
     const shouldThrow = throwKeyIsPressed && !throwKeyWasPressed;
     throwKeyWasPressed = throwKeyIsPressed;
     if (!shouldThrow) return;

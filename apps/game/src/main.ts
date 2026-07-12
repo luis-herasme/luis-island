@@ -6,8 +6,8 @@
  * Drive the little figure with WASD or the arrows — it falls onto the
  * ground when the page loads, walks with swinging arms and legs, the
  * obstacle boxes block its way, the staircase is walkable, the fan's wind
- * column lifts anything that enters it, and Space throws a small box in the
- * direction you last moved.
+ * column lifts anything that enters it, Space jumps, and E throws a small
+ * box in the direction you last moved.
  */
 import { startAnimationLoop } from "@game/render";
 import { spawnWorld } from "./entities/spawn-world";
