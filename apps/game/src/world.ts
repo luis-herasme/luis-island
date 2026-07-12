@@ -707,56 +707,80 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
   {
-    // Chair
+    // Chair — the armchair model, facing its table, pushable
     transform: {
-      translation: { x: 3.7, y: 4.275, z: -6.8 },
-      rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 0.45, y: 0.45, z: 0.45 },
+      translation: { x: 3.7, y: 4.695, z: -6.8 },
+      rotation: { x: 0, y: 0.7071068, z: 0, w: 0.7071068 },
+      scale: { x: 0.0055, y: 0.0055, z: 0.0055 },
     },
     renderable: {
-      geometry: { kind: "box" },
-      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+      geometry: { kind: "obj", url: "/chair.obj", offset: { x: 0, y: -0.229, z: 0.002 } },
+      material: { kind: "lit", textureUrl: "/chair.png" },
     },
-    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+    physicsBody: {
+      type: "dynamic",
+      restitution: 0,
+      damping: 2,
+      stepHeight: 0,
+      size: { x: 0.97, y: 1.29, z: 0.75 },
+    },
   },
   {
-    // Chair
+    // Chair — the armchair model, facing its table, pushable
     transform: {
-      translation: { x: 5.9, y: 4.275, z: -6.8 },
-      rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 0.45, y: 0.45, z: 0.45 },
+      translation: { x: 5.9, y: 4.695, z: -6.8 },
+      rotation: { x: 0, y: -0.7071068, z: 0, w: 0.7071068 },
+      scale: { x: 0.0055, y: 0.0055, z: 0.0055 },
     },
     renderable: {
-      geometry: { kind: "box" },
-      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+      geometry: { kind: "obj", url: "/chair.obj", offset: { x: 0, y: -0.229, z: 0.002 } },
+      material: { kind: "lit", textureUrl: "/chair.png" },
     },
-    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+    physicsBody: {
+      type: "dynamic",
+      restitution: 0,
+      damping: 2,
+      stepHeight: 0,
+      size: { x: 0.97, y: 1.29, z: 0.75 },
+    },
   },
   {
-    // Chair
+    // Chair — the armchair model, facing its table, pushable
     transform: {
-      translation: { x: 3.7, y: 4.275, z: -9.2 },
-      rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 0.45, y: 0.45, z: 0.45 },
+      translation: { x: 3.7, y: 4.695, z: -9.2 },
+      rotation: { x: 0, y: 0.7071068, z: 0, w: 0.7071068 },
+      scale: { x: 0.0055, y: 0.0055, z: 0.0055 },
     },
     renderable: {
-      geometry: { kind: "box" },
-      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+      geometry: { kind: "obj", url: "/chair.obj", offset: { x: 0, y: -0.229, z: 0.002 } },
+      material: { kind: "lit", textureUrl: "/chair.png" },
     },
-    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+    physicsBody: {
+      type: "dynamic",
+      restitution: 0,
+      damping: 2,
+      stepHeight: 0,
+      size: { x: 0.97, y: 1.29, z: 0.75 },
+    },
   },
   {
-    // Chair
+    // Chair — the armchair model, facing its table, pushable
     transform: {
-      translation: { x: 5.9, y: 4.275, z: -9.2 },
-      rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 0.45, y: 0.45, z: 0.45 },
+      translation: { x: 5.9, y: 4.695, z: -9.2 },
+      rotation: { x: 0, y: -0.7071068, z: 0, w: 0.7071068 },
+      scale: { x: 0.0055, y: 0.0055, z: 0.0055 },
     },
     renderable: {
-      geometry: { kind: "box" },
-      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+      geometry: { kind: "obj", url: "/chair.obj", offset: { x: 0, y: -0.229, z: 0.002 } },
+      material: { kind: "lit", textureUrl: "/chair.png" },
     },
-    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+    physicsBody: {
+      type: "dynamic",
+      restitution: 0,
+      damping: 2,
+      stepHeight: 0,
+      size: { x: 0.97, y: 1.29, z: 0.75 },
+    },
   },
 
   // The jukebox, resident band of the discotheque: come close and its
