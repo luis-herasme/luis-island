@@ -10,10 +10,24 @@
  */
 import { ECS } from "@game/ecs";
 import { Keyboard } from "@game/input";
-import { AXIS_Y, Matrix4x4, Transform3D, Vector3 } from "@game/math";
+import { AXIS_Y, Matrix4x4, Quaternion, Transform3D, Vector3 } from "@game/math";
 import { DynamicBody, PhysicsWorld, StaticBody } from "@game/physics";
 import type { RigidBody } from "@game/physics";
-import { GEOMETRY_BOX, Material, Mesh, PerspectiveCamera, Renderer, Uniform, startAnimationLoop } from "@game/render";
+import {
+  BufferUsage,
+  Data,
+  GEOMETRY_BOX,
+  Geometry,
+  IndexBuffer,
+  Material,
+  Mesh,
+  PerspectiveCamera,
+  Renderer,
+  Uniform,
+  VertexBuffer,
+  VertexData,
+  startAnimationLoop,
+} from "@game/render";
 
 // ---------------------------------------------------------------------------
 // Rendering setup — one shader for everything, colored per mesh
@@ -68,6 +82,12 @@ type Components = {
   body: RigidBody;
   /** facing is the last movement direction — where thrown boxes go. */
   player: { speed: number; facing: Vector3 };
+  /** A box region (centered on the transform) that pushes dynamic bodies. */
+  windZone: { size: Vector3; force: Vector3 };
+  /** Purely visual rotation around the Y axis, radians per second. */
+  spin: { speed: number };
+  /** Rising streaks that make a wind zone visible. */
+  windStreaks: { offsets: Vector3[]; speeds: number[]; bottom: number; top: number };
 };
 
 const ecs = new ECS<Components>();
@@ -78,7 +98,8 @@ type SpawnBoxOptions = {
   color: [number, number, number];
   position: [number, number, number];
   scale?: [number, number, number];
-  bodyType?: "dynamic" | "static";
+  /** "none" spawns a purely visual box with no physics body. */
+  bodyType?: "dynamic" | "static" | "none";
   restitution?: number;
   damping?: number;
   stepHeight?: number;
@@ -95,29 +116,32 @@ function spawnBox(options: SpawnBoxOptions) {
   transform.translation.set(...options.position);
   if (options.scale) transform.scale.set(...options.scale);
 
-  // The mesh is a unit box scaled by the transform, so the body size is
-  // exactly the scale.
-  const size = transform.scale.clone();
-  const translation = new Vector3(...options.position);
-
-  const body: RigidBody =
-    options.bodyType === "dynamic"
-      ? new DynamicBody({
-          size,
-          translation,
-          velocity: new Vector3(),
-          mass: 1,
-          restitution: options.restitution ?? 0,
-          damping: options.damping ?? 0,
-          stepHeight: options.stepHeight ?? 0,
-        })
-      : new StaticBody({ size, translation, restitution: options.restitution ?? 0 });
-  physicsWorld.addBody(body);
-
   const entity = ecs.addEntity();
   ecs.addComponent(entity, "transform", transform);
-  ecs.addComponent(entity, "body", body);
   ecs.addComponent(entity, "mesh", new Mesh({ geometry: GEOMETRY_BOX.copy(), material }));
+
+  if (options.bodyType !== "none") {
+    // The mesh is a unit box scaled by the transform, so the body size is
+    // exactly the scale.
+    const size = transform.scale.clone();
+    const translation = new Vector3(...options.position);
+
+    const body: RigidBody =
+      options.bodyType === "dynamic"
+        ? new DynamicBody({
+            size,
+            translation,
+            velocity: new Vector3(),
+            mass: 1,
+            restitution: options.restitution ?? 0,
+            damping: options.damping ?? 0,
+            stepHeight: options.stepHeight ?? 0,
+          })
+        : new StaticBody({ size, translation, restitution: options.restitution ?? 0 });
+    physicsWorld.addBody(body);
+    ecs.addComponent(entity, "body", body);
+  }
+
   return entity;
 }
 
@@ -140,6 +164,138 @@ for (let stepIndex = 0; stepIndex < STAIR_STEP_COUNT; stepIndex++) {
     position: [-1, -0.5 + STAIR_STEP_RISE * (stepIndex + 0.5), -3 - stepIndex],
     scale: [2, STAIR_STEP_RISE, 1],
   });
+}
+
+// ---------------------------------------------------------------------------
+// The fan: a wind zone that pushes bodies upward, made visible by a spinning
+// blade cross on a pedestal and rising streak particles.
+// ---------------------------------------------------------------------------
+
+const FAN_X = 4;
+const FAN_Z = 1;
+const GROUND_TOP = -0.5;
+const WIND_TOP = 4.5;
+const WIND_FORCE = 25;
+const STREAK_COUNT = 36;
+
+// Pedestal: a steppable static box the blades sit on.
+spawnBox({ color: [0.25, 0.25, 0.28], position: [FAN_X, GROUND_TOP + 0.08, FAN_Z], scale: [1.6, 0.16, 1.6] });
+
+// Blades: two crossed visual-only boxes sharing the same spin, so the cross
+// stays a cross while it rotates.
+for (const scale of [
+  [1.3, 0.05, 0.16],
+  [0.16, 0.05, 1.3],
+] as [number, number, number][]) {
+  const blade = spawnBox({
+    color: [0.7, 0.72, 0.75],
+    position: [FAN_X, GROUND_TOP + 0.22, FAN_Z],
+    scale,
+    bodyType: "none",
+  });
+  ecs.addComponent(blade, "spin", { speed: 6 });
+}
+
+// The wind region itself: invisible, centered over the fan.
+{
+  const zoneTransform = new Transform3D();
+  zoneTransform.translation.set(FAN_X, (GROUND_TOP + WIND_TOP) / 2, FAN_Z);
+
+  const zone = ecs.addEntity();
+  ecs.addComponent(zone, "transform", zoneTransform);
+  ecs.addComponent(zone, "windZone", {
+    size: new Vector3(1.8, WIND_TOP - GROUND_TOP, 1.8),
+    force: new Vector3(0, WIND_FORCE, 0),
+  });
+}
+
+const STREAK_VERTEX_SHADER_SOURCE = `#version 300 es
+in vec3 position;
+in vec3 offset;
+
+uniform mat4 projection_matrix;
+uniform mat4 camera_inverse_matrix;
+uniform mat4 transform;
+
+void main() {
+  gl_Position = projection_matrix * camera_inverse_matrix * transform * vec4(position + offset, 1.0);
+}`;
+
+const STREAK_FRAGMENT_SHADER_SOURCE = `#version 300 es
+precision mediump float;
+
+out vec4 fragment_color;
+
+void main() {
+  fragment_color = vec4(0.78, 0.88, 0.98, 1.0);
+}`;
+
+/** A thin upright cross (two perpendicular quads) per streak, instanced. */
+function createWindStreaksMesh(offsets: Vector3[]): Mesh {
+  const halfWidth = 0.035;
+  const halfHeight = 0.28;
+
+  // prettier-ignore
+  const positions: [number, number, number][] = [
+    // Quad in the XY plane
+    [-halfWidth, -halfHeight, 0], [halfWidth, -halfHeight, 0], [halfWidth, halfHeight, 0], [-halfWidth, halfHeight, 0],
+    // Quad in the ZY plane
+    [0, -halfHeight, -halfWidth], [0, -halfHeight, halfWidth], [0, halfHeight, halfWidth], [0, halfHeight, -halfWidth],
+  ];
+
+  // prettier-ignore
+  const indices = [
+    0, 1, 2, 2, 3, 0,
+    4, 5, 6, 6, 7, 4,
+  ];
+
+  const geometry = new Geometry({
+    vertexCount: positions.length,
+    instanceCount: offsets.length,
+    indices: IndexBuffer.fromUint8(indices),
+    vertexBuffers: [
+      new VertexBuffer({ vertexData: new VertexData({ name: "position", data: Data.vector3(positions) }) }),
+      new VertexBuffer({
+        vertexData: new VertexData({
+          name: "offset",
+          data: Data.vector3(offsets.map((offset) => [offset.x, offset.y, offset.z])),
+          divisor: 1,
+        }),
+        usage: BufferUsage.DynamicDraw,
+      }),
+    ],
+  });
+
+  return new Mesh({
+    geometry,
+    material: new Material({
+      vertexShaderSource: STREAK_VERTEX_SHADER_SOURCE,
+      fragmentShaderSource: STREAK_FRAGMENT_SHADER_SOURCE,
+    }),
+  });
+}
+
+// The streaks: one instanced mesh, one thin upright cross per particle, all
+// moved by rewriting the per-instance offset attribute each frame.
+{
+  const offsets: Vector3[] = [];
+  const speeds: number[] = [];
+  for (let streakIndex = 0; streakIndex < STREAK_COUNT; streakIndex++) {
+    offsets.push(
+      new Vector3(
+        FAN_X + (Math.random() - 0.5) * 1.4,
+        GROUND_TOP + Math.random() * (WIND_TOP - GROUND_TOP),
+        FAN_Z + (Math.random() - 0.5) * 1.4,
+      ),
+    );
+    speeds.push(3.5 + Math.random() * 3);
+  }
+
+  const streaks = ecs.addEntity();
+  const streakTransform = new Transform3D();
+  ecs.addComponent(streaks, "transform", streakTransform);
+  ecs.addComponent(streaks, "mesh", createWindStreaksMesh(offsets));
+  ecs.addComponent(streaks, "windStreaks", { offsets, speeds, bottom: GROUND_TOP, top: WIND_TOP });
 }
 
 // The player: dynamic, spawned above the ground so it falls in on load.
@@ -238,6 +394,67 @@ const throwSystem = ecs.createSystem({
   },
 });
 
+/** Wind zones push every dynamic body inside them, each frame. */
+const windSystem = ecs.createSystem({
+  requiredComponents: ["transform", "windZone"],
+
+  update({ entities, components }) {
+    for (const entity of entities) {
+      const zoneCenter = components.get(entity, "transform").translation;
+      const { size, force } = components.get(entity, "windZone");
+
+      for (const body of physicsWorld.bodies) {
+        if (body.type !== "dynamic") continue;
+
+        const inside =
+          Math.abs(body.translation.x - zoneCenter.x) <= size.x * 0.5 &&
+          Math.abs(body.translation.y - zoneCenter.y) <= size.y * 0.5 &&
+          Math.abs(body.translation.z - zoneCenter.z) <= size.z * 0.5;
+
+        if (inside) body.applyForce(force);
+      }
+    }
+  },
+});
+
+/** Purely visual rotation — the fan blades. */
+const spinQuaternion = new Quaternion();
+const spinSystem = ecs.createSystem({
+  requiredComponents: ["transform", "spin"],
+
+  update({ entities, components, deltaTime }) {
+    for (const entity of entities) {
+      const transform = components.get(entity, "transform");
+      const { speed } = components.get(entity, "spin");
+      spinQuaternion.setFromAxisAngle(AXIS_Y, speed * deltaTime);
+      transform.rotation.multiply(spinQuaternion);
+    }
+  },
+});
+
+/** Raises each streak and wraps it back to the base of its column. */
+const streakSystem = ecs.createSystem({
+  requiredComponents: ["mesh", "windStreaks"],
+
+  update({ entities, components, deltaTime }) {
+    for (const entity of entities) {
+      const mesh = components.get(entity, "mesh");
+      const { offsets, speeds, bottom, top } = components.get(entity, "windStreaks");
+
+      const offsetBuffer = mesh.geometry.getVertexBuffer("offset");
+      if (!offsetBuffer) continue;
+
+      for (let streakIndex = 0; streakIndex < offsets.length; streakIndex++) {
+        const offset = offsets[streakIndex]!;
+        offset.y += speeds[streakIndex]! * deltaTime;
+        if (offset.y > top) offset.y = bottom;
+
+        offsetBuffer.setVertex(streakIndex, [offset.x, offset.y, offset.z]);
+      }
+    }
+  },
+});
+
 /** Steps the world, then hands the resulting positions to the transforms. */
 const physicsSystem = ecs.createSystem({
   requiredComponents: ["transform", "body"],
@@ -278,6 +495,9 @@ const renderSystem = ecs.createSystem({
 
 ecs.addSystem(playerMovementSystem);
 ecs.addSystem(throwSystem);
+ecs.addSystem(windSystem);
+ecs.addSystem(spinSystem);
+ecs.addSystem(streakSystem);
 ecs.addSystem(physicsSystem);
 ecs.addSystem(renderSystem);
 
