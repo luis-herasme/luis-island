@@ -27,9 +27,9 @@ void main() {
 }`;
 
 /**
- * Alpha cutout: transparent texels are discarded instead of blended, which
- * needs no renderer support — no blend state, no draw-order sorting. The
- * price is hard edges instead of soft translucency.
+ * The texture's alpha flows straight through to the framebuffer: the
+ * material is transparent, so the renderer blends these fragments over
+ * whatever is already drawn, giving the puffs their soft edges.
  */
 const SPRITE_FRAGMENT_SHADER_SOURCE = `#version 300 es
 precision mediump float;
@@ -42,10 +42,10 @@ out vec4 fragment_color;
 
 void main() {
   vec4 color = texture(texture_sampler, v_uv);
-  if (color.a < 0.5) discard;
 
-  // A light blue tint keeps the puffs reading as wind.
-  fragment_color = vec4(color.rgb * vec3(0.85, 0.92, 1.0), 1.0);
+  // A light blue tint keeps the puffs reading as wind; alpha is softened a
+  // touch so the column stays airy even where puffs overlap.
+  fragment_color = vec4(color.rgb * vec3(0.85, 0.92, 1.0), color.a * 0.85);
 }`;
 
 const SPRITE_HALF_SIZE = 0.24;
@@ -100,6 +100,7 @@ export function createWindSpritesMesh(options: WindSpritesMeshOptions): Mesh {
   const material = new Material({
     vertexShaderSource: SPRITE_VERTEX_SHADER_SOURCE,
     fragmentShaderSource: SPRITE_FRAGMENT_SHADER_SOURCE,
+    transparent: true,
   });
   material.setUniform("texture_sampler", Uniform.texture(options.texture));
 
