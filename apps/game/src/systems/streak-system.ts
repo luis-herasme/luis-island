@@ -42,8 +42,9 @@ export function createStreakSystem(context: GameContext) {
       ecs.addComponent(entity, "mesh", createWindStreaksMesh(offsets));
     },
 
-    onEntityRemoved(entity) {
+    onEntityRemoved(entity, ecs) {
       states.delete(entity);
+      if (ecs.hasComponent(entity, "mesh")) ecs.removeComponent(entity, "mesh");
     },
 
     update({ entities, components, deltaTime, ecs }) {

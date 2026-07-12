@@ -3,38 +3,53 @@ import type { GameContext } from "../game-context";
 import { BOX_FRAGMENT_SHADER_SOURCE, BOX_VERTEX_SHADER_SOURCE } from "../rendering/box-shader";
 
 /**
- * Draws the frame, and owns mesh creation: the first time it sees an entity
- * described by `visual` without a mesh yet, it materializes the box mesh.
- * (Creation is lazy rather than hook-based because components land one at a
- * time — at onEntityAdded for `transform`, the `visual` may not exist yet.)
+ * Rendering owns the mesh lifecycle, in two systems because creation and
+ * drawing watch different components: meshes are created from `visual`
+ * descriptions, while drawing iterates everything that has a `mesh`
+ * (including ones other systems materialize, like the wind streaks).
  */
+
+/**
+ * Creates the mesh when an entity with a `visual` appears — the hook fires
+ * once both transform and visual are present, whichever lands last — and
+ * removes it when the visual goes away or the entity is destroyed.
+ */
+export function createMeshLifecycleSystem(context: GameContext) {
+  return context.ecs.createSystem({
+    requiredComponents: ["transform", "visual"],
+
+    onEntityAdded(entity, ecs) {
+      const { color } = ecs.get(entity, "visual");
+
+      const material = new Material({
+        vertexShaderSource: BOX_VERTEX_SHADER_SOURCE,
+        fragmentShaderSource: BOX_FRAGMENT_SHADER_SOURCE,
+      });
+      material.setUniform("base_color", Uniform.vector3(color));
+
+      ecs.addComponent(entity, "mesh", new Mesh({ geometry: GEOMETRY_BOX.copy(), material }));
+    },
+
+    onEntityRemoved(entity, ecs) {
+      if (ecs.hasComponent(entity, "mesh")) ecs.removeComponent(entity, "mesh");
+    },
+  });
+}
+
+/** Copies each entity's transform component into its mesh and draws the frame. */
 export function createRenderSystem(context: GameContext) {
   const meshes: Mesh[] = [];
 
   return context.ecs.createSystem({
-    requiredComponents: ["transform"],
+    requiredComponents: ["transform", "mesh"],
 
-    update({ entities, components, ecs }) {
+    update({ entities, components }) {
       meshes.length = 0;
 
       for (const entity of entities) {
-        let mesh = ecs.get(entity, "mesh");
-
-        if (!mesh) {
-          const visual = ecs.get(entity, "visual");
-          if (!visual) continue; // nothing to draw (e.g. a wind zone)
-
-          const material = new Material({
-            vertexShaderSource: BOX_VERTEX_SHADER_SOURCE,
-            fragmentShaderSource: BOX_FRAGMENT_SHADER_SOURCE,
-          });
-          material.setUniform("base_color", Uniform.vector3(visual.color));
-
-          mesh = new Mesh({ geometry: GEOMETRY_BOX.copy(), material });
-          ecs.addComponent(entity, "mesh", mesh);
-        }
-
         const transform = components.get(entity, "transform");
+        const mesh = components.get(entity, "mesh");
+
         mesh.transform.translation.copy(transform.translation);
         mesh.transform.rotation.copy(transform.rotation);
         mesh.transform.scale.copy(transform.scale);
