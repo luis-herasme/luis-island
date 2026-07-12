@@ -52,6 +52,8 @@ export type MaterialDescription = {
   /** Multiplied with the texture; defaults to white. */
   color?: [number, number, number];
   textureUrl?: string;
+  /** Tiles the texture this many times across the geometry's UVs; defaults to 1. */
+  textureScale?: number;
 };
 
 export type Components = {

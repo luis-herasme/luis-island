@@ -107,7 +107,7 @@ function materializeMesh(renderable: Components["renderable"]): Mesh {
     geometry = getObjGeometry(renderable.geometry.url);
   }
 
-  const { kind, color, textureUrl } = renderable.material;
+  const { kind, color, textureUrl, textureScale } = renderable.material;
 
   let variant: "plain" | "textured" = "plain";
   if (textureUrl) variant = "textured";
@@ -118,7 +118,13 @@ function materializeMesh(renderable: Components["renderable"]): Mesh {
 
   const material = new Material({ vertexShaderSource: shaders.vertex, fragmentShaderSource: shaders.fragment });
   material.setUniform("base_color", Uniform.vector3(baseColor));
-  if (textureUrl) material.setUniform("texture_sampler", Uniform.texture(getTexture(textureUrl)));
+  if (textureUrl) {
+    material.setUniform("texture_sampler", Uniform.texture(getTexture(textureUrl)));
+
+    let scale = textureScale;
+    if (scale === undefined) scale = 1;
+    material.setUniform("texture_scale", Uniform.float(scale));
+  }
 
   return new Mesh({ geometry, material });
 }

@@ -21,7 +21,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.24, 0.33, 0.28] },
+      material: { kind: "lit", textureUrl: "/grass.png", textureScale: 10 },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
@@ -45,7 +45,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.55, 0.36, 0.68] },
+      material: { kind: "lit", textureUrl: "/box.png" },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
@@ -57,7 +57,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.36, 0.55, 0.68] },
+      material: { kind: "lit", textureUrl: "/box.png" },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
@@ -69,7 +69,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.42, 0.68, 0.36] },
+      material: { kind: "lit", textureUrl: "/box.png" },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },

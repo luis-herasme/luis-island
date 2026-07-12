@@ -48,9 +48,10 @@ in vec2 v_uv;
 
 uniform vec3 base_color;
 uniform sampler2D texture_sampler;
+uniform float texture_scale;
 
 out vec4 fragment_color;
 
 void main() {
-  fragment_color = texture(texture_sampler, v_uv) * vec4(base_color, 1.0);
+  fragment_color = texture(texture_sampler, v_uv * texture_scale) * vec4(base_color, 1.0);
 }`;

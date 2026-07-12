@@ -60,11 +60,12 @@ in vec2 v_uv;
 
 uniform vec3 base_color;
 uniform sampler2D texture_sampler;
+uniform float texture_scale;
 
 out vec4 fragment_color;
 
 void main() {
   float light = max(0.35, dot(normalize(v_normal), normalize(vec3(0.4, 1.0, 0.6))));
-  fragment_color = texture(texture_sampler, v_uv) * vec4(base_color, 1.0);
+  fragment_color = texture(texture_sampler, v_uv * texture_scale) * vec4(base_color, 1.0);
   fragment_color.rgb *= light;
 }`;
