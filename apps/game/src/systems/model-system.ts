@@ -62,7 +62,15 @@ export const modelSystem = context.ecs.createSystem({
       if (!mesh) continue; // still loading
 
       const transform = components.get(entity, "transform");
+      const { offset } = components.get(entity, "model");
+
       mesh.transform.translation.copy(transform.translation);
+      if (offset) {
+        mesh.transform.translation.x += offset[0];
+        mesh.transform.translation.y += offset[1];
+        mesh.transform.translation.z += offset[2];
+      }
+
       mesh.transform.rotation.copy(transform.rotation);
       mesh.transform.scale.copy(transform.scale);
     }

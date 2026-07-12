@@ -81,16 +81,37 @@ export function spawnWorld(): { player: Entity } {
     });
   }
 
-  // A textured OBJ model: suricato's chair, loaded by the model system.
-  // Blender-sized (~70 units), so the transform scales it down to the world.
+  // A textured OBJ model: suricato's chair, loaded by the model system and
+  // pushable as a dynamic body. The model spans 175 x 235 x 137 of its own
+  // units with its bounds centered at (0, 41.6, -0.4), so at CHAIR_SCALE it
+  // is about 0.97 x 1.29 x 0.75 world units — the collider size — and the
+  // mesh needs a small offset to line its bounds center up with the
+  // collider's center.
   {
+    const CHAIR_SCALE = 0.0055;
+    const CHAIR_SIZE: [number, number, number] = [0.97, 1.29, 0.75];
+    const CHAIR_MODEL_OFFSET: [number, number, number] = [0, -0.229, 0.002];
+
     const chairTransform = new Transform3D();
-    chairTransform.translation.set(-5, -0.35, -4);
-    chairTransform.scale.set(0.02, 0.02, 0.02);
+    chairTransform.translation.set(-5, GROUND_TOP + CHAIR_SIZE[1] / 2, -4);
+    chairTransform.scale.set(CHAIR_SCALE, CHAIR_SCALE, CHAIR_SCALE);
 
     const chair = ecs.addEntity();
     ecs.addComponent(chair, "transform", chairTransform);
-    ecs.addComponent(chair, "model", { objUrl: "/chair.obj", textureUrl: "/chair.png" });
+    ecs.addComponent(chair, "model", {
+      objUrl: "/chair.obj",
+      textureUrl: "/chair.png",
+      offset: CHAIR_MODEL_OFFSET,
+    });
+    ecs.addComponent(chair, "physicsBody", {
+      type: "dynamic",
+      restitution: 0,
+      // No contact friction yet: damping is what stops a pushed chair.
+      damping: 2,
+      stepHeight: 0,
+      size: CHAIR_SIZE,
+    });
+
   }
 
   // The player: dynamic, spawned above the ground so it falls in on load.

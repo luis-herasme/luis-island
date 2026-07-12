@@ -16,15 +16,26 @@ export type Components = {
   /** Draw the entity as a colored box sized by its transform's scale. */
   visual: { color: [number, number, number] };
 
-  /** Draw the entity as a textured OBJ model, transformed by its transform. */
-  model: { objUrl: string; textureUrl: string };
+  /**
+   * Draw the entity as a textured OBJ model, transformed by its transform.
+   * offset (world units) is added when placing the mesh — it aligns a model
+   * whose origin is not its center with the entity's collider-centered
+   * translation.
+   */
+  model: { objUrl: string; textureUrl: string; offset?: [number, number, number] };
 
-  /** Give the entity a physics body sized by its transform's scale. */
+  /**
+   * Give the entity a physics body. The collider size defaults to the
+   * transform's scale — right for unit-box visuals — and `size` (world
+   * units) overrides it for entities whose scale is not their size, like
+   * OBJ models.
+   */
   physicsBody: {
     type: "dynamic" | "static";
     restitution: number;
     damping: number;
     stepHeight: number;
+    size?: [number, number, number];
   };
 
   /** Created by the body system from `physicsBody`; the moving state of the entity. */
