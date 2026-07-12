@@ -2,6 +2,22 @@ import type { Vector3, Transform3D } from "@game/math";
 import type { RigidBody } from "@game/physics";
 
 /**
+ * A reference to a shared geometry: the unit box, or an OBJ model by url.
+ * `offset` (world units) shifts the mesh when placed — it aligns a model
+ * whose origin is not its center with the entity's collider-centered
+ * translation.
+ */
+export type GeometryDescription = { kind: "box" } | { kind: "obj"; url: string; offset?: [number, number, number] };
+
+/**
+ * A closed, compiler-checked set of looks — deliberately not shaders-as-data.
+ * A new look is a new kind here plus a case in the render system.
+ */
+export type MaterialDescription =
+  | { kind: "color"; color: [number, number, number] }
+  | { kind: "textured"; textureUrl: string };
+
+/**
  * Everything an entity can be, in one place — and all of it plain data.
  *
  * Runtime resources (meshes, GPU buffers) are not components: they are
@@ -13,16 +29,14 @@ export type Components = {
   /** Where an entity is. Written by physics for entities with a body. */
   transform: Transform3D;
 
-  /** Draw the entity as a colored box sized by its transform's scale. */
-  visual: { color: [number, number, number] };
-
   /**
-   * Draw the entity as a textured OBJ model, transformed by its transform.
-   * offset (world units) is added when placing the mesh — it aligns a model
-   * whose origin is not its center with the entity's collider-centered
-   * translation.
+   * What the entity looks like: a geometry reference plus a material
+   * description. The render system materializes both through the asset
+   * cache, so geometries and textures are loaded once and shared. Purely
+   * procedural visuals (the avatar, the wind puffs) do not use this — their
+   * systems own their meshes directly and register them in the scene.
    */
-  model: { objUrl: string; textureUrl: string; offset?: [number, number, number] };
+  renderable: { geometry: GeometryDescription; material: MaterialDescription };
 
   /**
    * Give the entity a physics body. The collider size defaults to the

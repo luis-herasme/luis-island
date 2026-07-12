@@ -81,8 +81,8 @@ export function spawnWorld(): { player: Entity } {
     });
   }
 
-  // A textured OBJ model: suricato's chair, loaded by the model system and
-  // pushable as a dynamic body. The model spans 175 x 235 x 137 of its own
+  // A textured OBJ model: suricato's chair, materialized by the render
+  // system through the asset cache and pushable as a dynamic body. The model spans 175 x 235 x 137 of its own
   // units with its bounds centered at (0, 41.6, -0.4), so at CHAIR_SCALE it
   // is about 0.97 x 1.29 x 0.75 world units — the collider size — and the
   // mesh needs a small offset to line its bounds center up with the
@@ -98,10 +98,9 @@ export function spawnWorld(): { player: Entity } {
 
     const chair = ecs.addEntity();
     ecs.addComponent(chair, "transform", chairTransform);
-    ecs.addComponent(chair, "model", {
-      objUrl: "/chair.obj",
-      textureUrl: "/chair.png",
-      offset: CHAIR_MODEL_OFFSET,
+    ecs.addComponent(chair, "renderable", {
+      geometry: { kind: "obj", url: "/chair.obj", offset: CHAIR_MODEL_OFFSET },
+      material: { kind: "textured", textureUrl: "/chair.png" },
     });
     ecs.addComponent(chair, "physicsBody", {
       type: "dynamic",

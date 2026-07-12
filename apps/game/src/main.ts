@@ -14,7 +14,6 @@ import { spawnWorld } from "./entities/spawn-world";
 import { context } from "./game-context";
 import { bodySystem } from "./systems/body-system";
 import { cameraFollowSystem } from "./systems/camera-follow-system";
-import { modelSystem } from "./systems/model-system";
 import { physicsSystem } from "./systems/physics-system";
 import { playerAvatarSystem } from "./systems/player-avatar-system";
 import { playerMovementSystem } from "./systems/player-movement-system";
@@ -34,7 +33,6 @@ context.ecs.addSystem(playerMovementSystem);
 context.ecs.addSystem(throwSystem);
 context.ecs.addSystem(windSystem);
 context.ecs.addSystem(spinSystem);
-context.ecs.addSystem(modelSystem);
 context.ecs.addSystem(physicsSystem);
 // After physics (reads the settled transform), before render (writes meshes).
 context.ecs.addSystem(playerAvatarSystem);
