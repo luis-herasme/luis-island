@@ -1,10 +1,10 @@
-import type { Components } from "../components";
+import type { Components } from "./components";
 
 /**
  * The level, as pure data: every entity is a JSON definition mapping
  * component names to component values. Nothing here is executable — the
  * whole array would survive JSON.stringify — so a level could equally be
- * loaded from a file or a server. spawnWorld instantiates it.
+ * loaded from a file or a server. main.ts spawns each entry on startup.
  *
  * The ground's top sits at y = -0.5; cubes resting on it have their centers
  * at y = 0. The staircase rises 0.4 per step — below the player's 0.5
@@ -187,7 +187,11 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
       scale: { x: 0.0055, y: 0.0055, z: 0.0055 },
     },
     renderable: {
-      geometry: { kind: "obj", url: "/chair.obj", offset: { x: 0, y: -0.229, z: 0.002 } },
+      geometry: {
+        kind: "obj",
+        url: "/chair.obj",
+        offset: { x: 0, y: -0.229, z: 0.002 },
+      },
       material: { kind: "lit", textureUrl: "/chair.png" },
     },
     physicsBody: {

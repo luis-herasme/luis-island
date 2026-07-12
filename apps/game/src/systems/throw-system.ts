@@ -1,7 +1,7 @@
 import { Vector3 } from "@game/math";
 import type { Vector3Like } from "@game/math";
-import { spawnEntity } from "../entities/spawn-world";
 import { context } from "../game-context";
+import { spawnEntity } from "../spawn-entity";
 
 const THROW_COLORS: [number, number, number][] = [
   [0.95, 0.77, 0.06],

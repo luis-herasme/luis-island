@@ -10,9 +10,10 @@
  * box in the direction you last moved.
  */
 import { startAnimationLoop } from "@game/render";
-import { spawnWorld } from "./entities/spawn-world";
 import { context } from "./game-context";
 import { setCoinCount } from "./hud";
+import { spawnEntity } from "./spawn-entity";
+import { WORLD_ENTITIES } from "./world";
 import { bodySystem } from "./systems/body-system";
 import { cameraFollowSystem } from "./systems/camera-follow-system";
 import { coinSystem } from "./systems/coin-system";
@@ -42,7 +43,9 @@ context.ecs.addSystem(playerAvatarSystem);
 context.ecs.addSystem(cameraFollowSystem);
 context.ecs.addSystem(renderSystem);
 
-spawnWorld();
+for (const definition of WORLD_ENTITIES) {
+  spawnEntity(definition);
+}
 setCoinCount(0);
 
 let previousTime = performance.now();
