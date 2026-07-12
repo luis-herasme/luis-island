@@ -14,7 +14,9 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SEGMENT_COUNT = 64;
+// Low-poly on purpose: matches the game's blocky look, and the real peso's
+// rim is itself a rounded polygon.
+const SEGMENT_COUNT = 12;
 const RADIUS = 0.5;
 const HALF_THICKNESS = 0.04;
 

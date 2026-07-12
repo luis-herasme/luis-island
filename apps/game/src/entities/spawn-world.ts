@@ -131,9 +131,10 @@ export function spawnWorld(): { player: Entity } {
 
     const coin = ecs.addEntity();
     ecs.addComponent(coin, "transform", coinTransform);
+    // basic (unlit): the scans carry their own baked-in lighting.
     ecs.addComponent(coin, "renderable", {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "lit", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/peso.jpg" },
     });
     ecs.addComponent(coin, "spin", { speed: 2 });
   }

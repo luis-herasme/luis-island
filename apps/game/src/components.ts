@@ -26,7 +26,12 @@ export type GeometryDescription =
  * tinted texture.
  */
 export type MaterialDescription = {
-  kind: "lit";
+  /**
+   * `lit`: shaded by the demo's one directional light. `basic`: unlit, drawn
+   * at full brightness — right for textures with baked-in lighting, like
+   * photo scans.
+   */
+  kind: "lit" | "basic";
   /** Multiplied with the texture; defaults to white. */
   color?: [number, number, number];
   textureUrl?: string;
