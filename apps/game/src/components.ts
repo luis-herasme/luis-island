@@ -81,6 +81,9 @@ export type Components = {
   /** The player: facing is the last movement direction — where throws go. */
   player: { speed: number; facing: Vector3 };
 
+  /** A collectible: the player walking into it picks it up. */
+  coin: { value: number };
+
   /**
    * A box region (centered on the transform) that pushes dynamic bodies.
    * The force is strongest at the region's base and decays linearly to zero

@@ -1,4 +1,5 @@
 import { ECS } from "@game/ecs";
+import type { Entity } from "@game/ecs";
 import { Keyboard } from "@game/input";
 import { AXIS_Y, Matrix4x4, Vector3 } from "@game/math";
 import { PhysicsWorld } from "@game/physics";
@@ -31,4 +32,6 @@ export const context = {
   renderer: new Renderer(),
   camera,
   sceneMeshes: new Set<Mesh>(),
+  /** Set by spawnWorld — the entity systems read when they need "the player". */
+  playerEntity: null as Entity | null,
 };

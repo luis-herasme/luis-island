@@ -2,6 +2,7 @@ import { Transform3D, Vector3 } from "@game/math";
 import type { Entity } from "@game/ecs";
 import { context } from "../game-context";
 import { spawnBox } from "./spawn-box";
+import { spawnCoin } from "./spawn-coin";
 
 const STAIR_STEP_COUNT = 4;
 const STAIR_STEP_RISE = 0.4;
@@ -118,25 +119,28 @@ export function spawnWorld(): { player: Entity } {
 
   }
 
-  // A Dominican peso: a generated coin OBJ (scripts/generate-peso-obj.mjs)
-  // textured by an atlas with the front and back faces, hovering and
-  // spinning like a pickup. No physics body — the player walks through it.
+  // Collectible pesos scattered around the map, hovering above the ground —
+  // plus one on top of the staircase and one high in the wind column, so
+  // stairs, jumping and the fan all have a reward.
   {
-    const COIN_SCALE = 0.6;
     const COIN_HOVER_HEIGHT = 0.55;
+    const coinY = GROUND_TOP + COIN_HOVER_HEIGHT;
 
-    const coinTransform = new Transform3D();
-    coinTransform.translation.set(-2, GROUND_TOP + COIN_HOVER_HEIGHT, 4);
-    coinTransform.scale.set(COIN_SCALE, COIN_SCALE, COIN_SCALE);
+    const floorCoinSpots: [number, number][] = [
+      [-2, 4],
+      [6, 4],
+      [-7, -1],
+      [7, -5],
+      [0, 6],
+      [-4, -7],
+    ];
+    for (const [coinX, coinZ] of floorCoinSpots) {
+      spawnCoin({ position: [coinX, coinY, coinZ] });
+    }
 
-    const coin = ecs.addEntity();
-    ecs.addComponent(coin, "transform", coinTransform);
-    // basic (unlit): the scans carry their own baked-in lighting.
-    ecs.addComponent(coin, "renderable", {
-      geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
-    });
-    ecs.addComponent(coin, "spin", { speed: 2 });
+    const stairsTop = GROUND_TOP + STAIR_STEP_RISE * STAIR_STEP_COUNT;
+    spawnCoin({ position: [-1, stairsTop + COIN_HOVER_HEIGHT, -6] });
+    spawnCoin({ position: [FAN_X, 3, FAN_Z] });
   }
 
   // The player: dynamic, spawned above the ground so it falls in on load.
@@ -149,6 +153,7 @@ export function spawnWorld(): { player: Entity } {
   ecs.addComponent(player, "transform", playerTransform);
   ecs.addComponent(player, "physicsBody", { type: "dynamic", restitution: 0, damping: 0, stepHeight: 0.5 });
   ecs.addComponent(player, "player", { speed: 6, facing: new Vector3(0, 0, -1) });
+  context.playerEntity = player;
 
   return { player };
 }
