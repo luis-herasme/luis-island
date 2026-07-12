@@ -32,7 +32,8 @@ export function loadTexture(url: string): Promise<Texture> {
   let texture = textures.get(url);
   if (!texture) {
     texture = Texture.fromImageUrl(url).then((loadedTexture) => {
-      loadedTexture.minificationFilter = MinificationFilter.Linear;
+      // Trilinear filtering: without mipmaps, distant textures alias badly.
+      loadedTexture.minificationFilter = MinificationFilter.LinearMipmapLinear;
       loadedTexture.magnificationFilter = MagnificationFilter.Linear;
       return loadedTexture;
     });

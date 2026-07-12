@@ -118,6 +118,26 @@ export function spawnWorld(): { player: Entity } {
 
   }
 
+  // A Dominican peso: a generated coin OBJ (scripts/generate-peso-obj.mjs)
+  // textured by an atlas with the front and back faces, hovering and
+  // spinning like a pickup. No physics body — the player walks through it.
+  {
+    const COIN_SCALE = 0.6;
+    const COIN_HOVER_HEIGHT = 0.55;
+
+    const coinTransform = new Transform3D();
+    coinTransform.translation.set(-2, GROUND_TOP + COIN_HOVER_HEIGHT, 4);
+    coinTransform.scale.set(COIN_SCALE, COIN_SCALE, COIN_SCALE);
+
+    const coin = ecs.addEntity();
+    ecs.addComponent(coin, "transform", coinTransform);
+    ecs.addComponent(coin, "renderable", {
+      geometry: { kind: "obj", url: "/peso.obj" },
+      material: { kind: "lit", textureUrl: "/peso.jpg" },
+    });
+    ecs.addComponent(coin, "spin", { speed: 2 });
+  }
+
   // The player: dynamic, spawned above the ground so it falls in on load.
   // No `visual` — the avatar system renders it as an animated box figure
   // filling the unit-cube collider.
