@@ -117,6 +117,14 @@ export type Components = {
   spin: { speed: number };
 
   /**
+   * A continuous sound at the entity's position, heard louder the closer
+   * the player is: full `volume` at the source, silence at `range`. The
+   * sound is a closed set (like material kinds) — a url variant can join
+   * when sound files appear.
+   */
+  soundEmitter: { sound: "fanHum"; volume: number; range: number };
+
+  /**
    * An animated water surface: a flat plane at the transform's height,
    * sized by its scale. The look lives in the water system's shader.
    */

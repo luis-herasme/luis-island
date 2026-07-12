@@ -19,6 +19,35 @@ const DEFAULT_PLAY_SOUND_OPTIONS = {
   playbackRate: 1,
 };
 
+type NoiseBufferOptions = {
+  /** Seconds of noise; loops seamlessly enough for ambience. */
+  duration: number;
+  /** white is hiss; brown is a deep rumble — machinery, wind, surf. */
+  kind?: "white" | "brown";
+};
+
+const DEFAULT_NOISE_BUFFER_OPTIONS = {
+  kind: "white" as "white" | "brown",
+};
+
+type PlayLoopOptions = {
+  /** Gain, 0..1. */
+  volume?: number;
+};
+
+const DEFAULT_PLAY_LOOP_OPTIONS = {
+  volume: 1,
+};
+
+/** A handle to a looping sound: adjust its volume live, or stop it. */
+export type LoopHandle = {
+  setVolume(volume: number): void;
+  stop(): void;
+};
+
+/** How quickly setVolume changes take effect, seconds — avoids zipper noise. */
+const VOLUME_SMOOTHING_SECONDS = 0.05;
+
 type ToneOptions = {
   /** Start frequency, Hz. */
   frequency: number;
@@ -65,6 +94,15 @@ export class AudioPlayer {
     return this.context;
   }
 
+  /**
+   * Pokes the context so a suspended one resumes at the next user gesture.
+   * Sounds started before any gesture (ambient loops) begin the moment this
+   * succeeds — poll it from a system and audio unlocks as soon as it can.
+   */
+  resume(): void {
+    this.getContext();
+  }
+
   async loadSound(url: string): Promise<AudioBuffer> {
     const response = await fetch(url);
     const bytes = await response.arrayBuffer();
@@ -85,6 +123,58 @@ export class AudioPlayer {
     source.connect(gain);
     gain.connect(context.destination);
     source.start();
+  }
+
+  /** Synthesized noise to loop — ambience without an asset file. */
+  createNoiseBuffer(options: NoiseBufferOptions): AudioBuffer {
+    const { duration, kind } = { ...DEFAULT_NOISE_BUFFER_OPTIONS, ...options };
+    const context = this.getContext();
+    const sampleCount = Math.floor(duration * context.sampleRate);
+    const buffer = context.createBuffer(1, sampleCount, context.sampleRate);
+    const samples = buffer.getChannelData(0);
+
+    if (kind === "white") {
+      for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
+        samples[sampleIndex] = Math.random() * 2 - 1;
+      }
+      return buffer;
+    }
+
+    // Brown noise: integrated white noise, rolling off the high end into a
+    // rumble. The leak factor keeps the random walk from wandering away.
+    let lastSample = 0;
+    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
+      const white = Math.random() * 2 - 1;
+      lastSample = (lastSample + 0.02 * white) / 1.02;
+      samples[sampleIndex] = lastSample * 3.5;
+    }
+    return buffer;
+  }
+
+  /** Starts a sound looping forever; the handle adjusts it from outside. */
+  playLoop(buffer: AudioBuffer, options: PlayLoopOptions = {}): LoopHandle {
+    const { volume } = { ...DEFAULT_PLAY_LOOP_OPTIONS, ...options };
+    const context = this.getContext();
+
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const gain = context.createGain();
+    gain.gain.value = volume;
+
+    source.connect(gain);
+    gain.connect(context.destination);
+    source.start();
+
+    return {
+      setVolume(nextVolume: number): void {
+        gain.gain.setTargetAtTime(nextVolume, context.currentTime, VOLUME_SMOOTHING_SECONDS);
+      },
+      stop(): void {
+        source.stop();
+      },
+    };
   }
 
   playTone(options: ToneOptions): void {

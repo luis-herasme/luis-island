@@ -137,6 +137,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
       material: { kind: "lit", color: [0.25, 0.25, 0.28] },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+    soundEmitter: { sound: "fanHum", volume: 0.4, range: 9 },
   },
   {
     transform: {

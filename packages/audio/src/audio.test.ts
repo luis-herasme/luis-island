@@ -12,6 +12,10 @@ class FakeParameter {
   exponentialRampToValueAtTime(value: number, time: number): void {
     this.events.push(["ramp", value, time]);
   }
+
+  setTargetAtTime(value: number, time: number): void {
+    this.events.push(["target", value, time]);
+  }
 }
 
 class FakeNode {
@@ -21,6 +25,7 @@ class FakeNode {
   gain = new FakeParameter();
   playbackRate = new FakeParameter();
   buffer: unknown = null;
+  loop = false;
   started: number[] = [];
   stopped: number[] = [];
 
@@ -40,11 +45,17 @@ class FakeNode {
 class FakeAudioContext {
   state = "suspended";
   currentTime = 10;
+  sampleRate = 1000;
   destination = { kind: "destination" };
   resumeCallCount = 0;
   oscillators: FakeNode[] = [];
   gains: FakeNode[] = [];
   bufferSources: FakeNode[] = [];
+
+  createBuffer(channelCount: number, sampleCount: number, sampleRate: number): unknown {
+    const samples = new Float32Array(sampleCount);
+    return { channelCount, sampleRate, getChannelData: () => samples };
+  }
 
   resume(): Promise<void> {
     this.state = "running";
@@ -118,6 +129,41 @@ describe("AudioPlayer", () => {
     const oscillator = fakeContext.oscillators[0]!;
     expect(oscillator.started[0]).toBeCloseTo(10.1);
     expect(oscillator.stopped[0]).toBeCloseTo(10.3);
+  });
+
+  it("generates noise buffers that stay inside [-1, 1]", () => {
+    const { player } = createPlayer();
+
+    const buffer = player.createNoiseBuffer({ duration: 0.5, kind: "brown" });
+    const samples = (buffer as unknown as { getChannelData(): Float32Array }).getChannelData();
+
+    expect(samples.length).toBe(500);
+    let peak = 0;
+    for (const sample of samples) {
+      peak = Math.max(peak, Math.abs(sample));
+    }
+    expect(peak).toBeGreaterThan(0);
+    expect(peak).toBeLessThanOrEqual(1);
+  });
+
+  it("loops a buffer and adjusts its volume through the handle", () => {
+    const { player, fakeContext } = createPlayer();
+    const buffer = { kind: "buffer" };
+
+    const handle = player.playLoop(buffer as unknown as AudioBuffer, { volume: 0.4 });
+
+    const source = fakeContext.bufferSources[0]!;
+    const gain = fakeContext.gains[0]!;
+    expect(source.loop).toBe(true);
+    expect(source.buffer).toBe(buffer);
+    expect(gain.gain.value).toBe(0.4);
+    expect(source.started.length).toBe(1);
+
+    handle.setVolume(0.1);
+    expect(gain.gain.events).toEqual([["target", 0.1, 10]]);
+
+    handle.stop();
+    expect(source.stopped.length).toBe(1);
   });
 
   it("plays a decoded buffer through a gain", () => {
