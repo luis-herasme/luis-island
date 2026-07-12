@@ -1,5 +1,12 @@
-import type { Vector3 } from "./vector3";
+import type { Vector3Like } from "./vector3";
 import type { Matrix4x4 } from "./matrix4x4";
+
+/**
+ * Anything with numeric x/y/z/w fields — a Quaternion, or plain data like
+ * a component's rotation. Methods that only read their argument accept
+ * this, so serializable data flows into math without conversion.
+ */
+export type QuaternionLike = { x: number; y: number; z: number; w: number };
 
 export class Quaternion {
   constructor(
@@ -17,7 +24,7 @@ export class Quaternion {
     return this;
   }
 
-  copy(quaternion: Quaternion): this {
+  copy(quaternion: QuaternionLike): this {
     return this.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
   }
 
@@ -30,11 +37,11 @@ export class Quaternion {
   }
 
   /** A new quaternion rotating by angle (radians) around the normalized axis. */
-  static fromAxisAngle(axis: Vector3, angle: number): Quaternion {
+  static fromAxisAngle(axis: Vector3Like, angle: number): Quaternion {
     return new Quaternion().setFromAxisAngle(axis, angle);
   }
 
-  setFromAxisAngle(axis: Vector3, angle: number): this {
+  setFromAxisAngle(axis: Vector3Like, angle: number): this {
     // axis must be normalized
     const halfAngle = angle / 2;
     const sinHalfAngle = Math.sin(halfAngle);
@@ -103,7 +110,7 @@ export class Quaternion {
     );
   }
 
-  multiplyQuaternions(left: Quaternion, right: Quaternion): this {
+  multiplyQuaternions(left: QuaternionLike, right: QuaternionLike): this {
     const ax = left.x, ay = left.y, az = left.z, aw = left.w;
     const bx = right.x, by = right.y, bz = right.z, bw = right.w;
     return this.set(
@@ -114,11 +121,11 @@ export class Quaternion {
     );
   }
 
-  multiply(quaternion: Quaternion): this {
+  multiply(quaternion: QuaternionLike): this {
     return this.multiplyQuaternions(this, quaternion);
   }
 
-  premultiply(quaternion: Quaternion): this {
+  premultiply(quaternion: QuaternionLike): this {
     return this.multiplyQuaternions(quaternion, this);
   }
 
@@ -142,7 +149,7 @@ export class Quaternion {
     );
   }
 
-  slerp(target: Quaternion, alpha: number): this {
+  slerp(target: QuaternionLike, alpha: number): this {
     if (alpha === 0) return this;
     if (alpha === 1) return this.copy(target);
 

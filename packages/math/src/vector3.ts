@@ -1,5 +1,12 @@
-import type { Quaternion } from "./quaternion";
+import type { QuaternionLike } from "./quaternion";
 import type { Matrix4x4 } from "./matrix4x4";
+
+/**
+ * Anything with numeric x/y/z fields — a Vector3, or plain data like a
+ * component's translation. Methods that only read their argument accept
+ * this, so serializable data flows into math without conversion.
+ */
+export type Vector3Like = { x: number; y: number; z: number };
 
 export class Vector3 {
   constructor(
@@ -15,7 +22,7 @@ export class Vector3 {
     return this;
   }
 
-  copy(vector: Vector3): this {
+  copy(vector: Vector3Like): this {
     return this.set(vector.x, vector.y, vector.z);
   }
 
@@ -23,14 +30,14 @@ export class Vector3 {
     return new Vector3(this.x, this.y, this.z);
   }
 
-  add(vector: Vector3): this {
+  add(vector: Vector3Like): this {
     this.x += vector.x;
     this.y += vector.y;
     this.z += vector.z;
     return this;
   }
 
-  sub(vector: Vector3): this {
+  sub(vector: Vector3Like): this {
     this.x -= vector.x;
     this.y -= vector.y;
     this.z -= vector.z;
@@ -44,24 +51,24 @@ export class Vector3 {
     return this;
   }
 
-  addScaledVector(vector: Vector3, scalar: number): this {
+  addScaledVector(vector: Vector3Like, scalar: number): this {
     this.x += vector.x * scalar;
     this.y += vector.y * scalar;
     this.z += vector.z * scalar;
     return this;
   }
 
-  dot(vector: Vector3): number {
+  dot(vector: Vector3Like): number {
     return this.x * vector.x + this.y * vector.y + this.z * vector.z;
   }
 
-  crossVectors(left: Vector3, right: Vector3): this {
+  crossVectors(left: Vector3Like, right: Vector3Like): this {
     const ax = left.x, ay = left.y, az = left.z;
     const bx = right.x, by = right.y, bz = right.z;
     return this.set(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx);
   }
 
-  cross(vector: Vector3): this {
+  cross(vector: Vector3Like): this {
     return this.crossVectors(this, vector);
   }
 
@@ -78,19 +85,19 @@ export class Vector3 {
     return magnitude > 0 ? this.multiplyScalar(1 / magnitude) : this;
   }
 
-  distanceTo(vector: Vector3): number {
+  distanceTo(vector: Vector3Like): number {
     const dx = this.x - vector.x, dy = this.y - vector.y, dz = this.z - vector.z;
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
-  lerp(target: Vector3, alpha: number): this {
+  lerp(target: Vector3Like, alpha: number): this {
     this.x += (target.x - this.x) * alpha;
     this.y += (target.y - this.y) * alpha;
     this.z += (target.z - this.z) * alpha;
     return this;
   }
 
-  applyQuaternion(quaternion: Quaternion): this {
+  applyQuaternion(quaternion: QuaternionLike): this {
     // v' = v + 2w(qv × v) + 2(qv × (qv × v)), with qv = (q.x, q.y, q.z)
     const { x, y, z } = this;
     const qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;

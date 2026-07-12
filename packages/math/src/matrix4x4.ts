@@ -1,5 +1,5 @@
-import type { Vector3 } from "./vector3";
-import type { Quaternion } from "./quaternion";
+import type { Vector3, Vector3Like } from "./vector3";
+import type { Quaternion, QuaternionLike } from "./quaternion";
 
 /** 4x4 matrix, column-major storage (WebGL convention). */
 export class Matrix4x4 {
@@ -49,7 +49,7 @@ export class Matrix4x4 {
   }
 
   /** Build from position, rotation and scale (TRS). */
-  compose(position: Vector3, quaternion: Quaternion, scale: Vector3): this {
+  compose(position: Vector3Like, quaternion: QuaternionLike, scale: Vector3Like): this {
     const elements = this.elements;
     const { x, y, z, w } = quaternion;
     const x2 = x + x, y2 = y + y, z2 = z + z;
@@ -198,7 +198,7 @@ export class Matrix4x4 {
    * World transform positioned at eye, rotated so -Z faces target (gl-matrix "targetTo").
    * The rotation counterpart of lookAt: lookAt maps world→camera, targetTo maps camera→world.
    */
-  targetTo(eye: Vector3, target: Vector3, up: Vector3): this {
+  targetTo(eye: Vector3Like, target: Vector3Like, up: Vector3Like): this {
     let zx = eye.x - target.x, zy = eye.y - target.y, zz = eye.z - target.z;
     let magnitude = Math.hypot(zx, zy, zz);
     if (magnitude === 0) { zz = 1; magnitude = 1; }
@@ -225,7 +225,7 @@ export class Matrix4x4 {
   }
 
   /** Right-handed view matrix looking from eye toward target. */
-  lookAt(eye: Vector3, target: Vector3, up: Vector3): this {
+  lookAt(eye: Vector3Like, target: Vector3Like, up: Vector3Like): this {
     let zx = eye.x - target.x, zy = eye.y - target.y, zz = eye.z - target.z;
     let magnitude = Math.hypot(zx, zy, zz);
     if (magnitude === 0) { zz = 1; magnitude = 1; }
