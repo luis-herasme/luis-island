@@ -35,6 +35,9 @@ export async function preloadAssets(definitions: Partial<Components>[]): Promise
       textureUrls.add(definition.jukebox.textureUrl);
       soundUrls.add(definition.jukebox.songUrl);
     }
+    if (definition.player) {
+      textureUrls.add(definition.player.skinUrl);
+    }
   }
 
   await Promise.all([

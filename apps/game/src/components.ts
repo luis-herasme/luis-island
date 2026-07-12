@@ -90,8 +90,11 @@ export type Components = {
     size?: Vector3Like;
   };
 
-  /** The player: facing is the last movement direction — where throws go. */
-  player: { speed: number; facing: Vector3Like };
+  /**
+   * The player: facing is the last movement direction — where throws go —
+   * and skinUrl is a standard 64x64 Minecraft skin the avatar wears.
+   */
+  player: { speed: number; facing: Vector3Like; skinUrl: string };
 
   /** A collectible: the player walking into it picks it up. */
   coin: { value: number };

@@ -811,7 +811,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
       damping: 0,
       stepHeight: 0.25,
     },
-    player: { speed: 6, facing: { x: 0, y: 0, z: -1 } },
+    player: { speed: 6, facing: { x: 0, y: 0, z: -1 }, skinUrl: "/skin.png" },
     label: { text: "Luis", offsetY: 0.95 },
   },
 ];
