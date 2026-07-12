@@ -1,3 +1,4 @@
+import { AudioPlayer } from "@game/audio";
 import { ECS } from "@game/ecs";
 import type { Entity } from "@game/ecs";
 import { Keyboard } from "@game/input";
@@ -31,6 +32,7 @@ camera.transform.rotation.setFromRotationMatrix(new Matrix4x4().targetTo(CAMERA_
 export const context = {
   ecs: new ECS<Components>(),
   keyboard: new Keyboard(),
+  audioPlayer: new AudioPlayer(),
   physicsWorld: new PhysicsWorld(),
   renderer: new Renderer(),
   camera,

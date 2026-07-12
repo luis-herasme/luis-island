@@ -1,4 +1,5 @@
 import { context } from "../game-context";
+import { playRespawnSound } from "../sounds";
 
 /**
  * Below this height the player is under water (or fell off the island —
@@ -20,6 +21,7 @@ export const respawnSystem = context.ecs.createSystem({
 
       body.translation.set(RESPAWN_POSITION.x, RESPAWN_POSITION.y, RESPAWN_POSITION.z);
       if (body.type === "dynamic") body.velocity.set(0, 0, 0);
+      playRespawnSound();
     }
   },
 });

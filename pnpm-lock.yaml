@@ -14,6 +14,9 @@ importers:
 
   apps/game:
     dependencies:
+      '@game/audio':
+        specifier: workspace:*
+        version: link:../../packages/audio
       '@game/ecs':
         specifier: workspace:*
         version: link:../../packages/ecs
@@ -46,6 +49,12 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.3
+
+  packages/audio:
+    devDependencies:
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7
 
   packages/ecs:
     devDependencies:

@@ -1,5 +1,6 @@
 import { context } from "../game-context";
 import { setCoinCount } from "../hud";
+import { playCoinSound } from "../sounds";
 
 /** How close the player's center must be to a coin's center to collect it. */
 const COLLECT_DISTANCE = 0.8;
@@ -30,6 +31,7 @@ export const coinSystem = context.ecs.createSystem({
       collectedTotal += components.get(entity, "coin").value;
       ecs.destroyEntity(entity);
       setCoinCount(collectedTotal);
+      playCoinSound();
     }
   },
 });

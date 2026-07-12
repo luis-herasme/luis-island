@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@game/audio": "workspace:*",
     "@game/ecs": "workspace:*",
     "@game/input": "workspace:*",
     "@game/math": "workspace:*",
