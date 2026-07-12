@@ -1,39 +1,71 @@
 import type { Entity } from "@game/ecs";
+import { MagnificationFilter } from "@game/render";
+import type { Mesh } from "@game/render";
 import { context } from "../game-context";
 import { setCoinCount } from "../hud";
+import { getTexture } from "../rendering/asset-cache";
+import { createSpriteMesh } from "../rendering/sprite-mesh";
 import { playDeniedSound, playSong } from "../sounds";
 
 /** How close the player must be for the jukebox to talk to them. */
 const INTERACT_DISTANCE = 2.2;
+
+/** World-unit height of the jukebox sprite — matches its collider. */
+const SPRITE_HEIGHT = 1.5;
+
+/** Shake size and speeds while a song plays. */
+const VIBRATION_AMPLITUDE = 0.03;
+const VIBRATION_FREQUENCY_X = 35;
+const VIBRATION_FREQUENCY_Y = 47;
 
 type JukeboxState = {
   /** Clock time when the current song ends; 0 when nothing is playing. */
   playingUntil: number;
   /** True after a Q press the player could not afford. */
   showInsufficient: boolean;
+  mesh: Mesh;
 };
 
-/** Per-jukebox interaction state, keyed by entity. */
+/** Per-jukebox state and sprite, keyed by entity. */
 const states = new Map<Entity, JukeboxState>();
 
 let clock = 0;
 let interactKeyWasPressed = false;
 
 /**
- * The jukebox conversation, spoken through the entity's label: an offer
- * when the player comes close, a song for songCost coins on Q, and a
- * complaint when the player cannot afford one. Walking away clears the
- * complaint; the song keeps playing on its own.
+ * The jukebox: a billboarded pixel-art sprite (this system's private mesh)
+ * that talks through the entity's label — an offer when the player comes
+ * close, a song for songCost coins on Q, a complaint when the player
+ * cannot afford one. While the song plays the cabinet vibrates. Walking
+ * away clears the complaint; the song plays on.
  */
 export const jukeboxSystem = context.ecs.createSystem({
   requiredComponents: ["transform", "jukebox", "label"],
 
-  onEntityAdded(entity) {
-    states.set(entity, { playingUntil: 0, showInsufficient: false });
+  onEntityAdded(entity, ecs) {
+    const jukebox = ecs.get(entity, "jukebox");
+    if (!jukebox) return;
+
+    const texture = getTexture(jukebox.textureUrl);
+    // Pixel art: crisp texels when magnified, not smeared ones.
+    texture.magnificationFilter = MagnificationFilter.Nearest;
+
+    const mesh = createSpriteMesh({
+      texture,
+      width: SPRITE_HEIGHT * (texture.width / texture.height),
+      height: SPRITE_HEIGHT,
+    });
+
+    states.set(entity, { playingUntil: 0, showInsufficient: false, mesh });
+    context.sceneMeshes.add(mesh);
   },
 
   onEntityRemoved(entity) {
+    const state = states.get(entity);
+    if (!state) return;
+
     states.delete(entity);
+    context.sceneMeshes.delete(state.mesh);
   },
 
   update({ entities, components, deltaTime }) {
@@ -56,10 +88,17 @@ export const jukeboxSystem = context.ecs.createSystem({
       const jukebox = components.get(entity, "jukebox");
       const label = components.get(entity, "label");
       const { translation } = components.get(entity, "transform");
+      const isPlaying = clock < state.playingUntil;
+
+      // The sprite follows the entity, shaking while the song plays.
+      state.mesh.transform.translation.copy(translation);
+      if (isPlaying) {
+        state.mesh.transform.translation.x += Math.sin(clock * VIBRATION_FREQUENCY_X) * VIBRATION_AMPLITUDE;
+        state.mesh.transform.translation.y += Math.cos(clock * VIBRATION_FREQUENCY_Y) * VIBRATION_AMPLITUDE;
+      }
 
       const distance = Math.hypot(translation.x - player.x, translation.y - player.y, translation.z - player.z);
       const playerIsNear = distance <= INTERACT_DISTANCE;
-      const isPlaying = clock < state.playingUntil;
 
       if (!playerIsNear) {
         label.text = "";

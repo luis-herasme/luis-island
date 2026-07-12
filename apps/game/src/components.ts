@@ -99,9 +99,10 @@ export type Components = {
 
   /**
    * A jukebox: walk close and it offers to play a song for `songCost`
-   * coins through its label.
+   * coins through its label. Drawn as a billboarded sprite of `textureUrl`
+   * that vibrates while the song plays.
    */
-  jukebox: { songCost: number };
+  jukebox: { songCost: number; textureUrl: string };
 
   /**
    * A box region (centered on the transform) that pushes dynamic bodies.

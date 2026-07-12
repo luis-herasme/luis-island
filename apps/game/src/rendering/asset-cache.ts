@@ -28,6 +28,9 @@ export async function preloadAssets(definitions: Partial<Components>[]): Promise
     if (definition.particleEmitter) {
       textureUrls.add(definition.particleEmitter.textureUrl);
     }
+    if (definition.jukebox) {
+      textureUrls.add(definition.jukebox.textureUrl);
+    }
   }
 
   await Promise.all([

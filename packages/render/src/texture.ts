@@ -71,6 +71,16 @@ export class Texture {
 
   constructor(readonly textureData: TextureData) {}
 
+  get width(): number {
+    if (this.textureData.kind === "image") return this.textureData.image.width;
+    return this.textureData.pixels.width;
+  }
+
+  get height(): number {
+    if (this.textureData.kind === "image") return this.textureData.image.height;
+    return this.textureData.pixels.height;
+  }
+
   static fromImage(image: HTMLImageElement): Texture {
     return new Texture({ kind: "image", image });
   }
