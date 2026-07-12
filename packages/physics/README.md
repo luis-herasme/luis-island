@@ -37,7 +37,17 @@ const crate = new DynamicBody({
   damping: 0,                   // per-second linear deceleration
   stepHeight: 0,                // ledges up to this high lift instead of block
 });
+
+crate.applyImpulse(new Vector3(0, 6, 0)); // instant kick: velocity += impulse / mass
+crate.applyForce(new Vector3(0, 0, -20)); // sustained push: accelerates by force / mass
 ```
+
+Forces accumulate and last exactly one step — integration turns the sum
+into acceleration and clears it, so a continuous push (wind, thrust) is
+applied every frame. There is no stored acceleration: it is derived,
+force / mass, computed during the step. Both entry points scale by mass,
+which is where mass matters outside collisions — the same kick barely
+moves a heavy body.
 
 **`PhysicsWorld`** — owns the bodies and advances time:
 
@@ -49,8 +59,9 @@ world.step(deltaTime);
 
 ## What a step does
 
-1. **Integrate.** For every dynamic body: gravity and damping update the
-   velocity, the velocity updates the translation. Static bodies are skipped.
+1. **Integrate.** For every dynamic body: gravity, the accumulated forces
+   and damping update the velocity, the velocity updates the translation.
+   Static bodies are skipped.
 2. **Detect.** Every pair involving a dynamic body is tested for overlap
    (brute force — fine at this scale, a broadphase is future work). Each
    overlap produces a `Contact`: the two bodies, a normal pointing from the

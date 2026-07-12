@@ -79,7 +79,6 @@ type SpawnBoxOptions = {
   position: [number, number, number];
   scale?: [number, number, number];
   bodyType?: "dynamic" | "static";
-  velocity?: [number, number, number];
   restitution?: number;
   damping?: number;
   stepHeight?: number;
@@ -106,7 +105,7 @@ function spawnBox(options: SpawnBoxOptions) {
       ? new DynamicBody({
           size,
           translation,
-          velocity: options.velocity ? new Vector3(...options.velocity) : new Vector3(),
+          velocity: new Vector3(),
           mass: 1,
           restitution: options.restitution ?? 0,
           damping: options.damping ?? 0,
@@ -161,13 +160,13 @@ const THROW_COLORS: [number, number, number][] = [
   [0.9, 0.3, 0.24],
   [0.15, 0.68, 0.38],
 ];
-const THROW_HORIZONTAL_SPEED = 9;
-const THROW_UPWARD_SPEED = 5.5;
+const THROW_HORIZONTAL_IMPULSE = 9;
+const THROW_UPWARD_IMPULSE = 5.5;
 
 function throwBox(from: Vector3, facing: Vector3) {
   const color = THROW_COLORS[Math.floor(Math.random() * THROW_COLORS.length)]!;
 
-  spawnBox({
+  const entity = spawnBox({
     color,
     position: [from.x + facing.x * 1.2, from.y + 0.3, from.z + facing.z * 1.2],
     scale: [0.4, 0.4, 0.4],
@@ -176,8 +175,15 @@ function throwBox(from: Vector3, facing: Vector3) {
     // There is no contact friction yet, so damping is what makes a landed
     // box skid to a stop instead of sliding off the world.
     damping: 1.5,
-    velocity: [facing.x * THROW_HORIZONTAL_SPEED, THROW_UPWARD_SPEED, facing.z * THROW_HORIZONTAL_SPEED],
   });
+
+  // The actual throw: one kick, and gravity draws the parabola.
+  const body = ecs.get(entity, "body");
+  if (body?.type === "dynamic") {
+    body.applyImpulse(
+      new Vector3(facing.x * THROW_HORIZONTAL_IMPULSE, THROW_UPWARD_IMPULSE, facing.z * THROW_HORIZONTAL_IMPULSE),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

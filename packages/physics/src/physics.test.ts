@@ -61,6 +61,47 @@ describe("PhysicsWorld", () => {
     expect(body.translation.y).toBeCloseTo(10 - 0.1, 5);
   });
 
+  it("applyForce accelerates by force over mass", () => {
+    const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
+    const light = dynamicBox();
+    const heavy = dynamicBox({ position: [5, 0, 0] });
+    heavy.mass = 10;
+    world.addBody(light);
+    world.addBody(heavy);
+
+    light.applyForce(new Vector3(10, 0, 0));
+    heavy.applyForce(new Vector3(10, 0, 0));
+    world.step(0.1);
+
+    expect(light.velocity.x).toBeCloseTo(1, 5); // a = 10 / 1
+    expect(heavy.velocity.x).toBeCloseTo(0.1, 5); // a = 10 / 10
+  });
+
+  it("a force lasts exactly the step it was applied in", () => {
+    const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
+    const body = dynamicBox();
+    world.addBody(body);
+
+    body.applyForce(new Vector3(10, 0, 0));
+    world.step(0.1);
+    const velocityAfterFirstStep = body.velocity.x;
+    world.step(0.1);
+
+    expect(body.velocity.x).toBe(velocityAfterFirstStep); // no lingering push
+  });
+
+  it("applyImpulse changes velocity immediately, scaled by mass", () => {
+    const light = dynamicBox();
+    const heavy = dynamicBox();
+    heavy.mass = 10;
+
+    light.applyImpulse(new Vector3(2, 0, 0));
+    heavy.applyImpulse(new Vector3(2, 0, 0));
+
+    expect(light.velocity.x).toBeCloseTo(2, 5);
+    expect(heavy.velocity.x).toBeCloseTo(0.2, 5);
+  });
+
   it("damping decelerates a coasting body", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
     const body = dynamicBox({ damping: 5 });

@@ -71,7 +71,12 @@ export class PhysicsWorld {
     for (const body of this.bodies) {
       if (body.type === "static") continue;
 
+      // Gravity is a uniform acceleration; applied forces become one
+      // through the body's mass. The accumulator is spent and cleared —
+      // a force lasts exactly the step it was applied in.
       body.velocity.addScaledVector(this.gravity, deltaTime);
+      body.velocity.addScaledVector(body.accumulatedForce, body.inverseMass * deltaTime);
+      body.accumulatedForce.set(0, 0, 0);
 
       const dampingFactor = Math.max(0, 1 - body.damping * deltaTime);
       body.velocity.multiplyScalar(dampingFactor);

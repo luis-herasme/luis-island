@@ -36,6 +36,15 @@ export class DynamicBody {
   damping: number;
   stepHeight: number;
 
+  /**
+   * Sum of the forces applied since the last step. Integration turns it
+   * into acceleration (force / mass) and clears it, so a force lasts
+   * exactly one step — continuous pushes (wind, thrust) are applied every
+   * frame. It is not a constructor option because it is transient state,
+   * always starting at zero.
+   */
+  readonly accumulatedForce = new Vector3();
+
   constructor(options: DynamicBodyOptions) {
     this.size = options.size;
     this.translation = options.translation;
@@ -49,5 +58,21 @@ export class DynamicBody {
   /** 1 / mass — the form the resolver weighs responses with. */
   get inverseMass(): number {
     return 1 / this.mass;
+  }
+
+  /** Push on the body for the coming step: it accelerates by force / mass. */
+  applyForce(force: Vector3): this {
+    this.accumulatedForce.add(force);
+    return this;
+  }
+
+  /**
+   * An instantaneous kick: velocity changes immediately, scaled by inverse
+   * mass, so the same impulse barely moves a heavy body. Use this for
+   * throws, explosions and knockback; use applyForce for sustained pushes.
+   */
+  applyImpulse(impulse: Vector3): this {
+    this.velocity.addScaledVector(impulse, this.inverseMass);
+    return this;
   }
 }
