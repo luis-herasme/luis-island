@@ -106,6 +106,12 @@ export class Texture {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrapHorizontal);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.wrapVertical);
 
+    // A mipmap minification filter samples levels that do not exist until
+    // they are generated — without this the texture is incomplete (black).
+    const needsMipmaps =
+      this.minificationFilter !== MinificationFilter.Linear && this.minificationFilter !== MinificationFilter.Nearest;
+    if (needsMipmaps) gl.generateMipmap(gl.TEXTURE_2D);
+
     return webglTexture;
   }
 }
