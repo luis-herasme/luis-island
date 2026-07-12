@@ -1,5 +1,6 @@
 import type { Components } from "../components";
 import { Geometry, MagnificationFilter, MinificationFilter, Texture, fetchText, parseOBJ } from "@game/render";
+import { context } from "../game-context";
 
 /**
  * Shared render assets, loaded once up front and read synchronously ever
@@ -14,10 +15,12 @@ import { Geometry, MagnificationFilter, MinificationFilter, Texture, fetchText, 
 
 const objGeometries = new Map<string, Geometry>();
 const textures = new Map<string, Texture>();
+const soundBuffers = new Map<string, AudioBuffer>();
 
 export async function preloadAssets(definitions: Partial<Components>[]): Promise<void> {
   const objUrls = new Set<string>();
   const textureUrls = new Set<string>();
+  const soundUrls = new Set<string>();
 
   for (const definition of definitions) {
     if (definition.renderable) {
@@ -30,6 +33,7 @@ export async function preloadAssets(definitions: Partial<Components>[]): Promise
     }
     if (definition.jukebox) {
       textureUrls.add(definition.jukebox.textureUrl);
+      soundUrls.add(definition.jukebox.songUrl);
     }
   }
 
@@ -45,6 +49,11 @@ export async function preloadAssets(definitions: Partial<Components>[]): Promise
       texture.magnificationFilter = MagnificationFilter.Linear;
       textures.set(url, texture);
     }),
+    // Decoding works while the context is still suspended — only playback
+    // waits for the autoplay unlock.
+    ...[...soundUrls].map(async (url) => {
+      soundBuffers.set(url, await context.audioPlayer.loadSound(url));
+    }),
   ]);
 }
 
@@ -58,4 +67,10 @@ export function getTexture(url: string): Texture {
   const texture = textures.get(url);
   if (!texture) throw new Error(`Texture was not preloaded: ${url}`);
   return texture;
+}
+
+export function getSoundBuffer(url: string): AudioBuffer {
+  const buffer = soundBuffers.get(url);
+  if (!buffer) throw new Error(`Sound was not preloaded: ${url}`);
+  return buffer;
 }

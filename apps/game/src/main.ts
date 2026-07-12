@@ -65,6 +65,12 @@ for (const definition of WORLD_ENTITIES) {
 }
 setCoinCount(0);
 
+// Browsers keep audio suspended until a user gesture: the first key press
+// or click resumes the context, and everything scheduled (the fan hum)
+// becomes audible.
+window.addEventListener("keydown", () => context.audioPlayer.resume(), { once: true });
+window.addEventListener("pointerdown", () => context.audioPlayer.resume(), { once: true });
+
 let previousTime = performance.now();
 
 startAnimationLoop(() => {

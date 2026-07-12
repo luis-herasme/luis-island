@@ -7,8 +7,7 @@ import type { Components } from "./components";
  * loaded from a file or a server. main.ts spawns each entry on startup.
  *
  * The ground's top sits at y = -0.5; cubes resting on it have their centers
- * at y = 0. The staircase rises 0.4 per step — below the player's 0.5
- * stepHeight, so it is walkable while its full height blocks non-steppers.
+ * at y = 0.
  */
 export const WORLD_ENTITIES: Partial<Components>[] = [
   // The island: a thick slab whose top sits at y = -0.5 and whose cliffs
@@ -74,54 +73,260 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
 
-  // The staircase, lightening as it rises.
+  // The staircase up to the house: stone brick, rises of 0.2 — below the
+  // player's 0.25 stepHeight, so it is walkable while its full height
+  // blocks non-steppers. Eight steps climb to the house floor at y = 1.1.
   {
     transform: {
-      translation: { x: -1, y: -0.3, z: -3 },
+      translation: { x: -1, y: -0.4, z: -2.75 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 2, y: 0.4, z: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.45, 0.45, 0.45] },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
   {
     transform: {
-      translation: { x: -1, y: 0.1, z: -4 },
+      translation: { x: -1, y: -0.2, z: -3.25 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 2, y: 0.4, z: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.53, 0.53, 0.53] },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
   {
     transform: {
-      translation: { x: -1, y: 0.5, z: -5 },
+      translation: { x: -1, y: 0, z: -3.75 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 2, y: 0.4, z: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.61, 0.61, 0.61] },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
   },
   {
     transform: {
-      translation: { x: -1, y: 0.9, z: -6 },
+      translation: { x: -1, y: 0.2, z: -4.25 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 2, y: 0.4, z: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.69, 0.69, 0.69] },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    transform: {
+      translation: { x: -1, y: 0.4, z: -4.75 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    transform: {
+      translation: { x: -1, y: 0.6, z: -5.25 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    transform: {
+      translation: { x: -1, y: 0.8, z: -5.75 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    transform: {
+      translation: { x: -1, y: 1.0, z: -6.25 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 2, y: 0.2, z: 0.5 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_stone_brick.png", textureScale: [4, 1] },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+
+  // The house behind the stairs: a wooden cabin raised on four bark
+  // pillars, entered only through the door at the top of the staircase.
+  // Its floor top sits at y = 1.1, flush with the last step.
+  {
+    // Floor
+    transform: {
+      translation: { x: -1, y: 1.0, z: -8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 6, y: 0.2, z: 3 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png", textureScale: 3 },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Back wall
+    transform: {
+      translation: { x: -1, y: 2.1, z: -9.4 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 6, y: 2, z: 0.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png", textureScale: 2 },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Left wall
+    transform: {
+      translation: { x: -3.9, y: 2.1, z: -8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.2, y: 2, z: 3 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png", textureScale: 2 },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Right wall
+    transform: {
+      translation: { x: 1.9, y: 2.1, z: -8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.2, y: 2, z: 3 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png", textureScale: 2 },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Front wall, left of the door
+    transform: {
+      translation: { x: -2.8, y: 2.1, z: -6.6 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 2.4, y: 2, z: 0.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png", textureScale: 2 },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Front wall, right of the door
+    transform: {
+      translation: { x: 0.8, y: 2.1, z: -6.6 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 2.4, y: 2, z: 0.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png", textureScale: 2 },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Door lintel
+    transform: {
+      translation: { x: -1, y: 2.75, z: -6.6 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.2, y: 0.7, z: 0.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Roof, with a small overhang
+    transform: {
+      translation: { x: -1, y: 3.2, z: -8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 6.4, y: 0.2, z: 3.4 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png", textureScale: 3 },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Stilt pillar, front-left
+    transform: {
+      translation: { x: -3.8, y: 0.3, z: -6.7 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.35, y: 1.6, z: 0.35 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_tree.png" },
+    },
+  },
+  {
+    // Stilt pillar, front-right
+    transform: {
+      translation: { x: 1.8, y: 0.3, z: -6.7 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.35, y: 1.6, z: 0.35 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_tree.png" },
+    },
+  },
+  {
+    // Stilt pillar, back-left
+    transform: {
+      translation: { x: -3.8, y: 0.3, z: -9.3 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.35, y: 1.6, z: 0.35 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_tree.png" },
+    },
+  },
+  {
+    // Stilt pillar, back-right
+    transform: {
+      translation: { x: 1.8, y: 0.3, z: -9.3 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.35, y: 1.6, z: 0.35 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_tree.png" },
+    },
   },
 
   // The fan: a pedestal, two crossed spinning blades, an invisible wind
@@ -331,7 +536,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
       scale: { x: 0.9, y: 1.5, z: 0.7 },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
-    jukebox: { songCost: 3, textureUrl: "/juke-box.png" },
+    jukebox: { songCost: 3, textureUrl: "/juke-box.png", songUrl: "/cristopher.mpeg" },
     label: { text: "", offsetY: 1.2 },
   },
 
@@ -347,7 +552,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
       type: "dynamic",
       restitution: 0,
       damping: 0,
-      stepHeight: 0.5,
+      stepHeight: 0.25,
     },
     player: { speed: 6, facing: { x: 0, y: 0, z: -1 } },
     label: { text: "Luis", offsetY: 0.95 },

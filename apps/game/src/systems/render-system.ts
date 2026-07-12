@@ -123,7 +123,13 @@ function materializeMesh(renderable: Components["renderable"]): Mesh {
 
     let scale = textureScale;
     if (scale === undefined) scale = 1;
-    material.setUniform("texture_scale", Uniform.float(scale));
+    let scalePair: [number, number];
+    if (typeof scale === "number") {
+      scalePair = [scale, scale];
+    } else {
+      scalePair = scale;
+    }
+    material.setUniform("texture_scale", Uniform.vector2(scalePair));
   }
 
   return new Mesh({ geometry, material });

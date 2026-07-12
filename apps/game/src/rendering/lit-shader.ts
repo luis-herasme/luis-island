@@ -60,7 +60,7 @@ in vec2 v_uv;
 
 uniform vec3 base_color;
 uniform sampler2D texture_sampler;
-uniform float texture_scale;
+uniform vec2 texture_scale;
 
 out vec4 fragment_color;
 

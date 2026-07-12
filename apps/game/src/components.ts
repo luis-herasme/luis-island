@@ -52,8 +52,12 @@ export type MaterialDescription = {
   /** Multiplied with the texture; defaults to white. */
   color?: [number, number, number];
   textureUrl?: string;
-  /** Tiles the texture this many times across the geometry's UVs; defaults to 1. */
-  textureScale?: number;
+  /**
+   * Tiles the texture this many times across the geometry's UVs; defaults
+   * to 1. A `[u, v]` pair tiles each axis separately — the fix for
+   * stretched textures on long, thin faces.
+   */
+  textureScale?: number | [number, number];
 };
 
 export type Components = {
@@ -100,11 +104,11 @@ export type Components = {
   label: { text: string; offsetY: number };
 
   /**
-   * A jukebox: walk close and it offers to play a song for `songCost`
-   * coins through its label. Drawn as a billboarded sprite of `textureUrl`
-   * that vibrates while the song plays.
+   * A jukebox: walk close and it offers to play the song at `songUrl` for
+   * `songCost` coins through its label. Drawn as a billboarded sprite of
+   * `textureUrl` that vibrates while the song plays.
    */
-  jukebox: { songCost: number; textureUrl: string };
+  jukebox: { songCost: number; textureUrl: string; songUrl: string };
 
   /**
    * A box region (centered on the transform) that pushes dynamic bodies.

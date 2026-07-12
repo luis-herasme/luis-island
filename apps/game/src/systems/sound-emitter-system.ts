@@ -11,9 +11,9 @@ const handles = new Map<Entity, LoopHandle>();
 /**
  * Positional audio: every `soundEmitter` entity plays a continuous loop
  * whose volume follows the player's distance — full volume at the source,
- * fading quadratically to silence at the emitter's range. The system also
- * polls resume() so ambient loops start the moment the browser's autoplay
- * policy lets audio through.
+ * fading quadratically to silence at the emitter's range. The loops start
+ * silently before the autoplay unlock; main.ts resumes the context on the
+ * first gesture and they become audible.
  */
 export const soundEmitterSystem = context.ecs.createSystem({
   requiredComponents: ["transform", "soundEmitter"],
@@ -38,8 +38,6 @@ export const soundEmitterSystem = context.ecs.createSystem({
   },
 
   update({ entities, components }) {
-    context.audioPlayer.resume();
-
     const { ecs, playerEntity } = context;
     if (playerEntity === null) return;
     const playerTransform = ecs.get(playerEntity, "transform");

@@ -3,9 +3,9 @@ import { MagnificationFilter } from "@game/render";
 import type { Mesh } from "@game/render";
 import { context } from "../game-context";
 import { setCoinCount } from "../hud";
-import { getTexture } from "../rendering/asset-cache";
+import { getSoundBuffer, getTexture } from "../rendering/asset-cache";
 import { createSpriteMesh } from "../rendering/sprite-mesh";
-import { playDeniedSound, playSong } from "../sounds";
+import { playDeniedSound } from "../sounds";
 
 /** How close the player must be for the jukebox to talk to them. */
 const INTERACT_DISTANCE = 2.2;
@@ -115,7 +115,10 @@ export const jukeboxSystem = context.ecs.createSystem({
         if (context.coins >= jukebox.songCost) {
           context.coins -= jukebox.songCost;
           setCoinCount(context.coins);
-          state.playingUntil = clock + playSong();
+
+          const song = getSoundBuffer(jukebox.songUrl);
+          context.audioPlayer.playSound(song, { volume: 0.7 });
+          state.playingUntil = clock + song.duration;
           state.showInsufficient = false;
         } else {
           state.showInsufficient = true;

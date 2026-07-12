@@ -21,23 +21,3 @@ export function playDeniedSound(): void {
   context.audioPlayer.playTone({ frequency: 160, duration: 0.12, oscillator: "square", volume: 0.12 });
   context.audioPlayer.playTone({ frequency: 120, duration: 0.25, oscillator: "square", volume: 0.12, delay: 0.13 });
 }
-
-// The jukebox tune: the opening phrase of Ode to Joy, one square-wave voice.
-// [frequency, duration in seconds]
-// prettier-ignore
-const SONG_NOTES: [number, number][] = [
-  [659, 0.3], [659, 0.3], [698, 0.3], [784, 0.3],
-  [784, 0.3], [698, 0.3], [659, 0.3], [587, 0.3],
-  [523, 0.3], [523, 0.3], [587, 0.3], [659, 0.3],
-  [659, 0.45], [587, 0.15], [587, 0.6],
-];
-
-/** Plays the jukebox song; returns its duration in seconds. */
-export function playSong(): number {
-  let startTime = 0;
-  for (const [frequency, duration] of SONG_NOTES) {
-    context.audioPlayer.playTone({ frequency, duration, oscillator: "square", volume: 0.1, delay: startTime });
-    startTime += duration;
-  }
-  return startTime;
-}
