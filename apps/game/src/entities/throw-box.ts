@@ -1,7 +1,7 @@
 import { Vector3 } from "@game/math";
 import type { Vector3Like } from "@game/math";
 import { context } from "../game-context";
-import { spawnBox } from "./spawn-box";
+import { spawnEntity } from "./spawn-world";
 
 const THROW_COLORS: [number, number, number][] = [
   [0.95, 0.77, 0.06],
@@ -13,6 +13,7 @@ const THROW_COLORS: [number, number, number][] = [
 ];
 const THROW_HORIZONTAL_IMPULSE = 9;
 const THROW_UPWARD_IMPULSE = 5.5;
+const THROWN_BOX_SIZE = 0.4;
 
 type ThrowBoxOptions = {
   from: Vector3Like;
@@ -24,17 +25,16 @@ export function throwBox(options: ThrowBoxOptions): void {
   const { from, facing } = options;
   const color = THROW_COLORS[Math.floor(Math.random() * THROW_COLORS.length)]!;
 
-  const entity = spawnBox({
-    color,
-    position: { x: from.x + facing.x * 1.2, y: from.y + 0.3, z: from.z + facing.z * 1.2 },
-    scale: { x: 0.4, y: 0.4, z: 0.4 },
-    body: {
-      type: "dynamic",
-      restitution: 0.4,
-      // There is no contact friction yet, so damping is what makes a landed
-      // box skid to a stop instead of sliding off the world.
-      damping: 1.5,
+  const entity = spawnEntity({
+    transform: {
+      translation: { x: from.x + facing.x * 1.2, y: from.y + 0.3, z: from.z + facing.z * 1.2 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: THROWN_BOX_SIZE, y: THROWN_BOX_SIZE, z: THROWN_BOX_SIZE },
     },
+    renderable: { geometry: { kind: "box" }, material: { kind: "lit", color } },
+    // No contact friction yet, so damping is what makes a landed box skid
+    // to a stop instead of sliding off the world.
+    physicsBody: { type: "dynamic", restitution: 0.4, damping: 1.5, stepHeight: 0 },
   });
 
   // The body was materialized synchronously when the components were added.
