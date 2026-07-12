@@ -3,8 +3,12 @@ import { Material, Mesh, Uniform } from "@game/render";
 import type { Components } from "../components";
 import { context } from "../game-context";
 import { getBoxGeometry, loadObjGeometry, loadTexture } from "../rendering/asset-cache";
-import { BOX_FRAGMENT_SHADER_SOURCE, BOX_VERTEX_SHADER_SOURCE } from "../rendering/box-shader";
-import { MODEL_FRAGMENT_SHADER_SOURCE, MODEL_VERTEX_SHADER_SOURCE } from "../rendering/model-shader";
+import {
+  LIT_FRAGMENT_SHADER_SOURCE,
+  LIT_TEXTURED_FRAGMENT_SHADER_SOURCE,
+  LIT_TEXTURED_VERTEX_SHADER_SOURCE,
+  LIT_VERTEX_SHADER_SOURCE,
+} from "../rendering/lit-shader";
 
 /** Materialized meshes are render memory, private to this system (null while loading). */
 const meshes = new Map<Entity, Mesh | null>();
@@ -76,28 +80,34 @@ export const renderSystem = context.ecs.createSystem({
   },
 });
 
+const WHITE: [number, number, number] = [1, 1, 1];
+
 /**
  * Turns a description into a mesh. The geometry comes from the asset cache;
  * the material is built per entity, since it carries per-entity uniforms.
+ * The `lit` kind has one lighting model but two shader variants, picked by
+ * whether the description carries a texture map.
  */
 async function materializeMesh(renderable: Components["renderable"]): Promise<Mesh> {
   const geometry = renderable.geometry.kind === "box" ? getBoxGeometry() : await loadObjGeometry(renderable.geometry.url);
 
+  const { color, textureUrl } = renderable.material;
+
   let material: Material;
-  if (renderable.material.kind === "color") {
+  if (textureUrl) {
+    const texture = await loadTexture(textureUrl);
     material = new Material({
-      vertexShaderSource: BOX_VERTEX_SHADER_SOURCE,
-      fragmentShaderSource: BOX_FRAGMENT_SHADER_SOURCE,
-    });
-    material.setUniform("base_color", Uniform.vector3(renderable.material.color));
-  } else {
-    const texture = await loadTexture(renderable.material.textureUrl);
-    material = new Material({
-      vertexShaderSource: MODEL_VERTEX_SHADER_SOURCE,
-      fragmentShaderSource: MODEL_FRAGMENT_SHADER_SOURCE,
+      vertexShaderSource: LIT_TEXTURED_VERTEX_SHADER_SOURCE,
+      fragmentShaderSource: LIT_TEXTURED_FRAGMENT_SHADER_SOURCE,
     });
     material.setUniform("texture_sampler", Uniform.texture(texture));
+  } else {
+    material = new Material({
+      vertexShaderSource: LIT_VERTEX_SHADER_SOURCE,
+      fragmentShaderSource: LIT_FRAGMENT_SHADER_SOURCE,
+    });
   }
+  material.setUniform("base_color", Uniform.vector3(color ?? WHITE));
 
   return new Mesh({ geometry, material });
 }

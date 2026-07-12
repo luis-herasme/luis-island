@@ -11,11 +11,18 @@ export type GeometryDescription = { kind: "box" } | { kind: "obj"; url: string; 
 
 /**
  * A closed, compiler-checked set of looks — deliberately not shaders-as-data.
- * A new look is a new kind here plus a case in the render system.
+ * A new look (say, an unlit `basic`) is a new kind here plus a case in the
+ * render system. Kinds are lighting models, not color sources: `lit` has an
+ * optional color and an optional texture that multiply together, like
+ * three.js materials do — texture absent shows the color, both present is a
+ * tinted texture.
  */
-export type MaterialDescription =
-  | { kind: "color"; color: [number, number, number] }
-  | { kind: "textured"; textureUrl: string };
+export type MaterialDescription = {
+  kind: "lit";
+  /** Multiplied with the texture; defaults to white. */
+  color?: [number, number, number];
+  textureUrl?: string;
+};
 
 /**
  * Everything an entity can be, in one place — and all of it plain data.

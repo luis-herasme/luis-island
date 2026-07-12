@@ -100,7 +100,7 @@ export function spawnWorld(): { player: Entity } {
     ecs.addComponent(chair, "transform", chairTransform);
     ecs.addComponent(chair, "renderable", {
       geometry: { kind: "obj", url: "/chair.obj", offset: CHAIR_MODEL_OFFSET },
-      material: { kind: "textured", textureUrl: "/chair.png" },
+      material: { kind: "lit", textureUrl: "/chair.png" },
     });
     ecs.addComponent(chair, "physicsBody", {
       type: "dynamic",

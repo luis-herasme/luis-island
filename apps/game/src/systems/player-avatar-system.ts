@@ -3,7 +3,7 @@ import { AXIS_X, AXIS_Y, Quaternion, Transform3D } from "@game/math";
 import type { HierarchyNode } from "@game/render";
 import { GEOMETRY_BOX, Material, Mesh, NodeHierarchy, Uniform } from "@game/render";
 import { context } from "../game-context";
-import { BOX_FRAGMENT_SHADER_SOURCE, BOX_VERTEX_SHADER_SOURCE } from "../rendering/box-shader";
+import { LIT_FRAGMENT_SHADER_SOURCE, LIT_VERTEX_SHADER_SOURCE } from "../rendering/lit-shader";
 
 /**
  * Minecraft-style proportions, in world units. The whole avatar is one unit
@@ -194,8 +194,8 @@ type CreatePartOptions = {
 
 function createPart(options: CreatePartOptions): BodyPart {
   const material = new Material({
-    vertexShaderSource: BOX_VERTEX_SHADER_SOURCE,
-    fragmentShaderSource: BOX_FRAGMENT_SHADER_SOURCE,
+    vertexShaderSource: LIT_VERTEX_SHADER_SOURCE,
+    fragmentShaderSource: LIT_FRAGMENT_SHADER_SOURCE,
   });
   material.setUniform("base_color", Uniform.vector3(options.color));
 

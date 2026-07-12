@@ -31,7 +31,7 @@ export function spawnBox(options: SpawnBoxOptions): Entity {
   ecs.addComponent(entity, "transform", transform);
   ecs.addComponent(entity, "renderable", {
     geometry: { kind: "box" },
-    material: { kind: "color", color: options.color },
+    material: { kind: "lit", color: options.color },
   });
 
   if (options.body) {
