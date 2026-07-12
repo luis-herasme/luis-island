@@ -1,63 +1,61 @@
+import type { Entity } from "@game/ecs";
 import { GEOMETRY_BOX, Material, Mesh, Uniform } from "@game/render";
-import type { GameContext } from "../game-context";
+import { context } from "../game-context";
 import { BOX_FRAGMENT_SHADER_SOURCE, BOX_VERTEX_SHADER_SOURCE } from "../rendering/box-shader";
 
-/**
- * Rendering owns the mesh lifecycle, in two systems because creation and
- * drawing watch different components: meshes are created from `visual`
- * descriptions, while drawing iterates everything that has a `mesh`
- * (including ones other systems materialize, like the wind streaks).
- */
+/** Meshes are render memory, not components: they live in this private map. */
+const boxMeshes = new Map<Entity, Mesh>();
+
+const frameMeshes: Mesh[] = [];
 
 /**
- * Creates the mesh when an entity with a `visual` appears — the hook fires
- * once both transform and visual are present, whichever lands last — and
- * removes it when the visual goes away or the entity is destroyed.
+ * Owns the visual side of every `visual` entity: the mesh is created when
+ * the entity appears, kept in sync with the transform every frame, and
+ * dropped when the entity (or its visual) goes. The frame is drawn from
+ * context.sceneMeshes, which also carries meshes other systems own and
+ * registered themselves, like the wind streaks.
  */
-export function createMeshLifecycleSystem(context: GameContext) {
-  return context.ecs.createSystem({
-    requiredComponents: ["transform", "visual"],
+export const renderSystem = context.ecs.createSystem({
+  requiredComponents: ["transform", "visual"],
 
-    onEntityAdded(entity, ecs) {
-      const { color } = ecs.get(entity, "visual");
+  onEntityAdded(entity, ecs) {
+    const { color } = ecs.get(entity, "visual");
 
-      const material = new Material({
-        vertexShaderSource: BOX_VERTEX_SHADER_SOURCE,
-        fragmentShaderSource: BOX_FRAGMENT_SHADER_SOURCE,
-      });
-      material.setUniform("base_color", Uniform.vector3(color));
+    const material = new Material({
+      vertexShaderSource: BOX_VERTEX_SHADER_SOURCE,
+      fragmentShaderSource: BOX_FRAGMENT_SHADER_SOURCE,
+    });
+    material.setUniform("base_color", Uniform.vector3(color));
 
-      ecs.addComponent(entity, "mesh", new Mesh({ geometry: GEOMETRY_BOX.copy(), material }));
-    },
+    const mesh = new Mesh({ geometry: GEOMETRY_BOX.copy(), material });
+    boxMeshes.set(entity, mesh);
+    context.sceneMeshes.add(mesh);
+  },
 
-    onEntityRemoved(entity, ecs) {
-      if (ecs.hasComponent(entity, "mesh")) ecs.removeComponent(entity, "mesh");
-    },
-  });
-}
+  onEntityRemoved(entity) {
+    const mesh = boxMeshes.get(entity);
+    if (!mesh) return;
 
-/** Copies each entity's transform component into its mesh and draws the frame. */
-export function createRenderSystem(context: GameContext) {
-  const meshes: Mesh[] = [];
+    boxMeshes.delete(entity);
+    context.sceneMeshes.delete(mesh);
+  },
 
-  return context.ecs.createSystem({
-    requiredComponents: ["transform", "mesh"],
+  update({ entities, components }) {
+    for (const entity of entities) {
+      const mesh = boxMeshes.get(entity);
+      if (!mesh) continue;
 
-    update({ entities, components }) {
-      meshes.length = 0;
+      const transform = components.get(entity, "transform");
+      mesh.transform.translation.copy(transform.translation);
+      mesh.transform.rotation.copy(transform.rotation);
+      mesh.transform.scale.copy(transform.scale);
+    }
 
-      for (const entity of entities) {
-        const transform = components.get(entity, "transform");
-        const mesh = components.get(entity, "mesh");
+    frameMeshes.length = 0;
+    for (const mesh of context.sceneMeshes) {
+      frameMeshes.push(mesh);
+    }
 
-        mesh.transform.translation.copy(transform.translation);
-        mesh.transform.rotation.copy(transform.rotation);
-        mesh.transform.scale.copy(transform.scale);
-
-        meshes.push(mesh);
-      }
-
-      context.renderer.renderScene({ scene: meshes, camera: context.camera });
-    },
-  });
-}
+    context.renderer.renderScene({ scene: frameMeshes, camera: context.camera });
+  },
+});

@@ -10,36 +10,32 @@
  */
 import { startAnimationLoop } from "@game/render";
 import { spawnWorld } from "./entities/spawn-world";
-import { createGameContext } from "./game-context";
-import { createBodySystem } from "./systems/body-system";
-import { createCameraFollowSystem } from "./systems/camera-follow-system";
-import { createPhysicsSystem } from "./systems/physics-system";
-import { createPlayerMovementSystem } from "./systems/player-movement-system";
-import { createMeshLifecycleSystem, createRenderSystem } from "./systems/render-system";
-import { createSpinSystem } from "./systems/spin-system";
-import { createStreakSystem } from "./systems/streak-system";
-import { createThrowSystem } from "./systems/throw-system";
-import { createWindSystem } from "./systems/wind-system";
+import { context } from "./game-context";
+import { bodySystem } from "./systems/body-system";
+import { cameraFollowSystem } from "./systems/camera-follow-system";
+import { physicsSystem } from "./systems/physics-system";
+import { playerMovementSystem } from "./systems/player-movement-system";
+import { renderSystem } from "./systems/render-system";
+import { spinSystem } from "./systems/spin-system";
+import { streakSystem } from "./systems/streak-system";
+import { throwSystem } from "./systems/throw-system";
+import { windSystem } from "./systems/wind-system";
 
-const context = createGameContext();
+// Frame order: materialize → input → forces → visuals → physics → camera →
+// render. The materializing systems (body, streaks, render's meshes) come
+// first so entities spawned later get their resources the moment their
+// description components land.
+context.ecs.addSystem(bodySystem);
+context.ecs.addSystem(streakSystem);
+context.ecs.addSystem(playerMovementSystem);
+context.ecs.addSystem(throwSystem);
+context.ecs.addSystem(windSystem);
+context.ecs.addSystem(spinSystem);
+context.ecs.addSystem(physicsSystem);
+context.ecs.addSystem(cameraFollowSystem);
+context.ecs.addSystem(renderSystem);
 
-// The materializing systems come first, so entities spawned later get their
-// meshes, bodies and particle meshes the moment their description
-// components land.
-context.ecs.addSystem(createMeshLifecycleSystem(context));
-context.ecs.addSystem(createBodySystem(context));
-context.ecs.addSystem(createStreakSystem(context));
-
-// Frame order: input → wind → visuals → physics → camera → render.
-context.ecs.addSystem(createPlayerMovementSystem(context));
-context.ecs.addSystem(createThrowSystem(context));
-context.ecs.addSystem(createWindSystem(context));
-context.ecs.addSystem(createSpinSystem(context));
-context.ecs.addSystem(createPhysicsSystem(context));
-context.ecs.addSystem(createCameraFollowSystem(context));
-context.ecs.addSystem(createRenderSystem(context));
-
-spawnWorld(context);
+spawnWorld();
 
 let previousTime = performance.now();
 

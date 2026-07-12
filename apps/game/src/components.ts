@@ -1,21 +1,15 @@
 import type { Vector3, Transform3D } from "@game/math";
 import type { RigidBody } from "@game/physics";
-import type { Mesh } from "@game/render";
 
 /**
- * Everything an entity can be, in one place.
+ * Everything an entity can be, in one place — and all of it plain data.
  *
- * Two kinds of components live here. Description components are plain data
- * written at spawn time — they say what an entity is. Materialized components
- * are runtime resources a system creates from a description in its
- * onEntityAdded hook and releases in onEntityRemoved; game code never
- * constructs them directly.
+ * Runtime resources (meshes, GPU buffers) are not components: they are
+ * private memory of the system that owns them, created in onEntityAdded and
+ * released in onEntityRemoved. The one exception in spirit is `body`, which
+ * is the simulation state itself and is consumed by several systems.
  */
 export type Components = {
-  // -------------------------------------------------------------------------
-  // Descriptions
-  // -------------------------------------------------------------------------
-
   /** Where an entity is. Written by physics for entities with a body. */
   transform: Transform3D;
 
@@ -29,6 +23,9 @@ export type Components = {
     damping: number;
     stepHeight: number;
   };
+
+  /** Created by the body system from `physicsBody`; the moving state of the entity. */
+  body: RigidBody;
 
   /** The player: facing is the last movement direction — where throws go. */
   player: { speed: number; facing: Vector3 };
@@ -51,14 +48,4 @@ export type Components = {
     top: number;
     count: number;
   };
-
-  // -------------------------------------------------------------------------
-  // Materialized resources
-  // -------------------------------------------------------------------------
-
-  /** Created by the render system from `visual`, and by the streak system. */
-  mesh: Mesh;
-
-  /** Created by the body system from `physicsBody`. */
-  body: RigidBody;
 };

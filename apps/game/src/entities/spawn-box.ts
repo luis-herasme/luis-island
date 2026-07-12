@@ -1,9 +1,8 @@
 import { Transform3D } from "@game/math";
 import type { Entity } from "@game/ecs";
-import type { GameContext } from "../game-context";
+import { context } from "../game-context";
 
 type SpawnBoxOptions = {
-  context: GameContext;
   color: [number, number, number];
   position: [number, number, number];
   scale?: [number, number, number];
@@ -22,7 +21,7 @@ type SpawnBoxOptions = {
  * land on the entity.
  */
 export function spawnBox(options: SpawnBoxOptions): Entity {
-  const { ecs } = options.context;
+  const { ecs } = context;
 
   const transform = new Transform3D();
   transform.translation.set(...options.position);
