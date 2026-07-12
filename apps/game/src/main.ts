@@ -82,7 +82,11 @@ type Components = {
   body: RigidBody;
   /** facing is the last movement direction — where thrown boxes go. */
   player: { speed: number; facing: Vector3 };
-  /** A box region (centered on the transform) that pushes dynamic bodies. */
+  /**
+   * A box region (centered on the transform) that pushes dynamic bodies.
+   * The force is strongest at the region's base and decays linearly to
+   * zero at its top, like the airflow of a fan.
+   */
   windZone: { size: Vector3; force: Vector3 };
   /** Purely visual rotation around the Y axis, radians per second. */
   spin: { speed: number };
@@ -394,7 +398,13 @@ const throwSystem = ecs.createSystem({
   },
 });
 
-/** Wind zones push every dynamic body inside them, each frame. */
+/**
+ * Wind zones push every dynamic body inside them, each frame. The push
+ * fades with height — full force at the base, none at the top — so bodies
+ * hover around the height where the wind balances gravity instead of being
+ * launched out of the column.
+ */
+const scaledWindForce = new Vector3();
 const windSystem = ecs.createSystem({
   requiredComponents: ["transform", "windZone"],
 
@@ -410,8 +420,14 @@ const windSystem = ecs.createSystem({
           Math.abs(body.translation.x - zoneCenter.x) <= size.x * 0.5 &&
           Math.abs(body.translation.y - zoneCenter.y) <= size.y * 0.5 &&
           Math.abs(body.translation.z - zoneCenter.z) <= size.z * 0.5;
+        if (!inside) continue;
 
-        if (inside) body.applyForce(force);
+        const zoneBottom = zoneCenter.y - size.y * 0.5;
+        const normalizedHeight = (body.translation.y - zoneBottom) / size.y;
+        const strength = 1 - normalizedHeight;
+
+        scaledWindForce.copy(force).multiplyScalar(strength);
+        body.applyForce(scaledWindForce);
       }
     }
   },
