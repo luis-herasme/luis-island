@@ -232,12 +232,30 @@ One draw call renders all 100 quads; per-frame animation is just more
 `Transform3D` (scale + quaternion rotation + translation, composed into a
 `Matrix4x4` on demand) and its 2D analog `Transform2D` **live in `@game/math`**,
 not here — the TRS value type is math, and this package is just one of its
-consumers. There is no parent/child hierarchy anywhere on purpose; composing
-transforms is the ECS's job.
+consumers. Meshes have no implicit parent/child structure on purpose;
+composing scene transforms is the ECS's job. The one explicit, opt-in
+hierarchy is `NodeHierarchy`, below — a rig you build and drive yourself.
 
 `PerspectiveCamera` is projection parameters plus a `Transform3D`. Move the
 camera by setting its transform; `renderScene` derives the view matrix by
 inverting it, and keeps the aspect updated when the window resizes.
+
+## Node hierarchies and animation
+
+`NodeHierarchy` is a parent-child tree of `Transform3D`s — a glTF scene's
+node graph, a skeleton, or a hand-built rig with joints as node origins. It
+is pure positional data; nothing in it touches the GPU. Write the node-local
+transforms, call `updateGlobalTransforms()`, and read each node's
+`globalTransform` into the transforms of the meshes attached to it.
+
+`Animation` is a keyframe clip that plays over a hierarchy: `Sampler`s hold
+keyframe times and values (`Vector3` lerp or `Quaternion` slerp, linear
+only), and `Channel`s route each sampler to one node's translation, rotation
+or scale. The split mirrors glTF's own model — nodes belong to the scene and
+animations merely reference them — so a future glTF loader maps onto both
+directly, and several clips can share one hierarchy. Procedural animation
+(like a walk cycle driven by movement speed) skips `Animation` entirely and
+writes node-local transforms itself before propagating.
 
 ## Examples
 

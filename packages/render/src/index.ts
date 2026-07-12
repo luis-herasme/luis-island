@@ -1,5 +1,7 @@
 export { Animation } from "./animation";
-export type { AnimationNode, Channel, Interpolation, NodeProperty, Sampler, SamplerValues } from "./animation";
+export type { Channel, Interpolation, NodeProperty, Sampler, SamplerValues } from "./animation";
+export { NodeHierarchy } from "./node-hierarchy";
+export type { HierarchyNode } from "./node-hierarchy";
 export { BufferGPU, BufferKind, BufferUsage } from "./buffer-gpu";
 export { PerspectiveCamera } from "./camera";
 export { GEOMETRY_BOX, GEOMETRY_QUAD, GEOMETRY_QUAD_INTERLEAVED, Geometry } from "./geometry";
