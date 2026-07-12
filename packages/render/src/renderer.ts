@@ -12,6 +12,9 @@ export class Renderer {
   readonly gl: WebGL2RenderingContext;
   readonly canvas: HTMLCanvasElement;
 
+  private readonly opaqueMeshes: Mesh[] = [];
+  private readonly transparentMeshes: Mesh[] = [];
+
   constructor() {
     this.canvas = document.createElement("canvas");
     document.body.appendChild(this.canvas);
@@ -51,16 +54,35 @@ export class Renderer {
     this.clear();
     this.handleWindowResize(camera);
 
+    // Opaque meshes draw first; transparent ones after, back-to-front, so
+    // everything behind them is already in the framebuffer to blend against.
+    this.opaqueMeshes.length = 0;
+    this.transparentMeshes.length = 0;
+    for (const mesh of scene) {
+      (mesh.material.transparent ? this.transparentMeshes : this.opaqueMeshes).push(mesh);
+    }
+
+    if (this.transparentMeshes.length > 1) {
+      const cameraPosition = camera.transform.translation;
+      this.transparentMeshes.sort(
+        (first, second) =>
+          second.transform.translation.distanceTo(cameraPosition) -
+          first.transform.translation.distanceTo(cameraPosition),
+      );
+    }
+
     // Each mesh's material keeps a reference to the uniform value, so every
     // mesh gets its own copy instead of a view into a shared scratch matrix.
     const cameraInverseMatrix = camera.transform.toMatrix4x4().invert();
 
-    for (const mesh of scene) {
-      mesh.material.setUniform("transform", Uniform.matrix4(mesh.transform.toArray()));
-      mesh.material.setUniform("projection_matrix", Uniform.fromMatrix4x4(camera.projectionMatrix));
-      mesh.material.setUniform("camera_inverse_matrix", Uniform.fromMatrix4x4(cameraInverseMatrix));
+    for (const meshes of [this.opaqueMeshes, this.transparentMeshes]) {
+      for (const mesh of meshes) {
+        mesh.material.setUniform("transform", Uniform.matrix4(mesh.transform.toArray()));
+        mesh.material.setUniform("projection_matrix", Uniform.fromMatrix4x4(camera.projectionMatrix));
+        mesh.material.setUniform("camera_inverse_matrix", Uniform.fromMatrix4x4(cameraInverseMatrix));
 
-      this.render(mesh);
+        this.render(mesh);
+      }
     }
   }
 
@@ -79,6 +101,15 @@ export class Renderer {
 
     gl.bindVertexArray(mesh.getOrCreateVertexArrayObject(gl));
 
+    // Transparent meshes blend over what is already drawn and keep the depth
+    // buffer read-only: they must not occlude each other or later fragments.
+    const { transparent } = mesh.material;
+    if (transparent) {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+    }
+
     const indices = mesh.geometry.indices;
 
     if (indices) {
@@ -92,6 +123,11 @@ export class Renderer {
       }
     } else {
       gl.drawArrays(mesh.renderPrimitive, 0, mesh.geometry.vertexCount);
+    }
+
+    if (transparent) {
+      gl.disable(gl.BLEND);
+      gl.depthMask(true);
     }
   }
 }

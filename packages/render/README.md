@@ -179,6 +179,16 @@ material.resources!.setUniformBlock("Settings", 0);
 ubo.setBytes(byteOffset, newBytes); // flushes immediately
 ```
 
+### Transparency
+
+A material constructed with `transparent: true` opts into the renderer's
+transparent pass: `renderScene` draws every opaque mesh first, then the
+transparent ones sorted back-to-front, with alpha blending enabled and depth
+writes off (depth *testing* stays on, so opaque geometry still occludes
+them). The fragment shader's alpha channel becomes meaningful — whatever it
+outputs is blended over the framebuffer. Sorting is per mesh, not per
+triangle or per instance; wispy, low-contrast textures hide that fine.
+
 ### Everything binds by name
 
 There are no fixed attribute locations and no uniform location bookkeeping in

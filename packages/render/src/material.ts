@@ -5,12 +5,19 @@ import { componentTypeSizeInBytes } from "./vertex-buffer";
 type MaterialOptions = {
   vertexShaderSource: string;
   fragmentShaderSource: string;
+  /**
+   * Transparent materials are drawn after every opaque mesh, back-to-front,
+   * with alpha blending on and depth writes off — the fragment shader's
+   * alpha channel becomes meaningful. Defaults to opaque.
+   */
+  transparent?: boolean;
 };
 
 /** User-written GLSL plus the uniform values to feed it. */
 export class Material {
   readonly vertexShaderSource: string;
   readonly fragmentShaderSource: string;
+  readonly transparent: boolean;
   readonly uniforms = new Map<string, Uniform>();
 
   // WebGL resources, created lazily on first render
@@ -19,6 +26,7 @@ export class Material {
   constructor(options: MaterialOptions) {
     this.vertexShaderSource = options.vertexShaderSource;
     this.fragmentShaderSource = options.fragmentShaderSource;
+    this.transparent = options.transparent ?? false;
   }
 
   setUniform(uniformName: string, uniform: Uniform): void {
