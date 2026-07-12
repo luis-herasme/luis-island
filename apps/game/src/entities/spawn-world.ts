@@ -81,6 +81,18 @@ export function spawnWorld(): { player: Entity } {
     });
   }
 
+  // A textured OBJ model: suricato's chair, loaded by the model system.
+  // Blender-sized (~70 units), so the transform scales it down to the world.
+  {
+    const chairTransform = new Transform3D();
+    chairTransform.translation.set(-5, -0.35, -4);
+    chairTransform.scale.set(0.02, 0.02, 0.02);
+
+    const chair = ecs.addEntity();
+    ecs.addComponent(chair, "transform", chairTransform);
+    ecs.addComponent(chair, "model", { objUrl: "/chair.obj", textureUrl: "/chair.png" });
+  }
+
   // The player: dynamic, spawned above the ground so it falls in on load.
   const player = spawnBox({
     color: [1, 0.53, 0.27],

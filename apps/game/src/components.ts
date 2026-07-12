@@ -16,6 +16,9 @@ export type Components = {
   /** Draw the entity as a colored box sized by its transform's scale. */
   visual: { color: [number, number, number] };
 
+  /** Draw the entity as a textured OBJ model, transformed by its transform. */
+  model: { objUrl: string; textureUrl: string };
+
   /** Give the entity a physics body sized by its transform's scale. */
   physicsBody: {
     type: "dynamic" | "static";
