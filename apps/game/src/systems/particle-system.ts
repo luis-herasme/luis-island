@@ -29,14 +29,16 @@ export const particleSystem = context.ecs.createSystem({
     const base = ecs.get(entity, "transform").translation;
     const emitter = ecs.get(entity, "particleEmitter");
 
+    const [baseX, baseY, baseZ] = base;
+
     const offsets: Vector3[] = [];
     const speeds: number[] = [];
     for (let particleIndex = 0; particleIndex < emitter.count; particleIndex++) {
       offsets.push(
         new Vector3(
-          base.x + (Math.random() - 0.5) * 2 * emitter.radius,
-          base.y + Math.random() * emitter.height,
-          base.z + (Math.random() - 0.5) * 2 * emitter.radius,
+          baseX + (Math.random() - 0.5) * 2 * emitter.radius,
+          baseY + Math.random() * emitter.height,
+          baseZ + (Math.random() - 0.5) * 2 * emitter.radius,
         ),
       );
       speeds.push(emitter.minimumSpeed + Math.random() * (emitter.maximumSpeed - emitter.minimumSpeed));
@@ -51,7 +53,7 @@ export const particleSystem = context.ecs.createSystem({
       const state = states.get(entity);
       if (!state) return;
 
-      state.mesh = createParticleSpritesMesh({ offsets, texture, bottom: base.y, top: base.y + emitter.height });
+      state.mesh = createParticleSpritesMesh({ offsets, texture, bottom: baseY, top: baseY + emitter.height });
       context.sceneMeshes.add(state.mesh);
     })();
   },
@@ -69,7 +71,7 @@ export const particleSystem = context.ecs.createSystem({
       const state = states.get(entity);
       if (!state?.mesh) continue; // still loading
 
-      const base = components.get(entity, "transform").translation;
+      const baseY = components.get(entity, "transform").translation[1];
       const { height } = components.get(entity, "particleEmitter");
       const offsetBuffer = state.mesh.geometry.getVertexBuffer("offset");
       if (!offsetBuffer) continue;
@@ -77,7 +79,7 @@ export const particleSystem = context.ecs.createSystem({
       for (let particleIndex = 0; particleIndex < state.offsets.length; particleIndex++) {
         const offset = state.offsets[particleIndex]!;
         offset.y += state.speeds[particleIndex]! * deltaTime;
-        if (offset.y > base.y + height) offset.y = base.y;
+        if (offset.y > baseY + height) offset.y = baseY;
 
         offsetBuffer.setVertex(particleIndex, [offset.x, offset.y, offset.z]);
       }

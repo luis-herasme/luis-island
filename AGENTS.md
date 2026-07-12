@@ -23,3 +23,7 @@
   - **Typed lookups** where the compiler already prevents confusion: `ecs.get(entity, "position")`.
   - A single required parameter plus one optional trailing parameter is fine positionally: `IndexBuffer.fromUint8(values, usage?)`.
 - **No magic constants.** A literal with domain meaning (a WebGL enum value, a byte size, a format tag) is written exactly once, inside a named `as const` definition (`BufferKind`, `VertexComponentType`); every other place references the name. `kind: 0x1405 // gl.UNSIGNED_INT` at a use site is not acceptable — the comment is the name the constant should have had.
+
+## ECS conventions
+
+- **Components are plain serializable data — never classes.** Every component type is a `type` of JSON-compatible values (numbers, strings, booleans, arrays, plain objects). `JSON.stringify` on any component must round-trip it. Vectors and quaternions in components are number tuples (`[number, number, number]`), not `Vector3`/`Quaternion` instances — systems that need math build scratch instances from the tuples. Runtime state and resources (meshes, rigid bodies, GPU objects) are never components: they live in the owning system's private memory or in a context registry, materialized in `onEntityAdded` and released in `onEntityRemoved`.

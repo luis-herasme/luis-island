@@ -1,5 +1,21 @@
-import type { Vector3, Transform3D } from "@game/math";
-import type { RigidBody } from "@game/physics";
+/**
+ * Everything an entity can be, in one place — and all of it plain,
+ * JSON-serializable data. A component is never a class: vectors and
+ * quaternions are number tuples, and `JSON.stringify` round-trips every
+ * component. Systems that need math build scratch `Vector3`/`Quaternion`
+ * instances from the tuples.
+ *
+ * Runtime state and resources are not components: meshes live in the render
+ * system's memory, rigid bodies in `context.bodies` — materialized in
+ * onEntityAdded and released in onEntityRemoved.
+ */
+
+/** Scale, rotation (a quaternion, identity `[0, 0, 0, 1]`) and translation. */
+export type Transform = {
+  translation: [number, number, number];
+  rotation: [number, number, number, number];
+  scale: [number, number, number];
+};
 
 /**
  * A reference to a shared geometry: the unit box, or an OBJ model by url.
@@ -19,35 +35,24 @@ export type GeometryDescription =
 
 /**
  * A closed, compiler-checked set of looks — deliberately not shaders-as-data.
- * A new look (say, an unlit `basic`) is a new kind here plus a case in the
- * render system. Kinds are lighting models, not color sources: `lit` has an
+ * A new look is a new kind here plus a case in the render system. Kinds are
+ * lighting models, not color sources: `lit` is shaded by the demo's one
+ * directional light, `basic` is unlit and drawn at full brightness (right
+ * for textures with baked-in lighting, like photo scans). Both have an
  * optional color and an optional texture that multiply together, like
  * three.js materials do — texture absent shows the color, both present is a
  * tinted texture.
  */
 export type MaterialDescription = {
-  /**
-   * `lit`: shaded by the demo's one directional light. `basic`: unlit, drawn
-   * at full brightness — right for textures with baked-in lighting, like
-   * photo scans.
-   */
   kind: "lit" | "basic";
   /** Multiplied with the texture; defaults to white. */
   color?: [number, number, number];
   textureUrl?: string;
 };
 
-/**
- * Everything an entity can be, in one place — and all of it plain data.
- *
- * Runtime resources (meshes, GPU buffers) are not components: they are
- * private memory of the system that owns them, created in onEntityAdded and
- * released in onEntityRemoved. The one exception in spirit is `body`, which
- * is the simulation state itself and is consumed by several systems.
- */
 export type Components = {
   /** Where an entity is. Written by physics for entities with a body. */
-  transform: Transform3D;
+  transform: Transform;
 
   /**
    * What the entity looks like: a geometry reference plus a material
@@ -65,7 +70,7 @@ export type Components = {
    * Give the entity a physics body. The collider size defaults to the
    * transform's scale — right for unit-box visuals — and `size` (world
    * units) overrides it for entities whose scale is not their size, like
-   * OBJ models.
+   * OBJ models. The materialized RigidBody lives in `context.bodies`.
    */
   physicsBody: {
     type: "dynamic" | "static";
@@ -75,11 +80,8 @@ export type Components = {
     size?: [number, number, number];
   };
 
-  /** Created by the body system from `physicsBody`; the moving state of the entity. */
-  body: RigidBody;
-
   /** The player: facing is the last movement direction — where throws go. */
-  player: { speed: number; facing: Vector3 };
+  player: { speed: number; facing: [number, number, number] };
 
   /** A collectible: the player walking into it picks it up. */
   coin: { value: number };
@@ -89,7 +91,7 @@ export type Components = {
    * The force is strongest at the region's base and decays linearly to zero
    * at its top, like the airflow of a fan.
    */
-  windZone: { size: Vector3; force: Vector3 };
+  windZone: { size: [number, number, number]; force: [number, number, number] };
 
   /** Purely visual rotation around the Y axis, radians per second. */
   spin: { speed: number };

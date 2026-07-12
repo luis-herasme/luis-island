@@ -21,16 +21,16 @@ export const windSystem = context.ecs.createSystem({
         if (body.type !== "dynamic") continue;
 
         const inside =
-          Math.abs(body.translation.x - zoneCenter.x) <= size.x * 0.5 &&
-          Math.abs(body.translation.y - zoneCenter.y) <= size.y * 0.5 &&
-          Math.abs(body.translation.z - zoneCenter.z) <= size.z * 0.5;
+          Math.abs(body.translation.x - zoneCenter[0]) <= size[0] * 0.5 &&
+          Math.abs(body.translation.y - zoneCenter[1]) <= size[1] * 0.5 &&
+          Math.abs(body.translation.z - zoneCenter[2]) <= size[2] * 0.5;
         if (!inside) continue;
 
-        const zoneBottom = zoneCenter.y - size.y * 0.5;
-        const normalizedHeight = (body.translation.y - zoneBottom) / size.y;
+        const zoneBottom = zoneCenter[1] - size[1] * 0.5;
+        const normalizedHeight = (body.translation.y - zoneBottom) / size[1];
         const strength = 1 - normalizedHeight;
 
-        scaledWindForce.copy(force).multiplyScalar(strength);
+        scaledWindForce.set(force[0], force[1], force[2]).multiplyScalar(strength);
         body.applyForce(scaledWindForce);
       }
     }

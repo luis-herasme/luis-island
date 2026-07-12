@@ -7,7 +7,7 @@ let jumpKeyWasPressed = false;
 
 /** Input writes velocities; the physics step decides where things end up. */
 export const playerMovementSystem = context.ecs.createSystem({
-  requiredComponents: ["body", "player"],
+  requiredComponents: ["physicsBody", "player"],
 
   update({ entities, components }) {
     const { keyboard } = context;
@@ -30,8 +30,8 @@ export const playerMovementSystem = context.ecs.createSystem({
     jumpKeyWasPressed = jumpKeyIsPressed;
 
     for (const entity of entities) {
-      const body = components.get(entity, "body");
-      if (body.type !== "dynamic") continue;
+      const body = context.bodies.get(entity);
+      if (!body || body.type !== "dynamic") continue;
 
       const player = components.get(entity, "player");
 
@@ -44,7 +44,11 @@ export const playerMovementSystem = context.ecs.createSystem({
       // some vertical speed when input runs.
       if (shouldJump && body.velocity.y === 0) body.velocity.y = JUMP_SPEED;
 
-      if (length > 0) player.facing.set(directionX, 0, directionZ);
+      if (length > 0) {
+        player.facing[0] = directionX;
+        player.facing[1] = 0;
+        player.facing[2] = directionZ;
+      }
     }
   },
 });

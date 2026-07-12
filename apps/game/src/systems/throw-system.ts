@@ -5,7 +5,7 @@ let throwKeyWasPressed = false;
 
 /** E throws a box in the facing direction, arcing under gravity. */
 export const throwSystem = context.ecs.createSystem({
-  requiredComponents: ["body", "player"],
+  requiredComponents: ["physicsBody", "player"],
 
   update({ entities, components }) {
     const throwKeyIsPressed = context.keyboard.isPressed("KeyE");
@@ -14,9 +14,11 @@ export const throwSystem = context.ecs.createSystem({
     if (!shouldThrow) return;
 
     for (const entity of entities) {
-      const body = components.get(entity, "body");
+      const body = context.bodies.get(entity);
+      if (!body) continue;
+
       const { facing } = components.get(entity, "player");
-      throwBox({ from: body.translation, facing });
+      throwBox({ from: [body.translation.x, body.translation.y, body.translation.z], facing });
     }
   },
 });

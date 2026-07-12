@@ -1,4 +1,3 @@
-import { Transform3D, Vector3 } from "@game/math";
 import type { Entity } from "@game/ecs";
 import { context } from "../game-context";
 import { spawnBox } from "./spawn-box";
@@ -60,23 +59,25 @@ export function spawnWorld(): { player: Entity } {
   }
 
   {
-    const zoneTransform = new Transform3D();
-    zoneTransform.translation.set(FAN_X, (GROUND_TOP + WIND_TOP) / 2, FAN_Z);
-
     const zone = ecs.addEntity();
-    ecs.addComponent(zone, "transform", zoneTransform);
+    ecs.addComponent(zone, "transform", {
+      translation: [FAN_X, (GROUND_TOP + WIND_TOP) / 2, FAN_Z],
+      rotation: [0, 0, 0, 1],
+      scale: [1, 1, 1],
+    });
     ecs.addComponent(zone, "windZone", {
-      size: new Vector3(1.8, WIND_TOP - GROUND_TOP, 1.8),
-      force: new Vector3(0, WIND_FORCE, 0),
+      size: [1.8, WIND_TOP - GROUND_TOP, 1.8],
+      force: [0, WIND_FORCE, 0],
     });
   }
 
   {
-    const emitterTransform = new Transform3D();
-    emitterTransform.translation.set(FAN_X, GROUND_TOP, FAN_Z);
-
     const emitter = ecs.addEntity();
-    ecs.addComponent(emitter, "transform", emitterTransform);
+    ecs.addComponent(emitter, "transform", {
+      translation: [FAN_X, GROUND_TOP, FAN_Z],
+      rotation: [0, 0, 0, 1],
+      scale: [1, 1, 1],
+    });
     ecs.addComponent(emitter, "particleEmitter", {
       textureUrl: "/whitePuff00.png",
       count: PARTICLE_COUNT,
@@ -98,12 +99,12 @@ export function spawnWorld(): { player: Entity } {
     const CHAIR_SIZE: [number, number, number] = [0.97, 1.29, 0.75];
     const CHAIR_MODEL_OFFSET: [number, number, number] = [0, -0.229, 0.002];
 
-    const chairTransform = new Transform3D();
-    chairTransform.translation.set(-5, GROUND_TOP + CHAIR_SIZE[1] / 2, -4);
-    chairTransform.scale.set(CHAIR_SCALE, CHAIR_SCALE, CHAIR_SCALE);
-
     const chair = ecs.addEntity();
-    ecs.addComponent(chair, "transform", chairTransform);
+    ecs.addComponent(chair, "transform", {
+      translation: [-5, GROUND_TOP + CHAIR_SIZE[1] / 2, -4],
+      rotation: [0, 0, 0, 1],
+      scale: [CHAIR_SCALE, CHAIR_SCALE, CHAIR_SCALE],
+    });
     ecs.addComponent(chair, "renderable", {
       geometry: { kind: "obj", url: "/chair.obj", offset: CHAIR_MODEL_OFFSET },
       material: { kind: "lit", textureUrl: "/chair.png" },
@@ -146,13 +147,10 @@ export function spawnWorld(): { player: Entity } {
   // The player: dynamic, spawned above the ground so it falls in on load.
   // No `visual` — the avatar system renders it as an animated box figure
   // filling the unit-cube collider.
-  const playerTransform = new Transform3D();
-  playerTransform.translation.set(0, 3, 0);
-
   const player = ecs.addEntity();
-  ecs.addComponent(player, "transform", playerTransform);
+  ecs.addComponent(player, "transform", { translation: [0, 3, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] });
   ecs.addComponent(player, "physicsBody", { type: "dynamic", restitution: 0, damping: 0, stepHeight: 0.5 });
-  ecs.addComponent(player, "player", { speed: 6, facing: new Vector3(0, 0, -1) });
+  ecs.addComponent(player, "player", { speed: 6, facing: [0, 0, -1] });
   context.playerEntity = player;
 
   return { player };

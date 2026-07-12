@@ -12,8 +12,8 @@ export const cameraFollowSystem = context.ecs.createSystem({
 
   update({ entities, components, deltaTime }) {
     for (const entity of entities) {
-      const playerPosition = components.get(entity, "transform").translation;
-      cameraTargetPosition.copy(playerPosition).add(CAMERA_OFFSET);
+      const { translation } = components.get(entity, "transform");
+      cameraTargetPosition.set(...translation).add(CAMERA_OFFSET);
 
       // Exponential smoothing, frame-rate independent.
       const blend = 1 - Math.exp(-CAMERA_FOLLOW_RATE * deltaTime);

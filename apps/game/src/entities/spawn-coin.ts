@@ -1,4 +1,3 @@
-import { Transform3D } from "@game/math";
 import type { Entity } from "@game/ecs";
 import { context } from "../game-context";
 
@@ -20,12 +19,12 @@ type SpawnCoinOptions = {
 export function spawnCoin(options: SpawnCoinOptions): Entity {
   const { ecs } = context;
 
-  const transform = new Transform3D();
-  transform.translation.set(...options.position);
-  transform.scale.set(COIN_SCALE, COIN_SCALE, COIN_SCALE);
-
   const coin = ecs.addEntity();
-  ecs.addComponent(coin, "transform", transform);
+  ecs.addComponent(coin, "transform", {
+    translation: options.position,
+    rotation: [0, 0, 0, 1],
+    scale: [COIN_SCALE, COIN_SCALE, COIN_SCALE],
+  });
   ecs.addComponent(coin, "renderable", {
     geometry: { kind: "obj", url: "/peso.obj" },
     material: { kind: "basic", textureUrl: "/peso.jpg" },

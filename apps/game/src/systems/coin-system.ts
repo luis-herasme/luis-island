@@ -20,11 +20,12 @@ export const coinSystem = context.ecs.createSystem({
 
     const playerTransform = ecs.get(playerEntity, "transform");
     if (!playerTransform) return;
-    const playerTranslation = playerTransform.translation;
+    const [playerX, playerY, playerZ] = playerTransform.translation;
 
     for (const entity of entities) {
-      const coinTranslation = components.get(entity, "transform").translation;
-      if (coinTranslation.distanceTo(playerTranslation) > COLLECT_DISTANCE) continue;
+      const [coinX, coinY, coinZ] = components.get(entity, "transform").translation;
+      const distance = Math.hypot(coinX - playerX, coinY - playerY, coinZ - playerZ);
+      if (distance > COLLECT_DISTANCE) continue;
 
       collectedTotal += components.get(entity, "coin").value;
       ecs.destroyEntity(entity);

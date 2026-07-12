@@ -2,6 +2,7 @@ import { Vector3 } from "@game/math";
 import { context } from "../game-context";
 import { spawnBox } from "./spawn-box";
 
+
 const THROW_COLORS: [number, number, number][] = [
   [0.95, 0.77, 0.06],
   [0.9, 0.49, 0.13],
@@ -14,18 +15,19 @@ const THROW_HORIZONTAL_IMPULSE = 9;
 const THROW_UPWARD_IMPULSE = 5.5;
 
 type ThrowBoxOptions = {
-  from: Vector3;
-  facing: Vector3;
+  from: [number, number, number];
+  facing: [number, number, number];
 };
 
 /** A small box thrown from a point: one kick, and gravity draws the parabola. */
 export function throwBox(options: ThrowBoxOptions): void {
-  const { from, facing } = options;
+  const [fromX, fromY, fromZ] = options.from;
+  const [facingX, , facingZ] = options.facing;
   const color = THROW_COLORS[Math.floor(Math.random() * THROW_COLORS.length)]!;
 
   const entity = spawnBox({
     color,
-    position: [from.x + facing.x * 1.2, from.y + 0.3, from.z + facing.z * 1.2],
+    position: [fromX + facingX * 1.2, fromY + 0.3, fromZ + facingZ * 1.2],
     scale: [0.4, 0.4, 0.4],
     body: {
       type: "dynamic",
@@ -37,10 +39,10 @@ export function throwBox(options: ThrowBoxOptions): void {
   });
 
   // The body was materialized synchronously when the components were added.
-  const body = context.ecs.get(entity, "body");
+  const body = context.bodies.get(entity);
   if (body?.type === "dynamic") {
     body.applyImpulse(
-      new Vector3(facing.x * THROW_HORIZONTAL_IMPULSE, THROW_UPWARD_IMPULSE, facing.z * THROW_HORIZONTAL_IMPULSE),
+      new Vector3(facingX * THROW_HORIZONTAL_IMPULSE, THROW_UPWARD_IMPULSE, facingZ * THROW_HORIZONTAL_IMPULSE),
     );
   }
 }

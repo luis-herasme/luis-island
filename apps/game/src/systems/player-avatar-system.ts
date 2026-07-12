@@ -68,7 +68,7 @@ const targetRotation = new Quaternion();
  * walked, and the limbs swing as its sine.
  */
 export const playerAvatarSystem = context.ecs.createSystem({
-  requiredComponents: ["transform", "player", "body"],
+  requiredComponents: ["transform", "player"],
 
   onEntityAdded(entity) {
     const avatar = buildAvatar();
@@ -91,10 +91,10 @@ export const playerAvatarSystem = context.ecs.createSystem({
 
       const transform = components.get(entity, "transform");
       const player = components.get(entity, "player");
-      const body = components.get(entity, "body");
+      const body = context.bodies.get(entity);
       const nodes = avatar.hierarchy.nodes;
 
-      const horizontalSpeed = body.type === "dynamic" ? Math.hypot(body.velocity.x, body.velocity.z) : 0;
+      const horizontalSpeed = body?.type === "dynamic" ? Math.hypot(body.velocity.x, body.velocity.z) : 0;
 
       avatar.phase += horizontalSpeed * STRIDE_FREQUENCY * deltaTime;
       const swingTarget = horizontalSpeed > WALKING_SPEED_THRESHOLD ? 1 : 0;
@@ -110,9 +110,9 @@ export const playerAvatarSystem = context.ecs.createSystem({
       // The root carries the body: position from physics, and a smooth turn
       // toward the last movement direction. The avatar's front is its -Z.
       const root = nodes[avatar.rootIndex]!;
-      root.localTransform.translation.copy(transform.translation);
+      root.localTransform.translation.set(...transform.translation);
 
-      const yaw = Math.atan2(-player.facing.x, -player.facing.z);
+      const yaw = Math.atan2(-player.facing[0], -player.facing[2]);
       targetRotation.setFromAxisAngle(AXIS_Y, yaw);
       root.localTransform.rotation.slerp(targetRotation, 1 - Math.exp(-TURN_EASE_RATE * deltaTime));
 

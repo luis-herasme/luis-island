@@ -1,4 +1,3 @@
-import { Transform3D } from "@game/math";
 import type { Entity } from "@game/ecs";
 import { context } from "../game-context";
 
@@ -23,12 +22,12 @@ type SpawnBoxOptions = {
 export function spawnBox(options: SpawnBoxOptions): Entity {
   const { ecs } = context;
 
-  const transform = new Transform3D();
-  transform.translation.set(...options.position);
-  if (options.scale) transform.scale.set(...options.scale);
-
   const entity = ecs.addEntity();
-  ecs.addComponent(entity, "transform", transform);
+  ecs.addComponent(entity, "transform", {
+    translation: options.position,
+    rotation: [0, 0, 0, 1],
+    scale: options.scale ?? [1, 1, 1],
+  });
   ecs.addComponent(entity, "renderable", {
     geometry: { kind: "box" },
     material: { kind: "lit", color: options.color },
