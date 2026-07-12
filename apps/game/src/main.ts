@@ -64,10 +64,16 @@ void main() {
 
 const renderer = new Renderer();
 
+// The camera trails the player at a fixed offset, so its viewing angle is
+// constant: aim it once, from the offset toward the origin.
+const CAMERA_OFFSET = new Vector3(0, 9, 12);
+/** Per-second catch-up rate of the camera toward its target position. */
+const CAMERA_FOLLOW_RATE = 4;
+
 const camera = new PerspectiveCamera({ aspect: window.innerWidth / window.innerHeight });
-camera.transform.translation.set(0, 9, 12);
+camera.transform.translation.copy(CAMERA_OFFSET);
 camera.transform.rotation.setFromRotationMatrix(
-  new Matrix4x4().targetTo(camera.transform.translation, new Vector3(0, 0, 0), AXIS_Y),
+  new Matrix4x4().targetTo(CAMERA_OFFSET, new Vector3(0, 0, 0), AXIS_Y),
 );
 
 // ---------------------------------------------------------------------------
@@ -486,6 +492,23 @@ const physicsSystem = ecs.createSystem({
   },
 });
 
+/** Trails the player at CAMERA_OFFSET, smoothed so the motion feels weighted. */
+const cameraTargetPosition = new Vector3();
+const cameraFollowSystem = ecs.createSystem({
+  requiredComponents: ["transform", "player"],
+
+  update({ entities, components, deltaTime }) {
+    for (const entity of entities) {
+      const playerPosition = components.get(entity, "transform").translation;
+      cameraTargetPosition.copy(playerPosition).add(CAMERA_OFFSET);
+
+      // Exponential smoothing, frame-rate independent.
+      const blend = 1 - Math.exp(-CAMERA_FOLLOW_RATE * deltaTime);
+      camera.transform.translation.lerp(cameraTargetPosition, blend);
+    }
+  },
+});
+
 /** Copies each entity's transform component into its mesh and draws the frame. */
 const meshes: Mesh[] = [];
 const renderSystem = ecs.createSystem({
@@ -515,6 +538,7 @@ ecs.addSystem(windSystem);
 ecs.addSystem(spinSystem);
 ecs.addSystem(streakSystem);
 ecs.addSystem(physicsSystem);
+ecs.addSystem(cameraFollowSystem);
 ecs.addSystem(renderSystem);
 
 // ---------------------------------------------------------------------------
