@@ -527,11 +527,244 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     coin: { value: 1 },
   },
 
-  // The jukebox: come close and its label offers a song for coins. No
-  // renderable — its system builds the cabinet from boxes, like the avatar.
+  // The way to the discotheque: ride the fan's wind column up to the first
+  // wool platform, then jump platform to platform, each a little higher.
   {
     transform: {
-      translation: { x: 7, y: 0.25, z: -1 },
+      translation: { x: 6, y: 2.3, z: 2 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.6, y: 0.2, z: 1.6 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_cyan.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    transform: {
+      translation: { x: 7.5, y: 2.8, z: 0 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.4, y: 0.2, z: 1.4 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_yellow.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    transform: {
+      translation: { x: 6.5, y: 3.3, z: -2 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.4, y: 0.2, z: 1.4 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_green.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    transform: {
+      translation: { x: 7, y: 3.75, z: -4.5 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.4, y: 0.2, z: 1.4 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_magenta.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+
+  // The discotheque: an obsidian dance floor hanging over the north-east
+  // shore,
+  // glowing meselamp tiles inlaid (visual only — too thin to collide),
+  // bark-and-wood tables with wool chairs, and the jukebox as the resident
+  // band.
+  {
+    // Dance floor
+    transform: {
+      translation: { x: 7, y: 3.9, z: -8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 9, y: 0.3, z: 7 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_obsidian.png", textureScale: [6, 4] },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Glow tile
+    transform: {
+      translation: { x: 5.5, y: 4.065, z: -6.5 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.2, y: 0.02, z: 1.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "basic", textureUrl: "/minetest_textures/default_meselamp.png" },
+    },
+  },
+  {
+    // Glow tile
+    transform: {
+      translation: { x: 8.5, y: 4.065, z: -6.5 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.2, y: 0.02, z: 1.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "basic", textureUrl: "/minetest_textures/default_meselamp.png" },
+    },
+  },
+  {
+    // Glow tile
+    transform: {
+      translation: { x: 7, y: 4.065, z: -8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.6, y: 0.02, z: 1.6 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "basic", textureUrl: "/minetest_textures/default_meselamp.png" },
+    },
+  },
+  {
+    // Glow tile
+    transform: {
+      translation: { x: 5.5, y: 4.065, z: -9.5 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.2, y: 0.02, z: 1.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "basic", textureUrl: "/minetest_textures/default_meselamp.png" },
+    },
+  },
+  {
+    // Glow tile
+    transform: {
+      translation: { x: 8.5, y: 4.065, z: -9.5 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.2, y: 0.02, z: 1.2 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "basic", textureUrl: "/minetest_textures/default_meselamp.png" },
+    },
+  },
+  {
+    // Table leg, north table
+    transform: {
+      translation: { x: 4.8, y: 4.35, z: -6.8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.25, y: 0.6, z: 0.25 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_tree.png" },
+    },
+  },
+  {
+    // Table top, north table
+    transform: {
+      translation: { x: 4.8, y: 4.7, z: -6.8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.1, y: 0.1, z: 1.1 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Table leg, south table
+    transform: {
+      translation: { x: 4.8, y: 4.35, z: -9.2 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.25, y: 0.6, z: 0.25 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_tree.png" },
+    },
+  },
+  {
+    // Table top, south table
+    transform: {
+      translation: { x: 4.8, y: 4.7, z: -9.2 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1.1, y: 0.1, z: 1.1 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/default_wood.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Chair
+    transform: {
+      translation: { x: 3.7, y: 4.275, z: -6.8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.45, y: 0.45, z: 0.45 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Chair
+    transform: {
+      translation: { x: 5.9, y: 4.275, z: -6.8 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.45, y: 0.45, z: 0.45 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Chair
+    transform: {
+      translation: { x: 3.7, y: 4.275, z: -9.2 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.45, y: 0.45, z: 0.45 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+  {
+    // Chair
+    transform: {
+      translation: { x: 5.9, y: 4.275, z: -9.2 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 0.45, y: 0.45, z: 0.45 },
+    },
+    renderable: {
+      geometry: { kind: "box" },
+      material: { kind: "lit", textureUrl: "/minetest_textures/wool_red.png" },
+    },
+    physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+
+  // The jukebox, resident band of the discotheque: come close and its
+  // label offers a song for coins. No renderable — its system draws the
+  // pixel-art sprite.
+  {
+    transform: {
+      translation: { x: 9.5, y: 4.8, z: -8 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
       scale: { x: 0.9, y: 1.5, z: 0.7 },
     },
