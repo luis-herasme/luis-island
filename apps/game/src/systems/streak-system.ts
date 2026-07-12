@@ -56,7 +56,7 @@ export const streakSystem = context.ecs.createSystem({
       texture.minificationFilter = MinificationFilter.Linear;
       texture.magnificationFilter = MagnificationFilter.Linear;
 
-      state.mesh = createWindSpritesMesh({ offsets, texture });
+      state.mesh = createWindSpritesMesh({ offsets, texture, bottom, top });
       context.sceneMeshes.add(state.mesh);
     })();
   },
