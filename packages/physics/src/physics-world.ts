@@ -1,9 +1,14 @@
 import { Vector3 } from "@game/math";
 import { Contact, contactBetween } from "./collision";
+import type { DynamicBody } from "./dynamic-body";
 import type { RigidBody } from "./rigid-body";
+import type { StaticBody } from "./static-body";
 
 /** Earth-ish gravity; override per world through the constructor. */
 const DEFAULT_GRAVITY = Object.freeze(new Vector3(0, -9.81, 0));
+
+/** What a static body's velocity reads as during resolution. */
+const ZERO_VELOCITY = Object.freeze(new Vector3(0, 0, 0));
 
 /**
  * How much of the remaining penetration one resolution pass removes. Below 1
@@ -101,17 +106,20 @@ export class PhysicsWorld {
     // Impulse: cancel the approach velocity along the normal, plus bounce.
     // The normal points first → second, so approaching means a negative
     // relative velocity along it.
+    const firstVelocity = first.type === "dynamic" ? first.velocity : ZERO_VELOCITY;
+    const secondVelocity = second.type === "dynamic" ? second.velocity : ZERO_VELOCITY;
+
     const relativeVelocityAlongNormal =
-      (second.velocity.x - first.velocity.x) * normal.x +
-      (second.velocity.y - first.velocity.y) * normal.y +
-      (second.velocity.z - first.velocity.z) * normal.z;
+      (secondVelocity.x - firstVelocity.x) * normal.x +
+      (secondVelocity.y - firstVelocity.y) * normal.y +
+      (secondVelocity.z - firstVelocity.z) * normal.z;
 
     if (relativeVelocityAlongNormal < 0) {
       const restitution = Math.max(first.restitution, second.restitution);
       const impulseMagnitude = (-(1 + restitution) * relativeVelocityAlongNormal) / totalInverseMass;
 
-      first.velocity.addScaledVector(normal, -impulseMagnitude * first.inverseMass);
-      second.velocity.addScaledVector(normal, impulseMagnitude * second.inverseMass);
+      if (first.type === "dynamic") first.velocity.addScaledVector(normal, -impulseMagnitude * first.inverseMass);
+      if (second.type === "dynamic") second.velocity.addScaledVector(normal, impulseMagnitude * second.inverseMass);
     }
 
     // Positional correction: push the bodies apart so resting contact does
@@ -133,8 +141,8 @@ export class PhysicsWorld {
     // Only sideways contacts are steppable; tops and bottoms resolve normally.
     if (contact.normal.y !== 0) return false;
 
-    let stepper: RigidBody;
-    let obstacle: RigidBody;
+    let stepper: DynamicBody;
+    let obstacle: StaticBody;
 
     if (contact.first.type === "dynamic" && contact.first.stepHeight > 0 && contact.second.type === "static") {
       stepper = contact.first;

@@ -13,13 +13,24 @@ angular state anywhere — no spin, no torque, no orientation.
 **`Collider`** — the shape a body occupies. Box-only for now: an axis-aligned
 box described by half extents.
 
-**`RigidBody`** — a collider plus motion state:
+**`StaticBody` and `DynamicBody`** — the two kinds of body, separated at the
+type level because they are different concepts: a static body has no motion
+state at all, so it cannot even be *described* with a mass or a velocity.
+`RigidBody` is their union, discriminated by `type`. Every property is
+required on purpose — each one changes behavior, so the caller decides each
+one explicitly:
 
 ```ts
-const body = new RigidBody({
+const wall = new StaticBody({
   collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 0.5) }),
-  type: "dynamic",              // or "static": never moves, infinite mass
+  translation: new Vector3(2, 0, 0),
+  restitution: 0,               // static bodies can still be bouncy surfaces
+});
+
+const crate = new DynamicBody({
+  collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 0.5) }),
   translation: new Vector3(0, 2, 0),
+  velocity: new Vector3(),
   mass: 1,
   restitution: 0,               // bounciness, 0..1
   damping: 0,                   // per-second linear deceleration

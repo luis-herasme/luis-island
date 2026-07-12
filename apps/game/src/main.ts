@@ -11,7 +11,8 @@
 import { ECS } from "@game/ecs";
 import { Keyboard } from "@game/input";
 import { AXIS_Y, Matrix4x4, Transform3D, Vector3 } from "@game/math";
-import { Collider, PhysicsWorld, RigidBody } from "@game/physics";
+import { Collider, DynamicBody, PhysicsWorld, StaticBody } from "@game/physics";
+import type { RigidBody } from "@game/physics";
 import { GEOMETRY_BOX, Material, Mesh, PerspectiveCamera, Renderer, Uniform, startAnimationLoop } from "@game/render";
 
 // ---------------------------------------------------------------------------
@@ -97,15 +98,21 @@ function spawnBox(options: SpawnBoxOptions) {
 
   // The mesh is a unit box scaled by the transform, so the collider's half
   // extents are half the scale.
-  const body = new RigidBody({
-    collider: Collider.box({ halfExtents: transform.scale.clone().multiplyScalar(0.5) }),
-    type: options.bodyType ?? "static",
-    translation: new Vector3(...options.position),
-    velocity: options.velocity ? new Vector3(...options.velocity) : undefined,
-    restitution: options.restitution,
-    damping: options.damping,
-    stepHeight: options.stepHeight,
-  });
+  const collider = Collider.box({ halfExtents: transform.scale.clone().multiplyScalar(0.5) });
+  const translation = new Vector3(...options.position);
+
+  const body: RigidBody =
+    options.bodyType === "dynamic"
+      ? new DynamicBody({
+          collider,
+          translation,
+          velocity: options.velocity ? new Vector3(...options.velocity) : new Vector3(),
+          mass: 1,
+          restitution: options.restitution ?? 0,
+          damping: options.damping ?? 0,
+          stepHeight: options.stepHeight ?? 0,
+        })
+      : new StaticBody({ collider, translation, restitution: options.restitution ?? 0 });
   physicsWorld.addBody(body);
 
   const entity = ecs.addEntity();
@@ -193,6 +200,8 @@ const playerMovementSystem = ecs.createSystem({
 
     for (const entity of entities) {
       const body = components.get(entity, "body");
+      if (body.type !== "dynamic") continue;
+
       const player = components.get(entity, "player");
 
       // Horizontal velocity comes from input; vertical stays with gravity.

@@ -1,32 +1,41 @@
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "@game/math";
-import { Collider, PhysicsWorld, RigidBody, contactBetween } from "./index";
+import { Collider, DynamicBody, PhysicsWorld, StaticBody, contactBetween } from "./index";
 
 const FIXED_DELTA_TIME = 1 / 60;
 
-function unitBox(options: { type?: "dynamic" | "static"; position?: [number, number, number]; restitution?: number; damping?: number } = {}): RigidBody {
-  const translation = new Vector3(...(options.position ?? [0, 0, 0]));
-  return new RigidBody({
+function dynamicBox(options: { position?: [number, number, number]; restitution?: number; damping?: number; stepHeight?: number } = {}): DynamicBody {
+  return new DynamicBody({
     collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 0.5) }),
-    type: options.type ?? "dynamic",
-    translation,
+    translation: new Vector3(...(options.position ?? [0, 0, 0])),
+    velocity: new Vector3(),
+    mass: 1,
     restitution: options.restitution ?? 0,
     damping: options.damping ?? 0,
+    stepHeight: options.stepHeight ?? 0,
+  });
+}
+
+function staticBox(options: { position: [number, number, number]; halfExtents: [number, number, number] }): StaticBody {
+  return new StaticBody({
+    collider: Collider.box({ halfExtents: new Vector3(...options.halfExtents) }),
+    translation: new Vector3(...options.position),
+    restitution: 0,
   });
 }
 
 describe("contactBetween", () => {
   it("returns null for separated boxes", () => {
-    expect(contactBetween(unitBox(), unitBox({ position: [3, 0, 0] }))).toBeNull();
+    expect(contactBetween(dynamicBox(), dynamicBox({ position: [3, 0, 0] }))).toBeNull();
   });
 
   it("returns null for boxes that exactly touch", () => {
-    expect(contactBetween(unitBox(), unitBox({ position: [1, 0, 0] }))).toBeNull();
+    expect(contactBetween(dynamicBox(), dynamicBox({ position: [1, 0, 0] }))).toBeNull();
   });
 
   it("separates along the axis of least overlap, first toward second", () => {
     // Mostly overlapping, offset a bit on x — x is the cheapest way out.
-    const contact = contactBetween(unitBox(), unitBox({ position: [0.8, 0.1, 0.2] }))!;
+    const contact = contactBetween(dynamicBox(), dynamicBox({ position: [0.8, 0.1, 0.2] }))!;
 
     expect(contact.normal.x).toBe(1);
     expect(contact.normal.y).toBe(0);
@@ -35,7 +44,7 @@ describe("contactBetween", () => {
   });
 
   it("flips the normal when second is on the other side", () => {
-    const contact = contactBetween(unitBox(), unitBox({ position: [-0.8, 0, 0] }))!;
+    const contact = contactBetween(dynamicBox(), dynamicBox({ position: [-0.8, 0, 0] }))!;
     expect(contact.normal.x).toBe(-1);
   });
 });
@@ -43,7 +52,7 @@ describe("contactBetween", () => {
 describe("PhysicsWorld", () => {
   it("integrates gravity into velocity and translation", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, -10, 0) });
-    const body = unitBox({ position: [0, 10, 0] });
+    const body = dynamicBox({ position: [0, 10, 0] });
     world.addBody(body);
 
     world.step(0.1);
@@ -54,7 +63,7 @@ describe("PhysicsWorld", () => {
 
   it("damping decelerates a coasting body", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
-    const body = unitBox({ damping: 5 });
+    const body = dynamicBox({ damping: 5 });
     body.velocity.set(10, 0, 0);
     world.addBody(body);
 
@@ -66,12 +75,8 @@ describe("PhysicsWorld", () => {
 
   it("a falling box comes to rest on a static ground", () => {
     const world = new PhysicsWorld();
-    const ground = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
-      type: "static",
-      translation: new Vector3(0, -0.6, 0),
-    });
-    const box = unitBox({ position: [0, 2, 0] });
+    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
+    const box = dynamicBox({ position: [0, 2, 0] });
     world.addBody(ground);
     world.addBody(box);
 
@@ -86,12 +91,8 @@ describe("PhysicsWorld", () => {
 
   it("restitution bounces a falling box back up", () => {
     const world = new PhysicsWorld();
-    const ground = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
-      type: "static",
-      translation: new Vector3(0, -0.6, 0),
-    });
-    const box = unitBox({ position: [0, 2, 0], restitution: 0.8 });
+    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
+    const box = dynamicBox({ position: [0, 2, 0], restitution: 0.8 });
     world.addBody(ground);
     world.addBody(box);
 
@@ -106,12 +107,8 @@ describe("PhysicsWorld", () => {
 
   it("a dynamic box cannot be pushed through a static one", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
-    const wall = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 0.5) }),
-      type: "static",
-      translation: new Vector3(2, 0, 0),
-    });
-    const mover = unitBox();
+    const wall = staticBox({ position: [2, 0, 0], halfExtents: [0.5, 0.5, 0.5] });
+    const mover = dynamicBox();
     world.addBody(wall);
     world.addBody(mover);
 
@@ -130,8 +127,8 @@ describe("PhysicsWorld", () => {
 
   it("splits response between two dynamic bodies by mass", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
-    const light = unitBox({ position: [0, 0, 0] });
-    const heavy = unitBox({ position: [0.9, 0, 0] });
+    const light = dynamicBox({ position: [0, 0, 0] });
+    const heavy = dynamicBox({ position: [0.9, 0, 0] });
     heavy.mass = 10;
     light.velocity.set(5, 0, 0);
     world.addBody(light);
@@ -147,20 +144,11 @@ describe("PhysicsWorld", () => {
 
   it("a stepping body climbs a ledge within its stepHeight", () => {
     const world = new PhysicsWorld();
-    const ground = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
-      type: "static",
-      translation: new Vector3(0, -0.6, 0),
-    });
+    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
     // A wide raised platform starting at x = 1.5, its top at -0.1 — a 0.4
     // ledge above the walker's bottom at -0.5.
-    const step = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(5, 0.25, 10) }),
-      type: "static",
-      translation: new Vector3(6.5, -0.35, 0),
-    });
-    const walker = unitBox({ position: [0, 0, 0] });
-    walker.stepHeight = 0.5;
+    const step = staticBox({ position: [6.5, -0.35, 0], halfExtents: [5, 0.25, 10] });
+    const walker = dynamicBox({ position: [0, 0, 0], stepHeight: 0.5 });
     world.addBody(ground);
     world.addBody(step);
     world.addBody(walker);
@@ -177,19 +165,10 @@ describe("PhysicsWorld", () => {
 
   it("a stepping body is still blocked by ledges taller than stepHeight", () => {
     const world = new PhysicsWorld();
-    const ground = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
-      type: "static",
-      translation: new Vector3(0, -0.6, 0),
-    });
+    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
     // Wall top at +0.5: a 1.0 ledge, above the walker's 0.5 stepHeight.
-    const wall = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 10) }),
-      type: "static",
-      translation: new Vector3(2, 0, 0),
-    });
-    const walker = unitBox({ position: [0, 0, 0] });
-    walker.stepHeight = 0.5;
+    const wall = staticBox({ position: [2, 0, 0], halfExtents: [0.5, 0.5, 10] });
+    const walker = dynamicBox({ position: [0, 0, 0], stepHeight: 0.5 });
     world.addBody(ground);
     world.addBody(wall);
     world.addBody(walker);
@@ -205,17 +184,9 @@ describe("PhysicsWorld", () => {
 
   it("stepHeight 0 keeps every ledge blocking", () => {
     const world = new PhysicsWorld();
-    const ground = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(10, 0.1, 10) }),
-      type: "static",
-      translation: new Vector3(0, -0.6, 0),
-    });
-    const step = new RigidBody({
-      collider: Collider.box({ halfExtents: new Vector3(0.5, 0.25, 10) }),
-      type: "static",
-      translation: new Vector3(2, -0.35, 0),
-    });
-    const walker = unitBox({ position: [0, 0, 0] });
+    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
+    const step = staticBox({ position: [2, -0.35, 0], halfExtents: [0.5, 0.25, 10] });
+    const walker = dynamicBox({ position: [0, 0, 0] });
     world.addBody(ground);
     world.addBody(step);
     world.addBody(walker);
@@ -230,9 +201,8 @@ describe("PhysicsWorld", () => {
 
   it("dynamic bodies are pushed, never stepped onto", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
-    const crate = unitBox({ position: [2, 0, 0] });
-    const walker = unitBox({ position: [0, 0, 0] });
-    walker.stepHeight = 0.5;
+    const crate = dynamicBox({ position: [2, 0, 0] });
+    const walker = dynamicBox({ position: [0, 0, 0], stepHeight: 0.5 });
     world.addBody(crate);
     world.addBody(walker);
 
@@ -247,8 +217,8 @@ describe("PhysicsWorld", () => {
 
   it("keeps the latest contacts readable for game logic", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
-    const first = unitBox();
-    const second = unitBox({ position: [0.5, 0, 0] });
+    const first = dynamicBox();
+    const second = dynamicBox({ position: [0.5, 0, 0] });
     world.addBody(first);
     world.addBody(second);
 
