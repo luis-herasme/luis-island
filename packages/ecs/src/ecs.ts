@@ -84,7 +84,9 @@ export class ECS<Components> {
     entity: Entity,
     name: Name,
   ): entity is EntityWith<Components, Name> {
-    return this.entities.get(entity)?.has(name) ?? false;
+    const components = this.entities.get(entity);
+    if (!components) return false;
+    return components.has(name);
   }
 
   addComponent<Name extends keyof Components>(

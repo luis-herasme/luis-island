@@ -8,7 +8,13 @@ type PerspectiveCameraOptions = {
   far?: number;
 };
 
-const DEFAULT_FIELD_OF_VIEW = (45 * Math.PI) / 180;
+const DEFAULT_PERSPECTIVE_CAMERA_OPTIONS = {
+  /** 45 degrees, in radians. */
+  fieldOfView: (45 * Math.PI) / 180,
+  aspect: 1,
+  near: 0.1,
+  far: 100,
+};
 
 export class PerspectiveCamera {
   fieldOfView: number;
@@ -20,10 +26,11 @@ export class PerspectiveCamera {
   projectionMatrix = new Matrix4x4();
 
   constructor(options: PerspectiveCameraOptions = {}) {
-    this.fieldOfView = options.fieldOfView ?? DEFAULT_FIELD_OF_VIEW;
-    this.aspect = options.aspect ?? 1;
-    this.near = options.near ?? 0.1;
-    this.far = options.far ?? 100;
+    const resolved = { ...DEFAULT_PERSPECTIVE_CAMERA_OPTIONS, ...options };
+    this.fieldOfView = resolved.fieldOfView;
+    this.aspect = resolved.aspect;
+    this.near = resolved.near;
+    this.far = resolved.far;
     this.updateProjectionMatrix();
   }
 

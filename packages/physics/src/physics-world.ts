@@ -46,7 +46,11 @@ export class PhysicsWorld {
   contacts: Contact[] = [];
 
   constructor(options: PhysicsWorldOptions = {}) {
-    this.gravity = options.gravity ?? DEFAULT_GRAVITY.clone();
+    // Cloned per world, so no defaults object: worlds must not share one
+    // mutable gravity vector.
+    let gravity = options.gravity;
+    if (gravity === undefined) gravity = DEFAULT_GRAVITY.clone();
+    this.gravity = gravity;
   }
 
   addBody(body: RigidBody): void {

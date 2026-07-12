@@ -27,6 +27,7 @@
 ## Control-flow conventions
 
 - **Prefer `if` statements over ternary operators.** Branching reads as statements, not expressions: declare with `let`, branch with `if`/`else`, assign in each arm — even when a ternary would fit on one line. Ternaries are acceptable only where a statement cannot go and extracting one would be heavier than the expression itself (a default inside an argument list, a tiny guard inside a template string).
+- **Prefer `if` statements over `??` (and `||`) fallbacks.** A missing value is resolved explicitly: `let color = options.color; if (color === undefined) color = WHITE;`. When an options type has defaults, declare them once as a named constant next to the type (`const DEFAULT_TONE_OPTIONS = { ... }`) and merge at the top of the function: `const resolved = { ...DEFAULT_TONE_OPTIONS, ...options }`. Positional parameter defaults (`usage: BufferUsage = BufferUsage.StaticDraw`) are fine — they are already explicit.
 
 ## ECS conventions
 

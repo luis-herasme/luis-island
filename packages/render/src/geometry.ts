@@ -53,12 +53,27 @@ export class Geometry {
   vertexBuffers: VertexBuffer[];
   interleavedVertexBuffers: InterleavedVertexBuffer[];
 
+  // No shared defaults object here: the fallback arrays must be fresh per
+  // instance, or every geometry created without buffers would push into
+  // the same array.
   constructor(options: GeometryOptions) {
     this.vertexCount = options.vertexCount;
-    this.instanceCount = options.instanceCount ?? null;
-    this.indices = options.indices ?? null;
-    this.vertexBuffers = options.vertexBuffers ?? [];
-    this.interleavedVertexBuffers = options.interleavedVertexBuffers ?? [];
+
+    let instanceCount = options.instanceCount;
+    if (instanceCount === undefined) instanceCount = null;
+    this.instanceCount = instanceCount;
+
+    let indices = options.indices;
+    if (indices === undefined) indices = null;
+    this.indices = indices;
+
+    let vertexBuffers = options.vertexBuffers;
+    if (vertexBuffers === undefined) vertexBuffers = [];
+    this.vertexBuffers = vertexBuffers;
+
+    let interleavedVertexBuffers = options.interleavedVertexBuffers;
+    if (interleavedVertexBuffers === undefined) interleavedVertexBuffers = [];
+    this.interleavedVertexBuffers = interleavedVertexBuffers;
   }
 
   /**
@@ -67,10 +82,13 @@ export class Geometry {
    * constants are turned into instances you can safely mutate.
    */
   copy(): Geometry {
+    let indices: IndexBuffer | null = null;
+    if (this.indices) indices = this.indices.copy();
+
     return new Geometry({
       vertexCount: this.vertexCount,
       instanceCount: this.instanceCount,
-      indices: this.indices?.copy() ?? null,
+      indices,
       vertexBuffers: this.vertexBuffers.map((vertexBuffer) => vertexBuffer.copy()),
       interleavedVertexBuffers: this.interleavedVertexBuffers.map((interleavedVertexBuffer) =>
         interleavedVertexBuffer.copy(),
@@ -94,7 +112,9 @@ export class Geometry {
   }
 
   getVertexBuffer(name: string): VertexBuffer | null {
-    return this.vertexBuffers.find((vertexBuffer) => vertexBuffer.layout.name === name) ?? null;
+    const vertexBuffer = this.vertexBuffers.find((candidate) => candidate.layout.name === name);
+    if (vertexBuffer === undefined) return null;
+    return vertexBuffer;
   }
 
   /**
@@ -103,11 +123,11 @@ export class Geometry {
    * attributes, so mutating it directly may affect other attributes.
    */
   getInterleavedVertexBuffer(name: string): InterleavedVertexBuffer | null {
-    return (
-      this.interleavedVertexBuffers.find((interleavedVertexBuffer) =>
-        interleavedVertexBuffer.layouts.some((layout) => layout.name === name),
-      ) ?? null
+    const interleavedVertexBuffer = this.interleavedVertexBuffers.find((candidate) =>
+      candidate.layouts.some((layout) => layout.name === name),
     );
+    if (interleavedVertexBuffer === undefined) return null;
+    return interleavedVertexBuffer;
   }
 
   static fromVertexBuffer(vertexBuffer: VertexBuffer): Geometry {

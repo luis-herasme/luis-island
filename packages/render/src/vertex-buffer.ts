@@ -221,11 +221,21 @@ type VertexDataOptions = {
   /** Must match an `in` declaration in the vertex shader. */
   name: string;
   data: Data;
-  /** 0 advances per vertex (default); 1 advances per instance. */
+  /** 0 advances per vertex; 1 advances per instance. */
   divisor?: number;
   /** Map integer data to [0, 1] / [-1, 1] in the shader. */
   normalize?: boolean;
 };
+
+const DEFAULT_VERTEX_DATA_OPTIONS = {
+  divisor: 0,
+  normalize: false,
+};
+
+function resolveUsage(usage: BufferUsage | undefined): BufferUsage {
+  if (usage === undefined) return BufferUsage.StaticDraw;
+  return usage;
+}
 
 /**
  * A single attribute's raw data before it's processed into a VertexBuffer
@@ -238,10 +248,11 @@ export class VertexData {
   normalize: boolean;
 
   constructor(options: VertexDataOptions) {
-    this.name = options.name;
-    this.data = options.data;
-    this.divisor = options.divisor ?? 0;
-    this.normalize = options.normalize ?? false;
+    const resolved = { ...DEFAULT_VERTEX_DATA_OPTIONS, ...options };
+    this.name = resolved.name;
+    this.data = resolved.data;
+    this.divisor = resolved.divisor;
+    this.normalize = resolved.normalize;
   }
 }
 
@@ -347,7 +358,7 @@ export class VertexBuffer {
       this.layout = vertexLayoutFromVertexData(options.vertexData);
       this.buffer = new BufferGPU({
         kind: BufferKind.ArrayBuffer,
-        usage: options.usage ?? BufferUsage.StaticDraw,
+        usage: resolveUsage(options.usage),
         bufferCPU: options.vertexData.data.bytes,
       });
     } else {
@@ -394,7 +405,7 @@ export class InterleavedVertexBuffer {
       this.layouts = vertexLayoutsFromVertexDataArray(attributes);
       this.buffer = new BufferGPU({
         kind: BufferKind.ArrayBuffer,
-        usage: options.usage ?? BufferUsage.StaticDraw,
+        usage: resolveUsage(options.usage),
         bufferCPU: interleave(attributes, this.layouts),
       });
     } else {

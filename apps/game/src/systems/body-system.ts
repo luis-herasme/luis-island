@@ -19,7 +19,9 @@ export const bodySystem = context.ecs.createSystem({
     const description = ecs.get(entity, "physicsBody");
     if (!transform || !description) return;
 
-    const size = new Vector3().copy(description.size ?? transform.scale);
+    let sizeSource = description.size;
+    if (sizeSource === undefined) sizeSource = transform.scale;
+    const size = new Vector3().copy(sizeSource);
     const translation = new Vector3().copy(transform.translation);
 
     const body: RigidBody =

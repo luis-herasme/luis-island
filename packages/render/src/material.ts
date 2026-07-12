@@ -26,7 +26,10 @@ export class Material {
   constructor(options: MaterialOptions) {
     this.vertexShaderSource = options.vertexShaderSource;
     this.fragmentShaderSource = options.fragmentShaderSource;
-    this.transparent = options.transparent ?? false;
+
+    let transparent = options.transparent;
+    if (transparent === undefined) transparent = false;
+    this.transparent = transparent;
   }
 
   setUniform(uniformName: string, uniform: Uniform): void {
@@ -79,7 +82,9 @@ export class MaterialResources {
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      throw new Error(`Program linking failed: ${gl.getProgramInfoLog(program) ?? "unknown error"}`);
+      let linkLog = gl.getProgramInfoLog(program);
+      if (!linkLog) linkLog = "unknown error";
+      throw new Error(`Program linking failed: ${linkLog}`);
     }
 
     this.program = program;
@@ -255,7 +260,9 @@ function compileShader(gl: WebGL2RenderingContext, shaderSource: string, shaderT
   gl.compileShader(shader);
 
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    throw new Error(`Shader compilation failed: ${gl.getShaderInfoLog(shader) ?? "unknown error"}\n${shaderSource}`);
+    let compileLog = gl.getShaderInfoLog(shader);
+    if (!compileLog) compileLog = "unknown error";
+    throw new Error(`Shader compilation failed: ${compileLog}\n${shaderSource}`);
   }
 
   return shader;

@@ -121,8 +121,11 @@ async function materializeMesh(renderable: Components["renderable"]): Promise<Me
   if (textureUrl) variant = "textured";
   const shaders = SHADER_VARIANTS[kind][variant];
 
+  let baseColor = color;
+  if (baseColor === undefined) baseColor = WHITE;
+
   const material = new Material({ vertexShaderSource: shaders.vertex, fragmentShaderSource: shaders.fragment });
-  material.setUniform("base_color", Uniform.vector3(color ?? WHITE));
+  material.setUniform("base_color", Uniform.vector3(baseColor));
   if (textureUrl) material.setUniform("texture_sampler", Uniform.texture(await loadTexture(textureUrl)));
 
   return new Mesh({ geometry, material });
