@@ -8,12 +8,11 @@ import { GEOMETRY_BOX, Geometry, MagnificationFilter, MinificationFilter, Textur
  * means concurrent requests for the same url share one in-flight load.
  */
 
-let boxGeometry: Geometry | null = null;
-
-export function getBoxGeometry(): Geometry {
-  if (!boxGeometry) boxGeometry = GEOMETRY_BOX.copy();
-  return boxGeometry;
-}
+/**
+ * The one box geometry every box entity shares. Copying the template is
+ * CPU-side only — the GPU buffers upload lazily on first render.
+ */
+export const BOX_GEOMETRY = GEOMETRY_BOX.copy();
 
 const objGeometries = new Map<string, Promise<Geometry>>();
 
