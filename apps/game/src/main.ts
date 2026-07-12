@@ -96,15 +96,15 @@ function spawnBox(options: SpawnBoxOptions) {
   transform.translation.set(...options.position);
   if (options.scale) transform.scale.set(...options.scale);
 
-  // The mesh is a unit box scaled by the transform, so the body's half
-  // extents are half the scale.
-  const halfExtents = transform.scale.clone().multiplyScalar(0.5);
+  // The mesh is a unit box scaled by the transform, so the body size is
+  // exactly the scale.
+  const size = transform.scale.clone();
   const translation = new Vector3(...options.position);
 
   const body: RigidBody =
     options.bodyType === "dynamic"
       ? new DynamicBody({
-          halfExtents,
+          size,
           translation,
           velocity: options.velocity ? new Vector3(...options.velocity) : new Vector3(),
           mass: 1,
@@ -112,7 +112,7 @@ function spawnBox(options: SpawnBoxOptions) {
           damping: options.damping ?? 0,
           stepHeight: options.stepHeight ?? 0,
         })
-      : new StaticBody({ halfExtents, translation, restitution: options.restitution ?? 0 });
+      : new StaticBody({ size, translation, restitution: options.restitution ?? 0 });
   physicsWorld.addBody(body);
 
   const entity = ecs.addEntity();

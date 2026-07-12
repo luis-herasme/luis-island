@@ -8,7 +8,7 @@ it in through a system, the same way it wires the renderer.
 Two permanent design decisions keep it small. The system is **linear-only**:
 bodies never rotate, and there is no angular state anywhere — no spin, no
 torque, no orientation. And every body is an **axis-aligned box** described
-by its half extents — the only collision shape, because the game world is
+by its size — the only collision shape, because the game world is
 made of boxes. There is no collider abstraction to dispatch on; the box is
 the body's shape, directly.
 
@@ -23,13 +23,13 @@ one explicitly:
 
 ```ts
 const wall = new StaticBody({
-  halfExtents: new Vector3(0.5, 0.5, 0.5),
+  size: new Vector3(1, 1, 1),
   translation: new Vector3(2, 0, 0),
   restitution: 0,               // static bodies can still be bouncy surfaces
 });
 
 const crate = new DynamicBody({
-  halfExtents: new Vector3(0.5, 0.5, 0.5),
+  size: new Vector3(1, 1, 1),
   translation: new Vector3(0, 2, 0),
   velocity: new Vector3(),
   mass: 1,

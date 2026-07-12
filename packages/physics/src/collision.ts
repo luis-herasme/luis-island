@@ -19,20 +19,19 @@ export type Contact = {
  * the argument order defines the normal's direction: first → second.
  */
 export function contactBetween(first: RigidBody, second: RigidBody): Contact | null {
-  const firstHalfExtents = first.halfExtents;
-  const secondHalfExtents = second.halfExtents;
-
   const deltaX = second.translation.x - first.translation.x;
   const deltaY = second.translation.y - first.translation.y;
   const deltaZ = second.translation.z - first.translation.z;
 
-  const overlapX = firstHalfExtents.x + secondHalfExtents.x - Math.abs(deltaX);
+  // Two boxes overlap on an axis when the gap between their centers is
+  // smaller than the sum of their half sizes.
+  const overlapX = (first.size.x + second.size.x) * 0.5 - Math.abs(deltaX);
   if (overlapX <= 0) return null;
 
-  const overlapY = firstHalfExtents.y + secondHalfExtents.y - Math.abs(deltaY);
+  const overlapY = (first.size.y + second.size.y) * 0.5 - Math.abs(deltaY);
   if (overlapY <= 0) return null;
 
-  const overlapZ = firstHalfExtents.z + secondHalfExtents.z - Math.abs(deltaZ);
+  const overlapZ = (first.size.z + second.size.z) * 0.5 - Math.abs(deltaZ);
   if (overlapZ <= 0) return null;
 
   // Separate along the axis of least overlap — the shortest way out.

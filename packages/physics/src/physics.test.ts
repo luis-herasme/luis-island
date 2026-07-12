@@ -6,7 +6,7 @@ const FIXED_DELTA_TIME = 1 / 60;
 
 function dynamicBox(options: { position?: [number, number, number]; restitution?: number; damping?: number; stepHeight?: number } = {}): DynamicBody {
   return new DynamicBody({
-    halfExtents: new Vector3(0.5, 0.5, 0.5),
+    size: new Vector3(1, 1, 1),
     translation: new Vector3(...(options.position ?? [0, 0, 0])),
     velocity: new Vector3(),
     mass: 1,
@@ -16,9 +16,9 @@ function dynamicBox(options: { position?: [number, number, number]; restitution?
   });
 }
 
-function staticBox(options: { position: [number, number, number]; halfExtents: [number, number, number] }): StaticBody {
+function staticBox(options: { position: [number, number, number]; size: [number, number, number] }): StaticBody {
   return new StaticBody({
-    halfExtents: new Vector3(...options.halfExtents),
+    size: new Vector3(...options.size),
     translation: new Vector3(...options.position),
     restitution: 0,
   });
@@ -75,7 +75,7 @@ describe("PhysicsWorld", () => {
 
   it("a falling box comes to rest on a static ground", () => {
     const world = new PhysicsWorld();
-    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
+    const ground = staticBox({ position: [0, -0.6, 0], size: [20, 0.2, 20] });
     const box = dynamicBox({ position: [0, 2, 0] });
     world.addBody(ground);
     world.addBody(box);
@@ -91,7 +91,7 @@ describe("PhysicsWorld", () => {
 
   it("restitution bounces a falling box back up", () => {
     const world = new PhysicsWorld();
-    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
+    const ground = staticBox({ position: [0, -0.6, 0], size: [20, 0.2, 20] });
     const box = dynamicBox({ position: [0, 2, 0], restitution: 0.8 });
     world.addBody(ground);
     world.addBody(box);
@@ -107,7 +107,7 @@ describe("PhysicsWorld", () => {
 
   it("a dynamic box cannot be pushed through a static one", () => {
     const world = new PhysicsWorld({ gravity: new Vector3(0, 0, 0) });
-    const wall = staticBox({ position: [2, 0, 0], halfExtents: [0.5, 0.5, 0.5] });
+    const wall = staticBox({ position: [2, 0, 0], size: [1, 1, 1] });
     const mover = dynamicBox();
     world.addBody(wall);
     world.addBody(mover);
@@ -144,10 +144,10 @@ describe("PhysicsWorld", () => {
 
   it("a stepping body climbs a ledge within its stepHeight", () => {
     const world = new PhysicsWorld();
-    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
+    const ground = staticBox({ position: [0, -0.6, 0], size: [20, 0.2, 20] });
     // A wide raised platform starting at x = 1.5, its top at -0.1 — a 0.4
     // ledge above the walker's bottom at -0.5.
-    const step = staticBox({ position: [6.5, -0.35, 0], halfExtents: [5, 0.25, 10] });
+    const step = staticBox({ position: [6.5, -0.35, 0], size: [10, 0.5, 20] });
     const walker = dynamicBox({ position: [0, 0, 0], stepHeight: 0.5 });
     world.addBody(ground);
     world.addBody(step);
@@ -165,9 +165,9 @@ describe("PhysicsWorld", () => {
 
   it("a stepping body is still blocked by ledges taller than stepHeight", () => {
     const world = new PhysicsWorld();
-    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
+    const ground = staticBox({ position: [0, -0.6, 0], size: [20, 0.2, 20] });
     // Wall top at +0.5: a 1.0 ledge, above the walker's 0.5 stepHeight.
-    const wall = staticBox({ position: [2, 0, 0], halfExtents: [0.5, 0.5, 10] });
+    const wall = staticBox({ position: [2, 0, 0], size: [1, 1, 20] });
     const walker = dynamicBox({ position: [0, 0, 0], stepHeight: 0.5 });
     world.addBody(ground);
     world.addBody(wall);
@@ -184,8 +184,8 @@ describe("PhysicsWorld", () => {
 
   it("stepHeight 0 keeps every ledge blocking", () => {
     const world = new PhysicsWorld();
-    const ground = staticBox({ position: [0, -0.6, 0], halfExtents: [10, 0.1, 10] });
-    const step = staticBox({ position: [2, -0.35, 0], halfExtents: [0.5, 0.25, 10] });
+    const ground = staticBox({ position: [0, -0.6, 0], size: [20, 0.2, 20] });
+    const step = staticBox({ position: [2, -0.35, 0], size: [1, 0.5, 20] });
     const walker = dynamicBox({ position: [0, 0, 0] });
     world.addBody(ground);
     world.addBody(step);

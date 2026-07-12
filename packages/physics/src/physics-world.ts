@@ -154,13 +154,13 @@ export class PhysicsWorld {
       return false;
     }
 
-    const obstacleTop = obstacle.translation.y + obstacle.halfExtents.y;
-    const stepperBottom = stepper.translation.y - stepper.halfExtents.y;
+    const obstacleTop = obstacle.translation.y + obstacle.size.y * 0.5;
+    const stepperBottom = stepper.translation.y - stepper.size.y * 0.5;
     const ledgeHeight = obstacleTop - stepperBottom;
 
     if (ledgeHeight <= 0 || ledgeHeight > stepper.stepHeight) return false;
 
-    stepper.translation.y = obstacleTop + stepper.halfExtents.y;
+    stepper.translation.y = obstacleTop + stepper.size.y * 0.5;
     return true;
   }
 }

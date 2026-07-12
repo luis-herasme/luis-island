@@ -2,10 +2,10 @@ import { Vector3 } from "@game/math";
 
 type DynamicBodyOptions = {
   /**
-   * Half the body's size on each axis. Every body is an axis-aligned box —
-   * the only shape this engine supports, by design.
+   * Full dimensions of the box on each axis — a unit cube is (1, 1, 1).
+   * Every body is an axis-aligned box, the only shape this engine supports.
    */
-  halfExtents: Vector3;
+  size: Vector3;
   translation: Vector3;
   velocity: Vector3;
   mass: number;
@@ -28,7 +28,7 @@ type DynamicBodyOptions = {
  */
 export class DynamicBody {
   readonly type = "dynamic";
-  readonly halfExtents: Vector3;
+  readonly size: Vector3;
   readonly translation: Vector3;
   readonly velocity: Vector3;
   mass: number;
@@ -37,7 +37,7 @@ export class DynamicBody {
   stepHeight: number;
 
   constructor(options: DynamicBodyOptions) {
-    this.halfExtents = options.halfExtents;
+    this.size = options.size;
     this.translation = options.translation;
     this.velocity = options.velocity;
     this.mass = options.mass;
