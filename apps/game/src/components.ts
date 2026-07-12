@@ -7,7 +7,15 @@ import type { RigidBody } from "@game/physics";
  * whose origin is not its center with the entity's collider-centered
  * translation.
  */
-export type GeometryDescription = { kind: "box" } | { kind: "obj"; url: string; offset?: [number, number, number] };
+export type GeometryDescription =
+  | {
+      kind: "box";
+    }
+  | {
+      kind: "obj";
+      url: string;
+      offset?: [number, number, number];
+    };
 
 /**
  * A closed, compiler-checked set of looks — deliberately not shaders-as-data.
@@ -43,7 +51,10 @@ export type Components = {
    * procedural visuals (the avatar, the wind puffs) do not use this — their
    * systems own their meshes directly and register them in the scene.
    */
-  renderable: { geometry: GeometryDescription; material: MaterialDescription };
+  renderable: {
+    geometry: GeometryDescription;
+    material: MaterialDescription;
+  };
 
   /**
    * Give the entity a physics body. The collider size defaults to the
@@ -75,12 +86,19 @@ export type Components = {
   /** Purely visual rotation around the Y axis, radians per second. */
   spin: { speed: number };
 
-  /** A column of rising streaks that makes a wind zone visible. */
-  windStreaks: {
-    center: [number, number];
-    radius: number;
-    bottom: number;
-    top: number;
+  /**
+   * Emits billboarded sprite particles: they spawn within `radius` of the
+   * transform's translation, rise from the transform's height to `height`
+   * above it at a random speed in [minimumSpeed, maximumSpeed], and wrap
+   * back to the base. The particle system owns the mesh; the rise-fade-grow
+   * behavior stays fixed in the system until a second effect needs choices.
+   */
+  particleEmitter: {
+    textureUrl: string;
     count: number;
+    radius: number;
+    height: number;
+    minimumSpeed: number;
+    maximumSpeed: number;
   };
 };

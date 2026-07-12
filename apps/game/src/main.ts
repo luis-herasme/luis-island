@@ -19,16 +19,16 @@ import { playerAvatarSystem } from "./systems/player-avatar-system";
 import { playerMovementSystem } from "./systems/player-movement-system";
 import { renderSystem } from "./systems/render-system";
 import { spinSystem } from "./systems/spin-system";
-import { streakSystem } from "./systems/streak-system";
+import { particleSystem } from "./systems/particle-system";
 import { throwSystem } from "./systems/throw-system";
 import { windSystem } from "./systems/wind-system";
 
 // Frame order: materialize → input → forces → visuals → physics → camera →
-// render. The materializing systems (body, streaks, render's meshes) come
+// render. The materializing systems (body, particles, render's meshes) come
 // first so entities spawned later get their resources the moment their
 // description components land.
 context.ecs.addSystem(bodySystem);
-context.ecs.addSystem(streakSystem);
+context.ecs.addSystem(particleSystem);
 context.ecs.addSystem(playerMovementSystem);
 context.ecs.addSystem(throwSystem);
 context.ecs.addSystem(windSystem);

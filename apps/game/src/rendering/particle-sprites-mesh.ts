@@ -84,21 +84,21 @@ void main() {
 
 const SPRITE_HALF_SIZE = 0.3;
 
-type WindSpritesMeshOptions = {
+type ParticleSpritesMeshOptions = {
   offsets: Vector3[];
   texture: Texture;
-  /** The column's vertical extent — drives each puff's life-cycle fade. */
+  /** The column's vertical extent — drives each particle's life-cycle fade. */
   bottom: number;
   top: number;
 };
 
 /**
- * One instanced mesh for a whole column of puff sprites: a single quad per
- * particle, billboarded toward the camera in the vertex shader, placed by a
- * per-instance offset attribute rewritten each frame, with a per-instance
- * random size so no two puffs look alike.
+ * One instanced mesh for a whole column of particle sprites: a single quad
+ * per particle, billboarded toward the camera in the vertex shader, placed
+ * by a per-instance offset attribute rewritten each frame, with a
+ * per-instance random size so no two particles look alike.
  */
-export function createWindSpritesMesh(options: WindSpritesMeshOptions): Mesh {
+export function createParticleSpritesMesh(options: ParticleSpritesMeshOptions): Mesh {
   // prettier-ignore
   const positions: [number, number, number][] = [
     [-SPRITE_HALF_SIZE, -SPRITE_HALF_SIZE, 0],

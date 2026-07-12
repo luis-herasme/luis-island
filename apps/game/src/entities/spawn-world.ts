@@ -11,7 +11,7 @@ const FAN_Z = 1;
 const GROUND_TOP = -0.5;
 const WIND_TOP = 4.5;
 const WIND_FORCE = 25;
-const STREAK_COUNT = 36;
+const PARTICLE_COUNT = 36;
 
 /** The level, written as data: every entity is just description components. */
 export function spawnWorld(): { player: Entity } {
@@ -38,7 +38,7 @@ export function spawnWorld(): { player: Entity } {
   }
 
   // The fan: a pedestal, two crossed spinning blades, an invisible wind
-  // region and the streak column that makes it visible.
+  // region and the particle column that makes it visible.
   spawnBox({
     color: [0.25, 0.25, 0.28],
     position: [FAN_X, GROUND_TOP + 0.08, FAN_Z],
@@ -71,13 +71,18 @@ export function spawnWorld(): { player: Entity } {
   }
 
   {
-    const streaks = ecs.addEntity();
-    ecs.addComponent(streaks, "windStreaks", {
-      center: [FAN_X, FAN_Z],
+    const emitterTransform = new Transform3D();
+    emitterTransform.translation.set(FAN_X, GROUND_TOP, FAN_Z);
+
+    const emitter = ecs.addEntity();
+    ecs.addComponent(emitter, "transform", emitterTransform);
+    ecs.addComponent(emitter, "particleEmitter", {
+      textureUrl: "/whitePuff00.png",
+      count: PARTICLE_COUNT,
       radius: 0.7,
-      bottom: GROUND_TOP,
-      top: WIND_TOP,
-      count: STREAK_COUNT,
+      height: WIND_TOP - GROUND_TOP,
+      minimumSpeed: 3.5,
+      maximumSpeed: 6.5,
     });
   }
 
