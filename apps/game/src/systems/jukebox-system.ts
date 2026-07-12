@@ -1,4 +1,5 @@
 import type { Entity } from "@game/ecs";
+import type { SoundHandle } from "@game/audio";
 import { MagnificationFilter } from "@game/render";
 import type { Mesh } from "@game/render";
 import { context } from "../game-context";
@@ -13,6 +14,10 @@ const INTERACT_DISTANCE = 2.2;
 /** World-unit height of the jukebox sprite — matches its collider. */
 const SPRITE_HEIGHT = 1.5;
 
+/** The song's volume at the jukebox, fading to silence at its range. */
+const SONG_VOLUME = 0.7;
+const SONG_RANGE = 14;
+
 /** Shake size and speeds while a song plays. */
 const VIBRATION_AMPLITUDE = 0.03;
 const VIBRATION_FREQUENCY_X = 35;
@@ -24,6 +29,8 @@ type JukeboxState = {
   /** True after a Q press the player could not afford. */
   showInsufficient: boolean;
   mesh: Mesh;
+  /** The playing song, kept for distance-based volume; null when silent. */
+  songHandle: SoundHandle | null;
 };
 
 /** Per-jukebox state and sprite, keyed by entity. */
@@ -56,7 +63,7 @@ export const jukeboxSystem = context.ecs.createSystem({
       height: SPRITE_HEIGHT,
     });
 
-    states.set(entity, { playingUntil: 0, showInsufficient: false, mesh });
+    states.set(entity, { playingUntil: 0, showInsufficient: false, mesh, songHandle: null });
     context.sceneMeshes.add(mesh);
   },
 
@@ -100,6 +107,18 @@ export const jukeboxSystem = context.ecs.createSystem({
       const distance = Math.hypot(translation.x - player.x, translation.y - player.y, translation.z - player.z);
       const playerIsNear = distance <= INTERACT_DISTANCE;
 
+      // The song is positional: it fades quadratically with the player's
+      // distance, like the sound emitters.
+      if (state.songHandle) {
+        if (isPlaying) {
+          let closeness = 1 - distance / SONG_RANGE;
+          if (closeness < 0) closeness = 0;
+          state.songHandle.setVolume(SONG_VOLUME * closeness * closeness);
+        } else {
+          state.songHandle = null;
+        }
+      }
+
       if (!playerIsNear) {
         label.text = "";
         state.showInsufficient = false;
@@ -117,7 +136,7 @@ export const jukeboxSystem = context.ecs.createSystem({
           setCoinCount(context.coins);
 
           const song = getSoundBuffer(jukebox.songUrl);
-          context.audioPlayer.playSound(song, { volume: 0.7 });
+          state.songHandle = context.audioPlayer.playSound(song, { volume: SONG_VOLUME });
           state.playingUntil = clock + song.duration;
           state.showInsufficient = false;
         } else {

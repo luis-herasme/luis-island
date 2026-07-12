@@ -39,8 +39,8 @@ const DEFAULT_PLAY_LOOP_OPTIONS = {
   volume: 1,
 };
 
-/** A handle to a looping sound: adjust its volume live, or stop it. */
-export type LoopHandle = {
+/** A handle to a playing sound: adjust its volume live, or stop it. */
+export type SoundHandle = {
   setVolume(volume: number): void;
   stop(): void;
 };
@@ -109,7 +109,7 @@ export class AudioPlayer {
     return this.getContext().decodeAudioData(bytes);
   }
 
-  playSound(buffer: AudioBuffer, options: PlaySoundOptions = {}): void {
+  playSound(buffer: AudioBuffer, options: PlaySoundOptions = {}): SoundHandle {
     const { volume, playbackRate } = { ...DEFAULT_PLAY_SOUND_OPTIONS, ...options };
     const context = this.getContext();
 
@@ -123,6 +123,15 @@ export class AudioPlayer {
     source.connect(gain);
     gain.connect(context.destination);
     source.start();
+
+    return {
+      setVolume(nextVolume: number): void {
+        gain.gain.setTargetAtTime(nextVolume, context.currentTime, VOLUME_SMOOTHING_SECONDS);
+      },
+      stop(): void {
+        source.stop();
+      },
+    };
   }
 
   /** Synthesized noise to loop — ambience without an asset file. */
@@ -152,7 +161,7 @@ export class AudioPlayer {
   }
 
   /** Starts a sound looping forever; the handle adjusts it from outside. */
-  playLoop(buffer: AudioBuffer, options: PlayLoopOptions = {}): LoopHandle {
+  playLoop(buffer: AudioBuffer, options: PlayLoopOptions = {}): SoundHandle {
     const { volume } = { ...DEFAULT_PLAY_LOOP_OPTIONS, ...options };
     const context = this.getContext();
 

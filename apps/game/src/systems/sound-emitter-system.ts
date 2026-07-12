@@ -1,12 +1,12 @@
 import type { Entity } from "@game/ecs";
-import type { LoopHandle } from "@game/audio";
+import type { SoundHandle } from "@game/audio";
 import { context } from "../game-context";
 
 /** Seconds of noise in a hum loop — long enough that the seam is rare. */
 const HUM_LOOP_DURATION = 2;
 
 /** Loop handles are this system's private memory, keyed by entity. */
-const handles = new Map<Entity, LoopHandle>();
+const handles = new Map<Entity, SoundHandle>();
 
 /**
  * Positional audio: every `soundEmitter` entity plays a continuous loop
