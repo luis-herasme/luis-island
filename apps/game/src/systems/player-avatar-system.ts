@@ -199,7 +199,7 @@ function createPart(options: CreatePartOptions): BodyPart {
   });
   material.setUniform("base_color", Uniform.vector3(options.color));
 
-  const mesh = new Mesh({ geometry: GEOMETRY_BOX.copy(), material });
+  const mesh = new Mesh({ geometry: GEOMETRY_BOX, material });
   mesh.transform.scale.set(...options.size);
 
   return { mesh, anchorIndex: options.anchorIndex };

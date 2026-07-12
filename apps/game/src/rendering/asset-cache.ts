@@ -1,4 +1,4 @@
-import { GEOMETRY_BOX, Geometry, MagnificationFilter, MinificationFilter, Texture, fetchText, parseOBJ } from "@game/render";
+import { Geometry, MagnificationFilter, MinificationFilter, Texture, fetchText, parseOBJ } from "@game/render";
 
 /**
  * Shared render assets, loaded once and reused. Meshes stay per-entity (they
@@ -7,12 +7,6 @@ import { GEOMETRY_BOX, Geometry, MagnificationFilter, MinificationFilter, Textur
  * texture url is only ever fetched once. Caching the promise (not the value)
  * means concurrent requests for the same url share one in-flight load.
  */
-
-/**
- * The one box geometry every box entity shares. Copying the template is
- * CPU-side only — the GPU buffers upload lazily on first render.
- */
-export const BOX_GEOMETRY = GEOMETRY_BOX.copy();
 
 const objGeometries = new Map<string, Promise<Geometry>>();
 

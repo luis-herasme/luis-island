@@ -1,8 +1,8 @@
 import type { Entity } from "@game/ecs";
-import { Material, Mesh, Uniform } from "@game/render";
+import { GEOMETRY_BOX, Material, Mesh, Uniform } from "@game/render";
 import type { Components } from "../components";
 import { context } from "../game-context";
-import { BOX_GEOMETRY, loadObjGeometry, loadTexture } from "../rendering/asset-cache";
+import { loadObjGeometry, loadTexture } from "../rendering/asset-cache";
 import {
   BASIC_FRAGMENT_SHADER_SOURCE,
   BASIC_TEXTURED_FRAGMENT_SHADER_SOURCE,
@@ -105,7 +105,9 @@ const SHADER_VARIANTS = {
  * whether the description carries a texture map.
  */
 async function materializeMesh(renderable: Components["renderable"]): Promise<Mesh> {
-  const geometry = renderable.geometry.kind === "box" ? BOX_GEOMETRY : await loadObjGeometry(renderable.geometry.url);
+  // Meshes only read their geometry, so every box shares the template
+  // directly — copy() is for callers that customize their copy.
+  const geometry = renderable.geometry.kind === "box" ? GEOMETRY_BOX : await loadObjGeometry(renderable.geometry.url);
 
   const { kind, color, textureUrl } = renderable.material;
   const shaders = SHADER_VARIANTS[kind][textureUrl ? "textured" : "plain"];
