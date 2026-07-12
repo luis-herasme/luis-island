@@ -115,11 +115,14 @@ export function spawnWorld(): { player: Entity } {
   }
 
   // The player: dynamic, spawned above the ground so it falls in on load.
-  const player = spawnBox({
-    color: [1, 0.53, 0.27],
-    position: [0, 3, 0],
-    body: { type: "dynamic", stepHeight: 0.5 },
-  });
+  // No `visual` — the avatar system renders it as an animated box figure
+  // filling the unit-cube collider.
+  const playerTransform = new Transform3D();
+  playerTransform.translation.set(0, 3, 0);
+
+  const player = ecs.addEntity();
+  ecs.addComponent(player, "transform", playerTransform);
+  ecs.addComponent(player, "physicsBody", { type: "dynamic", restitution: 0, damping: 0, stepHeight: 0.5 });
   ecs.addComponent(player, "player", { speed: 6, facing: new Vector3(0, 0, -1) });
 
   return { player };

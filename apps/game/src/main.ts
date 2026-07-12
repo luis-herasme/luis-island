@@ -3,10 +3,11 @@
  * renderer draws it, @game/math carries the transforms, @game/input feeds a
  * movement system and @game/physics makes it all solid.
  *
- * Drive the orange cube with WASD or the arrows — it falls onto the ground
- * when the page loads, the obstacle boxes block its way, the staircase is
- * walkable, the fan's wind column lifts anything that enters it, and Space
- * throws a small box in the direction you last moved.
+ * Drive the little figure with WASD or the arrows — it falls onto the
+ * ground when the page loads, walks with swinging arms and legs, the
+ * obstacle boxes block its way, the staircase is walkable, the fan's wind
+ * column lifts anything that enters it, and Space throws a small box in the
+ * direction you last moved.
  */
 import { startAnimationLoop } from "@game/render";
 import { spawnWorld } from "./entities/spawn-world";
@@ -15,6 +16,7 @@ import { bodySystem } from "./systems/body-system";
 import { cameraFollowSystem } from "./systems/camera-follow-system";
 import { modelSystem } from "./systems/model-system";
 import { physicsSystem } from "./systems/physics-system";
+import { playerAvatarSystem } from "./systems/player-avatar-system";
 import { playerMovementSystem } from "./systems/player-movement-system";
 import { renderSystem } from "./systems/render-system";
 import { spinSystem } from "./systems/spin-system";
@@ -34,6 +36,8 @@ context.ecs.addSystem(windSystem);
 context.ecs.addSystem(spinSystem);
 context.ecs.addSystem(modelSystem);
 context.ecs.addSystem(physicsSystem);
+// After physics (reads the settled transform), before render (writes meshes).
+context.ecs.addSystem(playerAvatarSystem);
 context.ecs.addSystem(cameraFollowSystem);
 context.ecs.addSystem(renderSystem);
 
