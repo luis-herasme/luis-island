@@ -1,24 +1,28 @@
 import type { Entity } from "@game/ecs";
 import { Vector3 } from "@game/math";
 import type { Mesh } from "@game/render";
+import { MagnificationFilter, MinificationFilter, Texture } from "@game/render";
 import { context } from "../game-context";
-import { createWindStreaksMesh } from "../rendering/wind-streaks-mesh";
+import { createWindSpritesMesh } from "../rendering/wind-sprites-mesh";
+
+const SPRITE_TEXTURE_URL = "/whitePuff00.png";
 
 type StreakState = {
   offsets: Vector3[];
   speeds: number[];
-  mesh: Mesh;
+  /** Null while the sprite texture is loading. */
+  mesh: Mesh | null;
 };
 
 /** Streak particles are this system's private memory, keyed by entity. */
 const states = new Map<Entity, StreakState>();
 
 /**
- * Owns the streak particles of a wind column. The `windStreaks` description
- * says where the column is; this system creates the instanced mesh and
- * per-streak state when the entity appears (registering the mesh in the
- * scene), raises each streak every frame wrapping it back to the base, and
- * releases everything when the entity goes.
+ * Owns the puff particles of a wind column. The `windStreaks` description
+ * says where the column is; this system creates the billboarded sprite mesh
+ * once the texture loads (registering it in the scene), raises each puff
+ * every frame wrapping it back to the base, and releases everything when
+ * the entity goes.
  */
 export const streakSystem = context.ecs.createSystem({
   requiredComponents: ["windStreaks"],
@@ -40,9 +44,21 @@ export const streakSystem = context.ecs.createSystem({
       speeds.push(3.5 + Math.random() * 3);
     }
 
-    const mesh = createWindStreaksMesh(offsets);
-    states.set(entity, { offsets, speeds, mesh });
-    context.sceneMeshes.add(mesh);
+    states.set(entity, { offsets, speeds, mesh: null });
+
+    void (async () => {
+      const texture = await Texture.fromImageUrl(SPRITE_TEXTURE_URL);
+
+      // The entity may have been removed while the texture was in flight.
+      const state = states.get(entity);
+      if (!state) return;
+
+      texture.minificationFilter = MinificationFilter.Linear;
+      texture.magnificationFilter = MagnificationFilter.Linear;
+
+      state.mesh = createWindSpritesMesh({ offsets, texture });
+      context.sceneMeshes.add(state.mesh);
+    })();
   },
 
   onEntityRemoved(entity) {
@@ -50,13 +66,13 @@ export const streakSystem = context.ecs.createSystem({
     if (!state) return;
 
     states.delete(entity);
-    context.sceneMeshes.delete(state.mesh);
+    if (state.mesh) context.sceneMeshes.delete(state.mesh);
   },
 
   update({ entities, components, deltaTime }) {
     for (const entity of entities) {
       const state = states.get(entity);
-      if (!state) continue;
+      if (!state?.mesh) continue; // still loading
 
       const { bottom, top } = components.get(entity, "windStreaks");
       const offsetBuffer = state.mesh.geometry.getVertexBuffer("offset");
