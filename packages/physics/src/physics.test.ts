@@ -4,15 +4,30 @@ import { DynamicBody, PhysicsWorld, StaticBody, contactBetween } from "./index";
 
 const FIXED_DELTA_TIME = 1 / 60;
 
-function dynamicBox(options: { position?: [number, number, number]; restitution?: number; damping?: number; stepHeight?: number } = {}): DynamicBody {
+type DynamicBoxOptions = {
+  position?: [number, number, number];
+  restitution?: number;
+  damping?: number;
+  stepHeight?: number;
+};
+
+const DEFAULT_DYNAMIC_BOX_OPTIONS = {
+  position: [0, 0, 0] as [number, number, number],
+  restitution: 0,
+  damping: 0,
+  stepHeight: 0,
+};
+
+function dynamicBox(options: DynamicBoxOptions = {}): DynamicBody {
+  const { position, restitution, damping, stepHeight } = { ...DEFAULT_DYNAMIC_BOX_OPTIONS, ...options };
   return new DynamicBody({
     size: new Vector3(1, 1, 1),
-    translation: new Vector3(...(options.position ?? [0, 0, 0])),
+    translation: new Vector3(...position),
     velocity: new Vector3(),
     mass: 1,
-    restitution: options.restitution ?? 0,
-    damping: options.damping ?? 0,
-    stepHeight: options.stepHeight ?? 0,
+    restitution,
+    damping,
+    stepHeight,
   });
 }
 
