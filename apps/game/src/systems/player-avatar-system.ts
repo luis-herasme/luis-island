@@ -10,7 +10,9 @@ import { LIT_FRAGMENT_SHADER_SOURCE, LIT_VERTEX_SHADER_SOURCE } from "../renderi
  * tall so it fills the player's unit-cube collider: feet at the collider's
  * bottom, crown of the head at its top.
  */
-const HEAD_SIZE = 0.25;
+// Oversized on purpose — the cartoon big-head look. The crown pokes past
+// the unit collider, which is visual only.
+const HEAD_SIZE = 0.36;
 const TORSO_WIDTH = 0.25;
 const TORSO_HEIGHT = 0.375;
 const TORSO_DEPTH = 0.125;
