@@ -33,9 +33,13 @@ uniform vec3 camera_position;
 
 out vec4 fragment_color;
 
-const vec3 DEEP_COLOR = vec3(0.02, 0.11, 0.2);
-const vec3 SHALLOW_COLOR = vec3(0.06, 0.29, 0.39);
-const vec3 SKY_COLOR = vec3(0.55, 0.7, 0.8);
+// Cartoon water: flat, saturated tone bands stepped by wave height, with
+// crisp white foam on the crests — no smooth gradients.
+const vec3 DEEP_COLOR = vec3(0.0, 0.42, 0.74);
+const vec3 MID_COLOR = vec3(0.02, 0.56, 0.86);
+const vec3 SHALLOW_COLOR = vec3(0.2, 0.75, 0.94);
+const vec3 HORIZON_COLOR = vec3(0.5, 0.85, 0.96);
+const vec3 FOAM_COLOR = vec3(0.97, 1.0, 1.0);
 const vec3 LIGHT_DIRECTION = normalize(vec3(0.4, 1.0, 0.6));
 const float NORMAL_SAMPLE_DISTANCE = 0.35;
 const float WAVE_STEEPNESS = 0.9;
@@ -52,7 +56,21 @@ float waveHeight(vec2 point) {
 void main() {
   vec2 point = v_world_position.xz;
 
-  // Central differences over the height field tilt the surface normal.
+  // Calm the waves far from the camera: the fine pattern would alias into
+  // moiré bands near the horizon.
+  float cameraDistance = distance(camera_position.xz, point);
+  float farness = smoothstep(40.0, 150.0, cameraDistance);
+  float height = waveHeight(point) * mix(1.0, 0.25, farness);
+
+  // Flat tone bands by wave height — the cartoon look.
+  vec3 color = DEEP_COLOR;
+  color = mix(color, MID_COLOR, smoothstep(-0.2, -0.08, height));
+  color = mix(color, SHALLOW_COLOR, smoothstep(0.35, 0.47, height));
+
+  // Crisp white caps on the crests.
+  color = mix(color, FOAM_COLOR, smoothstep(0.72, 0.8, height));
+
+  // A toon-stepped sun sparkle from the tilted wave normal.
   float heightWest = waveHeight(point - vec2(NORMAL_SAMPLE_DISTANCE, 0.0));
   float heightEast = waveHeight(point + vec2(NORMAL_SAMPLE_DISTANCE, 0.0));
   float heightSouth = waveHeight(point - vec2(0.0, NORMAL_SAMPLE_DISTANCE));
@@ -64,16 +82,12 @@ void main() {
   ));
 
   vec3 viewDirection = normalize(camera_position - v_world_position);
-  float facing = clamp(dot(viewDirection, normal), 0.0, 1.0);
-  float fresnel = pow(1.0 - facing, 3.0);
-
-  float diffuse = clamp(dot(normal, LIGHT_DIRECTION), 0.0, 1.0);
   vec3 reflected = reflect(-LIGHT_DIRECTION, normal);
-  float specular = pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 90.0);
+  float specular = pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 60.0);
+  color = mix(color, FOAM_COLOR, step(0.5, specular) * 0.7 * (1.0 - farness));
 
-  vec3 color = mix(DEEP_COLOR, SHALLOW_COLOR, diffuse * 0.55 + 0.25);
-  color = mix(color, SKY_COLOR, fresnel * 0.6);
-  color += specular * vec3(0.9, 0.95, 1.0);
+  // Blend toward a bright horizon so distance stays readable.
+  color = mix(color, HORIZON_COLOR, farness * 0.55);
 
   fragment_color = vec4(color, 1.0);
 }`;
