@@ -101,6 +101,12 @@ export type Components = {
   spin: { speed: number };
 
   /**
+   * An animated water surface: a flat plane at the transform's height,
+   * sized by its scale. The look lives in the water system's shader.
+   */
+  water: Record<string, never>;
+
+  /**
    * Emits billboarded sprite particles: they spawn within `radius` of the
    * transform's translation, rise from the transform's height to `height`
    * above it at a random speed in [minimumSpeed, maximumSpeed], and wrap

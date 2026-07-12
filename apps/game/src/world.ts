@@ -11,18 +11,29 @@ import type { Components } from "./components";
  * stepHeight, so it is walkable while its full height blocks non-steppers.
  */
 export const WORLD_ENTITIES: Partial<Components>[] = [
-  // The ground slab.
+  // The island: a thick slab whose top sits at y = -0.5 and whose cliffs
+  // reach below the waterline.
   {
     transform: {
-      translation: { x: 0, y: -0.6, z: 0 },
+      translation: { x: 0, y: -1.25, z: 0 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 20, y: 0.2, z: 20 },
+      scale: { x: 20, y: 1.5, z: 20 },
     },
     renderable: {
       geometry: { kind: "box" },
-      material: { kind: "lit", color: [0.2, 0.27, 0.33] },
+      material: { kind: "lit", color: [0.24, 0.33, 0.28] },
     },
     physicsBody: { type: "static", restitution: 0, damping: 0, stepHeight: 0 },
+  },
+
+  // The sea around the island, stretching to the horizon.
+  {
+    transform: {
+      translation: { x: 0, y: -1, z: 0 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 600, y: 1, z: 600 },
+    },
+    water: {},
   },
 
   // Obstacles — static bodies the player collides with.
