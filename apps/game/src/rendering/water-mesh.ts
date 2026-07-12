@@ -33,60 +33,62 @@ uniform vec3 camera_position;
 
 out vec4 fragment_color;
 
-// Cartoon water: flat, saturated tone bands stepped by wave height, with
-// crisp white foam on the crests — no smooth gradients.
-const vec3 DEEP_COLOR = vec3(0.0, 0.42, 0.74);
-const vec3 MID_COLOR = vec3(0.02, 0.56, 0.86);
-const vec3 SHALLOW_COLOR = vec3(0.2, 0.75, 0.94);
-const vec3 HORIZON_COLOR = vec3(0.5, 0.85, 0.96);
-const vec3 FOAM_COLOR = vec3(0.97, 1.0, 1.0);
-const vec3 LIGHT_DIRECTION = normalize(vec3(0.4, 1.0, 0.6));
-const float NORMAL_SAMPLE_DISTANCE = 0.35;
-const float WAVE_STEEPNESS = 0.9;
+// Cartoon pool-caustic water: a saturated blue base with a slowly wobbling
+// bright cellular web — the borders of animated Voronoi cells — plus soft
+// darker patches from the cell interiors, at two overlapping scales.
+const vec3 DEEP_COLOR = vec3(0.1, 0.47, 0.86);
+const vec3 BASE_COLOR = vec3(0.16, 0.58, 0.94);
+const vec3 HORIZON_COLOR = vec3(0.5, 0.85, 0.97);
+const vec3 CAUSTIC_COLOR = vec3(0.85, 0.97, 1.0);
 
-float waveHeight(vec2 point) {
-  float height = 0.0;
-  height += sin(point.x * 0.9 + time * 1.2) * 0.45;
-  height += sin(dot(point, vec2(0.6, 1.1)) * 0.8 + time * 0.9) * 0.3;
-  height += sin(dot(point, vec2(-1.3, 0.7)) * 1.7 + time * 1.6) * 0.15;
-  height += sin(dot(point, vec2(0.3, -1.7)) * 2.9 + time * 2.3) * 0.1;
-  return height;
+vec2 hashPoint(vec2 cell) {
+  return fract(sin(vec2(dot(cell, vec2(127.1, 311.7)), dot(cell, vec2(269.5, 183.3)))) * 43758.5453);
+}
+
+// Distances to the closest and second-closest animated feature points.
+// Their difference is ~0 on cell borders — that is where the light web is.
+vec2 voronoiDistances(vec2 point, float wobbleTime) {
+  vec2 cell = floor(point);
+  vec2 local = fract(point);
+
+  float closest = 8.0;
+  float secondClosest = 8.0;
+  for (int offsetY = -1; offsetY <= 1; offsetY++) {
+    for (int offsetX = -1; offsetX <= 1; offsetX++) {
+      vec2 neighbor = vec2(float(offsetX), float(offsetY));
+      vec2 featurePoint = hashPoint(cell + neighbor);
+      featurePoint = 0.5 + 0.5 * sin(wobbleTime + 6.2831 * featurePoint);
+      float featureDistance = length(neighbor + featurePoint - local);
+      if (featureDistance < closest) {
+        secondClosest = closest;
+        closest = featureDistance;
+      } else if (featureDistance < secondClosest) {
+        secondClosest = featureDistance;
+      }
+    }
+  }
+  return vec2(closest, secondClosest);
 }
 
 void main() {
   vec2 point = v_world_position.xz;
 
-  // Calm the waves far from the camera: the fine pattern would alias into
-  // moiré bands near the horizon.
+  // Soften the pattern far from the camera so it cannot alias, and blend
+  // toward a bright horizon so distance stays readable.
   float cameraDistance = distance(camera_position.xz, point);
-  float farness = smoothstep(40.0, 150.0, cameraDistance);
-  float height = waveHeight(point) * mix(1.0, 0.25, farness);
+  float farness = smoothstep(40.0, 160.0, cameraDistance);
 
-  // Flat tone bands by wave height — the cartoon look.
-  vec3 color = DEEP_COLOR;
-  color = mix(color, MID_COLOR, smoothstep(-0.2, -0.08, height));
-  color = mix(color, SHALLOW_COLOR, smoothstep(0.35, 0.47, height));
+  vec2 coarse = voronoiDistances(point * 0.28, time * 0.5);
+  vec2 fine = voronoiDistances(point * 0.55 + 17.3, time * 0.4 + 2.0);
 
-  // Crisp white caps on the crests.
-  color = mix(color, FOAM_COLOR, smoothstep(0.72, 0.8, height));
+  // Wide, soft-edged borders: fat light patches, not thin electric lines.
+  float coarseEdge = 1.0 - smoothstep(0.0, 0.45, coarse.y - coarse.x);
+  float fineEdge = 1.0 - smoothstep(0.0, 0.5, fine.y - fine.x);
+  float caustics = clamp(coarseEdge * 0.75 + fineEdge * 0.4, 0.0, 1.0);
 
-  // A toon-stepped sun sparkle from the tilted wave normal.
-  float heightWest = waveHeight(point - vec2(NORMAL_SAMPLE_DISTANCE, 0.0));
-  float heightEast = waveHeight(point + vec2(NORMAL_SAMPLE_DISTANCE, 0.0));
-  float heightSouth = waveHeight(point - vec2(0.0, NORMAL_SAMPLE_DISTANCE));
-  float heightNorth = waveHeight(point + vec2(0.0, NORMAL_SAMPLE_DISTANCE));
-  vec3 normal = normalize(vec3(
-    (heightWest - heightEast) * WAVE_STEEPNESS,
-    1.0,
-    (heightSouth - heightNorth) * WAVE_STEEPNESS
-  ));
-
-  vec3 viewDirection = normalize(camera_position - v_world_position);
-  vec3 reflected = reflect(-LIGHT_DIRECTION, normal);
-  float specular = pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 60.0);
-  color = mix(color, FOAM_COLOR, step(0.5, specular) * 0.7 * (1.0 - farness));
-
-  // Blend toward a bright horizon so distance stays readable.
+  // Cell interiors darken slightly toward their centers — the soft patches.
+  vec3 color = mix(DEEP_COLOR, BASE_COLOR, smoothstep(0.1, 0.75, coarse.x));
+  color = mix(color, CAUSTIC_COLOR, caustics * 0.65 * (1.0 - farness * 0.7));
   color = mix(color, HORIZON_COLOR, farness * 0.55);
 
   fragment_color = vec4(color, 1.0);
