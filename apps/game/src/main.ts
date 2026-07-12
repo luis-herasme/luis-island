@@ -26,7 +26,7 @@ import { playerAvatarSystem } from "./systems/player-avatar-system";
 import { playerMovementSystem } from "./systems/player-movement-system";
 import { renderSystem } from "./systems/render-system";
 import { respawnSystem } from "./systems/respawn-system";
-import { soundEmitterSystem } from "./systems/sound-emitter-system";
+import { positionalAudioSystem } from "./systems/positional-audio-system";
 import { spinSystem } from "./systems/spin-system";
 import { particleSystem } from "./systems/particle-system";
 import { throwSystem } from "./systems/throw-system";
@@ -48,7 +48,7 @@ context.ecs.addSystem(physicsSystem);
 context.ecs.addSystem(respawnSystem);
 context.ecs.addSystem(coinSystem);
 context.ecs.addSystem(jukeboxSystem);
-context.ecs.addSystem(soundEmitterSystem);
+context.ecs.addSystem(positionalAudioSystem);
 // After physics (reads the settled transform), before render (writes meshes).
 context.ecs.addSystem(playerAvatarSystem);
 context.ecs.addSystem(labelSystem);

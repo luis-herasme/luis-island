@@ -1,8 +1,8 @@
 import type { Entity } from "@game/ecs";
-import type { SoundHandle } from "@game/audio";
 import { MagnificationFilter } from "@game/render";
 import type { Mesh } from "@game/render";
 import { context } from "../game-context";
+import type { PositionalSound } from "../game-context";
 import { setCoinCount } from "../hud";
 import { getSoundBuffer, getTexture } from "../rendering/asset-cache";
 import { createSpriteMesh } from "../rendering/sprite-mesh";
@@ -29,8 +29,8 @@ type JukeboxState = {
   /** True after a Q press the player could not afford. */
   showInsufficient: boolean;
   mesh: Mesh;
-  /** The playing song, kept for distance-based volume; null when silent. */
-  songHandle: SoundHandle | null;
+  /** The playing song's positional registration; null when silent. */
+  song: PositionalSound | null;
 };
 
 /** Per-jukebox state and sprite, keyed by entity. */
@@ -63,7 +63,7 @@ export const jukeboxSystem = context.ecs.createSystem({
       height: SPRITE_HEIGHT,
     });
 
-    states.set(entity, { playingUntil: 0, showInsufficient: false, mesh, songHandle: null });
+    states.set(entity, { playingUntil: 0, showInsufficient: false, mesh, song: null });
     context.sceneMeshes.add(mesh);
   },
 
@@ -73,6 +73,10 @@ export const jukeboxSystem = context.ecs.createSystem({
 
     states.delete(entity);
     context.sceneMeshes.delete(state.mesh);
+    if (state.song) {
+      context.positionalSounds.delete(state.song);
+      state.song.handle.stop();
+    }
   },
 
   update({ entities, components, deltaTime }) {
@@ -107,16 +111,10 @@ export const jukeboxSystem = context.ecs.createSystem({
       const distance = Math.hypot(translation.x - player.x, translation.y - player.y, translation.z - player.z);
       const playerIsNear = distance <= INTERACT_DISTANCE;
 
-      // The song is positional: it fades quadratically with the player's
-      // distance, like the sound emitters.
-      if (state.songHandle) {
-        if (isPlaying) {
-          let closeness = 1 - distance / SONG_RANGE;
-          if (closeness < 0) closeness = 0;
-          state.songHandle.setVolume(SONG_VOLUME * closeness * closeness);
-        } else {
-          state.songHandle = null;
-        }
+      // A finished song leaves the positional registry.
+      if (state.song && !isPlaying) {
+        context.positionalSounds.delete(state.song);
+        state.song = null;
       }
 
       if (!playerIsNear) {
@@ -135,9 +133,15 @@ export const jukeboxSystem = context.ecs.createSystem({
           context.coins -= jukebox.songCost;
           setCoinCount(context.coins);
 
-          const song = getSoundBuffer(jukebox.songUrl);
-          state.songHandle = context.audioPlayer.playSound(song, { volume: SONG_VOLUME });
-          state.playingUntil = clock + song.duration;
+          const songBuffer = getSoundBuffer(jukebox.songUrl);
+          state.song = {
+            handle: context.audioPlayer.playSound(songBuffer, { volume: SONG_VOLUME }),
+            position: translation,
+            volume: SONG_VOLUME,
+            range: SONG_RANGE,
+          };
+          context.positionalSounds.add(state.song);
+          state.playingUntil = clock + songBuffer.duration;
           state.showInsufficient = false;
         } else {
           state.showInsufficient = true;
