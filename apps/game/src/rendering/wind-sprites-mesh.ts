@@ -30,9 +30,9 @@ out float v_alpha;
 void main() {
   float age = clamp((offset.y - column_bottom) / (column_top - column_bottom), 0.0, 1.0);
 
-  float growth = mix(0.6, 1.7, age);
-  float fadeIn = smoothstep(0.0, 0.35, age);
-  float fadeOut = 1.0 - smoothstep(0.45, 1.0, age);
+  float growth = mix(1.0, 2.5, age);
+  float fadeIn = smoothstep(0.0, 0.5, age);
+  float fadeOut = 1.0 - smoothstep(0.5, 1.0, age);
   v_alpha = fadeIn * fadeOut;
 
   // Each puff's quad is rotated by its own fixed angle in the billboard
@@ -75,8 +75,11 @@ void main() {
   // alpha is guaranteed zero before the quad edge.
   float edgeFade = 1.0 - smoothstep(0.25, 0.5, distance(v_uv, vec2(0.5)));
 
-  // A light blue tint keeps the puffs reading as wind.
-  fragment_color = vec4(color.rgb * vec3(0.85, 0.92, 1.0), color.a * v_alpha * edgeFade * 0.35);
+  // A dim light-blue tint keeps the puffs reading as wind, and caps how
+  // bright the densest part of the column can get: where many puffs
+  // overlap, the blended result converges to this color, so scaling it
+  // down turns a white-hot core into a soft haze.
+  fragment_color = vec4(color.rgb * vec3(0.85, 0.92, 1.0) * 0.75, color.a * v_alpha * edgeFade * 0.18);
 }`;
 
 const SPRITE_HALF_SIZE = 0.3;
