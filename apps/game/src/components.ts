@@ -56,7 +56,7 @@ export type Components = {
   // Materialized resources
   // -------------------------------------------------------------------------
 
-  /** Created by the mesh system from `visual`, and by the streak system. */
+  /** Created by the render system from `visual`, and by the streak system. */
   mesh: Mesh;
 
   /** Created by the body system from `physicsBody`. */

@@ -13,7 +13,6 @@ import { spawnWorld } from "./entities/spawn-world";
 import { createGameContext } from "./game-context";
 import { createBodySystem } from "./systems/body-system";
 import { createCameraFollowSystem } from "./systems/camera-follow-system";
-import { createMeshSystem } from "./systems/mesh-system";
 import { createPhysicsSystem } from "./systems/physics-system";
 import { createPlayerMovementSystem } from "./systems/player-movement-system";
 import { createRenderSystem } from "./systems/render-system";
@@ -25,8 +24,8 @@ import { createWindSystem } from "./systems/wind-system";
 const context = createGameContext();
 
 // The materializing systems come first, so entities spawned later get their
-// meshes and bodies the moment their description components land.
-context.ecs.addSystem(createMeshSystem(context));
+// bodies and particle meshes the moment their description components land.
+// Box meshes are materialized lazily by the render system itself.
 context.ecs.addSystem(createBodySystem(context));
 context.ecs.addSystem(createStreakSystem(context));
 
