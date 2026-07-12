@@ -24,18 +24,20 @@ export const bodySystem = context.ecs.createSystem({
     const size = new Vector3().copy(sizeSource);
     const translation = new Vector3().copy(transform.translation);
 
-    const body: RigidBody =
-      description.type === "dynamic"
-        ? new DynamicBody({
-            size,
-            translation,
-            velocity: new Vector3(),
-            mass: 1,
-            restitution: description.restitution,
-            damping: description.damping,
-            stepHeight: description.stepHeight,
-          })
-        : new StaticBody({ size, translation, restitution: description.restitution });
+    let body: RigidBody;
+    if (description.type === "dynamic") {
+      body = new DynamicBody({
+        size,
+        translation,
+        velocity: new Vector3(),
+        mass: 1,
+        restitution: description.restitution,
+        damping: description.damping,
+        stepHeight: description.stepHeight,
+      });
+    } else {
+      body = new StaticBody({ size, translation, restitution: description.restitution });
+    }
 
     context.physicsWorld.addBody(body);
     context.bodies.set(entity, body);
