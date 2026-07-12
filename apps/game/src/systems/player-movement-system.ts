@@ -22,8 +22,12 @@ export const playerMovementSystem = context.ecs.createSystem({
 
     // Normalize so diagonals are not faster than straight lines.
     const length = Math.hypot(moveX, moveZ);
-    const directionX = length === 0 ? 0 : moveX / length;
-    const directionZ = length === 0 ? 0 : moveZ / length;
+    let directionX = 0;
+    let directionZ = 0;
+    if (length > 0) {
+      directionX = moveX / length;
+      directionZ = moveZ / length;
+    }
 
     const jumpKeyIsPressed = keyboard.isPressed("Space");
     const shouldJump = jumpKeyIsPressed && !jumpKeyWasPressed;

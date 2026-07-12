@@ -36,12 +36,18 @@ export function contactBetween(first: RigidBody, second: RigidBody): Contact | n
 
   // Separate along the axis of least overlap — the shortest way out.
   if (overlapX <= overlapY && overlapX <= overlapZ) {
-    return { first, second, normal: new Vector3(deltaX >= 0 ? 1 : -1, 0, 0), penetration: overlapX };
+    let directionX = -1;
+    if (deltaX >= 0) directionX = 1;
+    return { first, second, normal: new Vector3(directionX, 0, 0), penetration: overlapX };
   }
 
   if (overlapY <= overlapZ) {
-    return { first, second, normal: new Vector3(0, deltaY >= 0 ? 1 : -1, 0), penetration: overlapY };
+    let directionY = -1;
+    if (deltaY >= 0) directionY = 1;
+    return { first, second, normal: new Vector3(0, directionY, 0), penetration: overlapY };
   }
 
-  return { first, second, normal: new Vector3(0, 0, deltaZ >= 0 ? 1 : -1), penetration: overlapZ };
+  let directionZ = -1;
+  if (deltaZ >= 0) directionZ = 1;
+  return { first, second, normal: new Vector3(0, 0, directionZ), penetration: overlapZ };
 }

@@ -59,7 +59,11 @@ export class Renderer {
     this.opaqueMeshes.length = 0;
     this.transparentMeshes.length = 0;
     for (const mesh of scene) {
-      (mesh.material.transparent ? this.transparentMeshes : this.opaqueMeshes).push(mesh);
+      if (mesh.material.transparent) {
+        this.transparentMeshes.push(mesh);
+      } else {
+        this.opaqueMeshes.push(mesh);
+      }
     }
 
     if (this.transparentMeshes.length > 1) {

@@ -82,7 +82,8 @@ export class Vector3 {
 
   normalize(): this {
     const magnitude = this.length();
-    return magnitude > 0 ? this.multiplyScalar(1 / magnitude) : this;
+    if (magnitude === 0) return this;
+    return this.multiplyScalar(1 / magnitude);
   }
 
   distanceTo(vector: Vector3Like): number {
@@ -116,7 +117,8 @@ export class Vector3 {
     const { x, y, z } = this;
     const elements = matrix.elements;
     const w = elements[3]! * x + elements[7]! * y + elements[11]! * z + elements[15]!;
-    const inverseW = w !== 0 ? 1 / w : 1;
+    let inverseW = 1;
+    if (w !== 0) inverseW = 1 / w;
     this.x = (elements[0]! * x + elements[4]! * y + elements[8]! * z + elements[12]!) * inverseW;
     this.y = (elements[1]! * x + elements[5]! * y + elements[9]! * z + elements[13]!) * inverseW;
     this.z = (elements[2]! * x + elements[6]! * y + elements[10]! * z + elements[14]!) * inverseW;

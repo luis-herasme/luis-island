@@ -94,10 +94,13 @@ export const playerAvatarSystem = context.ecs.createSystem({
       const body = context.bodies.get(entity);
       const nodes = avatar.hierarchy.nodes;
 
-      const horizontalSpeed = body?.type === "dynamic" ? Math.hypot(body.velocity.x, body.velocity.z) : 0;
+      let horizontalSpeed = 0;
+      if (body?.type === "dynamic") horizontalSpeed = Math.hypot(body.velocity.x, body.velocity.z);
 
       avatar.phase += horizontalSpeed * STRIDE_FREQUENCY * deltaTime;
-      const swingTarget = horizontalSpeed > WALKING_SPEED_THRESHOLD ? 1 : 0;
+
+      let swingTarget = 0;
+      if (horizontalSpeed > WALKING_SPEED_THRESHOLD) swingTarget = 1;
       avatar.swing += (swingTarget - avatar.swing) * (1 - Math.exp(-SWING_EASE_RATE * deltaTime));
 
       // Opposite limbs swing in opposite phases: left leg with right arm.

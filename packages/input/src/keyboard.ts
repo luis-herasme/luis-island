@@ -44,7 +44,10 @@ export class Keyboard {
    * out to 0.
    */
   axis(options: AxisOptions): number {
-    return (this.isPressed(options.positive) ? 1 : 0) - (this.isPressed(options.negative) ? 1 : 0);
+    let value = 0;
+    if (this.isPressed(options.positive)) value += 1;
+    if (this.isPressed(options.negative)) value -= 1;
+    return value;
   }
 
   dispose(): void {

@@ -111,8 +111,11 @@ export class PhysicsWorld {
     // Impulse: cancel the approach velocity along the normal, plus bounce.
     // The normal points first → second, so approaching means a negative
     // relative velocity along it.
-    const firstVelocity = first.type === "dynamic" ? first.velocity : ZERO_VELOCITY;
-    const secondVelocity = second.type === "dynamic" ? second.velocity : ZERO_VELOCITY;
+    let firstVelocity = ZERO_VELOCITY;
+    if (first.type === "dynamic") firstVelocity = first.velocity;
+
+    let secondVelocity = ZERO_VELOCITY;
+    if (second.type === "dynamic") secondVelocity = second.velocity;
 
     const relativeVelocityAlongNormal =
       (secondVelocity.x - firstVelocity.x) * normal.x +

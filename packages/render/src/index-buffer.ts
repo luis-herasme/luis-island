@@ -36,7 +36,12 @@ export class IndexBuffer {
   }
 
   static fromUint8(values: Uint8Array | readonly number[], usage: BufferUsage = BufferUsage.StaticDraw): IndexBuffer {
-    const bytes = values instanceof Uint8Array ? values : Uint8Array.from(values);
+    let bytes: Uint8Array;
+    if (values instanceof Uint8Array) {
+      bytes = values;
+    } else {
+      bytes = Uint8Array.from(values);
+    }
     return new IndexBuffer({
       kind: IndexKind.UnsignedByte,
       count: bytes.length,
@@ -45,7 +50,12 @@ export class IndexBuffer {
   }
 
   static fromUint16(values: Uint16Array | readonly number[], usage: BufferUsage = BufferUsage.StaticDraw): IndexBuffer {
-    const indices = values instanceof Uint16Array ? values : Uint16Array.from(values);
+    let indices: Uint16Array;
+    if (values instanceof Uint16Array) {
+      indices = values;
+    } else {
+      indices = Uint16Array.from(values);
+    }
     const bytes = new Uint8Array(indices.buffer, indices.byteOffset, indices.byteLength);
     return new IndexBuffer({
       kind: IndexKind.UnsignedShort,
@@ -55,7 +65,12 @@ export class IndexBuffer {
   }
 
   static fromUint32(values: Uint32Array | readonly number[], usage: BufferUsage = BufferUsage.StaticDraw): IndexBuffer {
-    const indices = values instanceof Uint32Array ? values : Uint32Array.from(values);
+    let indices: Uint32Array;
+    if (values instanceof Uint32Array) {
+      indices = values;
+    } else {
+      indices = Uint32Array.from(values);
+    }
     const bytes = new Uint8Array(indices.buffer, indices.byteOffset, indices.byteLength);
     return new IndexBuffer({
       kind: IndexKind.UnsignedInt,

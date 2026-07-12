@@ -59,7 +59,8 @@ export class Vector2 {
 
   normalize(): this {
     const length = this.length();
-    return length === 0 ? this : this.multiplyScalar(1 / length);
+    if (length === 0) return this;
+    return this.multiplyScalar(1 / length);
   }
 
   distanceTo(vector: Vector2Like): number {

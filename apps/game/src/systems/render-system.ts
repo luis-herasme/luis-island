@@ -1,5 +1,6 @@
 import type { Entity } from "@game/ecs";
 import { GEOMETRY_BOX, Material, Mesh, Uniform } from "@game/render";
+import type { Geometry } from "@game/render";
 import type { Components } from "../components";
 import { context } from "../game-context";
 import { loadObjGeometry, loadTexture } from "../rendering/asset-cache";
@@ -107,10 +108,18 @@ const SHADER_VARIANTS = {
 async function materializeMesh(renderable: Components["renderable"]): Promise<Mesh> {
   // Meshes only read their geometry, so every box shares the template
   // directly — copy() is for callers that customize their copy.
-  const geometry = renderable.geometry.kind === "box" ? GEOMETRY_BOX : await loadObjGeometry(renderable.geometry.url);
+  let geometry: Geometry;
+  if (renderable.geometry.kind === "box") {
+    geometry = GEOMETRY_BOX;
+  } else {
+    geometry = await loadObjGeometry(renderable.geometry.url);
+  }
 
   const { kind, color, textureUrl } = renderable.material;
-  const shaders = SHADER_VARIANTS[kind][textureUrl ? "textured" : "plain"];
+
+  let variant: "plain" | "textured" = "plain";
+  if (textureUrl) variant = "textured";
+  const shaders = SHADER_VARIANTS[kind][variant];
 
   const material = new Material({ vertexShaderSource: shaders.vertex, fragmentShaderSource: shaders.fragment });
   material.setUniform("base_color", Uniform.vector3(color ?? WHITE));
