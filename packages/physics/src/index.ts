@@ -1,5 +1,3 @@
-export { Collider } from "./collider";
-export type { BoxCollider } from "./collider";
 export { contactBetween } from "./collision";
 export type { Contact } from "./collision";
 export { DynamicBody } from "./dynamic-body";

@@ -11,7 +11,7 @@
 import { ECS } from "@game/ecs";
 import { Keyboard } from "@game/input";
 import { AXIS_Y, Matrix4x4, Transform3D, Vector3 } from "@game/math";
-import { Collider, DynamicBody, PhysicsWorld, StaticBody } from "@game/physics";
+import { DynamicBody, PhysicsWorld, StaticBody } from "@game/physics";
 import type { RigidBody } from "@game/physics";
 import { GEOMETRY_BOX, Material, Mesh, PerspectiveCamera, Renderer, Uniform, startAnimationLoop } from "@game/render";
 
@@ -96,15 +96,15 @@ function spawnBox(options: SpawnBoxOptions) {
   transform.translation.set(...options.position);
   if (options.scale) transform.scale.set(...options.scale);
 
-  // The mesh is a unit box scaled by the transform, so the collider's half
+  // The mesh is a unit box scaled by the transform, so the body's half
   // extents are half the scale.
-  const collider = Collider.box({ halfExtents: transform.scale.clone().multiplyScalar(0.5) });
+  const halfExtents = transform.scale.clone().multiplyScalar(0.5);
   const translation = new Vector3(...options.position);
 
   const body: RigidBody =
     options.bodyType === "dynamic"
       ? new DynamicBody({
-          collider,
+          halfExtents,
           translation,
           velocity: options.velocity ? new Vector3(...options.velocity) : new Vector3(),
           mass: 1,
@@ -112,7 +112,7 @@ function spawnBox(options: SpawnBoxOptions) {
           damping: options.damping ?? 0,
           stepHeight: options.stepHeight ?? 0,
         })
-      : new StaticBody({ collider, translation, restitution: options.restitution ?? 0 });
+      : new StaticBody({ halfExtents, translation, restitution: options.restitution ?? 0 });
   physicsWorld.addBody(body);
 
   const entity = ecs.addEntity();

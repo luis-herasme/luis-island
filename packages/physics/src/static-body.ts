@@ -1,8 +1,11 @@
 import { Vector3 } from "@game/math";
-import type { Collider } from "./collider";
 
 type StaticBodyOptions = {
-  collider: Collider;
+  /**
+   * Half the body's size on each axis. Every body is an axis-aligned box —
+   * the only shape this engine supports, by design.
+   */
+  halfExtents: Vector3;
   translation: Vector3;
   /** Bounciness, 0 (none) to 1 (perfectly elastic). A contact uses the larger of the two bodies'. */
   restitution: number;
@@ -16,12 +19,12 @@ type StaticBodyOptions = {
 export class StaticBody {
   readonly type = "static";
   readonly inverseMass = 0;
-  readonly collider: Collider;
+  readonly halfExtents: Vector3;
   readonly translation: Vector3;
   restitution: number;
 
   constructor(options: StaticBodyOptions) {
-    this.collider = options.collider;
+    this.halfExtents = options.halfExtents;
     this.translation = options.translation;
     this.restitution = options.restitution;
   }

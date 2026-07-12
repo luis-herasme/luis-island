@@ -1,8 +1,11 @@
 import { Vector3 } from "@game/math";
-import type { Collider } from "./collider";
 
 type DynamicBodyOptions = {
-  collider: Collider;
+  /**
+   * Half the body's size on each axis. Every body is an axis-aligned box —
+   * the only shape this engine supports, by design.
+   */
+  halfExtents: Vector3;
   translation: Vector3;
   velocity: Vector3;
   mass: number;
@@ -25,7 +28,7 @@ type DynamicBodyOptions = {
  */
 export class DynamicBody {
   readonly type = "dynamic";
-  readonly collider: Collider;
+  readonly halfExtents: Vector3;
   readonly translation: Vector3;
   readonly velocity: Vector3;
   mass: number;
@@ -34,7 +37,7 @@ export class DynamicBody {
   stepHeight: number;
 
   constructor(options: DynamicBodyOptions) {
-    this.collider = options.collider;
+    this.halfExtents = options.halfExtents;
     this.translation = options.translation;
     this.velocity = options.velocity;
     this.mass = options.mass;

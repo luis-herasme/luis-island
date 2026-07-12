@@ -5,13 +5,14 @@ mass, velocity, gravity, damping (deceleration), restitution. It depends only
 on `@game/math` and knows nothing about rendering or the ECS; the game wires
 it in through a system, the same way it wires the renderer.
 
-The system is **linear-only by design**: bodies never rotate, and there is no
-angular state anywhere — no spin, no torque, no orientation.
+Two permanent design decisions keep it small. The system is **linear-only**:
+bodies never rotate, and there is no angular state anywhere — no spin, no
+torque, no orientation. And every body is an **axis-aligned box** described
+by its half extents — the only collision shape, because the game world is
+made of boxes. There is no collider abstraction to dispatch on; the box is
+the body's shape, directly.
 
 ## The pieces
-
-**`Collider`** — the shape a body occupies. Box-only for now: an axis-aligned
-box described by half extents.
 
 **`StaticBody` and `DynamicBody`** — the two kinds of body, separated at the
 type level because they are different concepts: a static body has no motion
@@ -22,13 +23,13 @@ one explicitly:
 
 ```ts
 const wall = new StaticBody({
-  collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 0.5) }),
+  halfExtents: new Vector3(0.5, 0.5, 0.5),
   translation: new Vector3(2, 0, 0),
   restitution: 0,               // static bodies can still be bouncy surfaces
 });
 
 const crate = new DynamicBody({
-  collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 0.5) }),
+  halfExtents: new Vector3(0.5, 0.5, 0.5),
   translation: new Vector3(0, 2, 0),
   velocity: new Vector3(),
   mass: 1,

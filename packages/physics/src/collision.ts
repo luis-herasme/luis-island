@@ -19,10 +19,8 @@ export type Contact = {
  * the argument order defines the normal's direction: first → second.
  */
 export function contactBetween(first: RigidBody, second: RigidBody): Contact | null {
-  // Box-only for now; this becomes a dispatch on collider kinds when more
-  // shapes exist.
-  const firstHalfExtents = first.collider.halfExtents;
-  const secondHalfExtents = second.collider.halfExtents;
+  const firstHalfExtents = first.halfExtents;
+  const secondHalfExtents = second.halfExtents;
 
   const deltaX = second.translation.x - first.translation.x;
   const deltaY = second.translation.y - first.translation.y;

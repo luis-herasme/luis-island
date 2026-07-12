@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "@game/math";
-import { Collider, DynamicBody, PhysicsWorld, StaticBody, contactBetween } from "./index";
+import { DynamicBody, PhysicsWorld, StaticBody, contactBetween } from "./index";
 
 const FIXED_DELTA_TIME = 1 / 60;
 
 function dynamicBox(options: { position?: [number, number, number]; restitution?: number; damping?: number; stepHeight?: number } = {}): DynamicBody {
   return new DynamicBody({
-    collider: Collider.box({ halfExtents: new Vector3(0.5, 0.5, 0.5) }),
+    halfExtents: new Vector3(0.5, 0.5, 0.5),
     translation: new Vector3(...(options.position ?? [0, 0, 0])),
     velocity: new Vector3(),
     mass: 1,
@@ -18,7 +18,7 @@ function dynamicBox(options: { position?: [number, number, number]; restitution?
 
 function staticBox(options: { position: [number, number, number]; halfExtents: [number, number, number] }): StaticBody {
   return new StaticBody({
-    collider: Collider.box({ halfExtents: new Vector3(...options.halfExtents) }),
+    halfExtents: new Vector3(...options.halfExtents),
     translation: new Vector3(...options.position),
     restitution: 0,
   });
