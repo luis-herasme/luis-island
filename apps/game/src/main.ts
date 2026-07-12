@@ -12,6 +12,7 @@
 import { startAnimationLoop } from "@game/render";
 import { spawnWorld } from "./entities/spawn-world";
 import { context } from "./game-context";
+import { setCoinCount } from "./hud";
 import { bodySystem } from "./systems/body-system";
 import { cameraFollowSystem } from "./systems/camera-follow-system";
 import { coinSystem } from "./systems/coin-system";
@@ -42,6 +43,7 @@ context.ecs.addSystem(cameraFollowSystem);
 context.ecs.addSystem(renderSystem);
 
 spawnWorld();
+setCoinCount(0);
 
 let previousTime = performance.now();
 
