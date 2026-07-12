@@ -1,8 +1,6 @@
 /**
  * The HUD is DOM, not WebGL: the renderer has no text drawing, and a fixed
- * overlay above the canvas is the simplest honest way to show numbers. The
- * coin icon is the peso atlas itself — object-fit crops it to the front
- * face's half, and the border radius rounds it into a coin.
+ * overlay above the canvas is the simplest honest way to show numbers.
  */
 
 const COUNTER_CONTAINER_STYLE = [
@@ -21,13 +19,7 @@ const COUNTER_CONTAINER_STYLE = [
   "pointer-events: none",
 ].join("; ");
 
-const COIN_ICON_STYLE = [
-  "width: 44px",
-  "height: 44px",
-  "border-radius: 50%",
-  "object-fit: cover",
-  "object-position: left center",
-].join("; ");
+const COIN_ICON_STYLE = ["width: 44px", "height: 44px", "object-fit: contain"].join("; ");
 
 let coinCountElement: HTMLSpanElement | null = null;
 
@@ -41,7 +33,7 @@ function createCoinCounter(): HTMLSpanElement {
   container.style.cssText = COUNTER_CONTAINER_STYLE;
 
   const icon = document.createElement("img");
-  icon.src = "/peso.jpg";
+  icon.src = "/coin.png";
   icon.alt = "";
   icon.style.cssText = COIN_ICON_STYLE;
 

@@ -430,7 +430,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
@@ -443,7 +443,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
@@ -456,7 +456,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
@@ -469,7 +469,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
@@ -482,7 +482,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
@@ -495,7 +495,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
@@ -508,7 +508,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
@@ -521,7 +521,7 @@ export const WORLD_ENTITIES: Partial<Components>[] = [
     },
     renderable: {
       geometry: { kind: "obj", url: "/peso.obj" },
-      material: { kind: "basic", textureUrl: "/peso.jpg" },
+      material: { kind: "basic", textureUrl: "/coin-atlas.png" },
     },
     spin: { speed: 2 },
     coin: { value: 1 },
